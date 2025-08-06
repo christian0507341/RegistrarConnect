@@ -1,11 +1,14 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from .managers import CustomUserManager
 
 class User(AbstractUser):
+    objects = CustomUserManager()
     ROLE_CHOICES = (
         ('student', 'Student'),
         ('alumni', 'Alumni'),
         ('registrar', 'Registrar'),
+        
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
 

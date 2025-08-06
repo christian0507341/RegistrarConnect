@@ -1,0 +1,5 @@
+Django<6.0,>=4.2
+djangorestframework>=3.13.0
+
+[with-social]
+django-allauth[socialaccount]>=64.0.0

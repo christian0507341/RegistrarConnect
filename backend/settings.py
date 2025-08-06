@@ -11,6 +11,14 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from pymongo import MongoClient
+
+MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
+MONGO_DB_NAME = "RegistrarConnect"
+
+client = MongoClient(MONGODB_URI)
+mongo_db = client[MONGO_DB_NAME]
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,6 +49,7 @@ INSTALLED_APPS = [
     # Third-party apps
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt',
 
     # Custom apps
     'backend.accounts',
@@ -84,12 +93,21 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'djongo',
+        'NAME': 'RegistrarConnect',
     }
 }
+
+
 
 
 # Password validation
@@ -151,3 +169,16 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
+#ANO ANO LNG MUNA I2 AH 
+# Email settings (for development: console backend)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@registrarconnect.com'
+
+# For production, you'd use SendGrid, SMTP, etc.
+# Example (commented out):
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.sendgrid.net'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'apikey'
+# EMAIL_HOST_PASSWORD = 'your_sendgrid_api_key'
