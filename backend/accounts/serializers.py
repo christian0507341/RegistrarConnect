@@ -1,30 +1,37 @@
+import re
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
-role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=True)
-role = serializers.CharField(required=True)
 
+PHINMAED_PATTERN = re.compile(r'.+\.up@phinmaed\.com$', re.IGNORECASE)
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
-    role = serializers.CharField(required=True)  # Include role explicitly
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password', 'password2', 'role')
+        fields = ('email', 'first_name', 'middle_name', 'last_name', 'password', 'password2', 'role')
+
+    def validate_email(self, value):
+        if not PHINMAED_PATTERN.search(value or ''):
+            raise serializers.ValidationError(
+                "Use your PHINMAED email ending with '.up@phinmaed.com' (e.g., firstname.lastname.up@phinmaed.com)."
+            )
+        return value.lower()
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password": "Passwords don't match."})
+            raise serializers.ValidationError("Passwords do not match.")
         return attrs
 
     def create(self, validated_data):
         password = validated_data.pop('password')
         validated_data.pop('password2')
         user = User(**validated_data)
+        user.is_active = True  # you said skip verification/forgot for now; set False if you re-enable later
         user.set_password(password)
         user.save()
         return user

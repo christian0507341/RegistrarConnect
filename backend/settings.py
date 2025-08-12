@@ -12,13 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-from pymongo import MongoClient
 
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
-MONGO_DB_NAME = "RegistrarConnect"
-
-client = MongoClient(MONGODB_URI)
-mongo_db = client[MONGO_DB_NAME]
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -102,8 +96,12 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'RegistrarConnect',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'registrar_connect'),
+        'USER': os.getenv('POSTGRES_USER', 'registrar_user'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'registrar'),
+        'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
 
