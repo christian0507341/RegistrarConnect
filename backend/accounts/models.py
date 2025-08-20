@@ -1,18 +1,29 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from .managers import CustomUserManager
+from django.core.validators import RegexValidator
 
 class User(AbstractUser):
     # Remove username, use email as the login identifier
-    username = None
+    username = models.CharField(max_length=50, unique=True, null=True, blank=True)
 
     email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=150)
-    middle_name = models.CharField(max_length=150, blank=True, null=True)
-    last_name = models.CharField(max_length=150)
+    first_name = models.CharField(max_length=50)
+    middle_name = models.CharField(max_length=50, blank=True, null=True)
+    last_name = models.CharField(max_length=50)
 
-    # Student ID NOT in registration; will be filled on profile later
-    student_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
+    student_id = models.CharField(
+    max_length=20,
+    unique=True,
+    blank=True,
+    null=True,
+    validators=[
+        RegexValidator(
+            regex=r'^\d{2}-(?:\d{4}|\d{2}-\d{4})-\d{6}$',
+            message="Student ID must be either XX-XXXX-XXXXXX or XX-XX-XXXX-XXXXXX"
+        )
+    ]
+)
 
     ROLE_CHOICES = (
         ('student', 'Student'),
@@ -21,7 +32,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']  # for createsuperuser prompts
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     objects = CustomUserManager()
 

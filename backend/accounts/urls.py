@@ -6,8 +6,5 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
     path('me/', UserProfileView.as_view(), name='user-profile'),
-    path('verify-email/', VerifyEmailView.as_view(), name='email-verify'),
-    # path('api/document-requests/', include('backend.document_requests.urls')),
-    # path('api/appointments/', include('backend.appointments.urls')),
-
+    path('verify-email/', VerifyEmailView.as_view(), name='email-verify')
 ]

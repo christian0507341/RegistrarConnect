@@ -1,4 +1,4 @@
-from rest_framework import generics
+from rest_framework import generics, permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -13,7 +13,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.conf import settings
 
-from .serializers import RegisterSerializer
+from .serializers import RegisterSerializer, UserSerializer
 from .tokens import email_verification_token
 
 User = get_user_model()
@@ -86,3 +86,8 @@ class UserProfileView(APIView):
             "username": user.username,
             "email": user.email,
         })
+
+class FacultyListView(generics.ListAPIView):
+    queryset = User.objects.filter(role="faculty")
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]

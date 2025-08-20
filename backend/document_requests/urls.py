@@ -1,7 +1,9 @@
 from django.urls import path
-from .views import DocumentRequestCreateView, DocumentRequestListView
+from .views import DocumentRequestListCreateView, DocumentRequestDetailView, DocumentRequestStatusUpdateView
 
 urlpatterns = [
-    path('create/', DocumentRequestCreateView.as_view(), name='create-request'),
-    path('my-requests/', DocumentRequestListView.as_view(), name='my-requests'),
+    path('', DocumentRequestListCreateView.as_view(), name="document-request-list-create"),
+    path('<int:pk>/', DocumentRequestDetailView.as_view(), name="document-request-detail"),
+    path('<int:pk>/status/', DocumentRequestStatusUpdateView.as_view(), name='document-request-status'),
+
 ]
