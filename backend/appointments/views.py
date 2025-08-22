@@ -3,6 +3,16 @@ from rest_framework.exceptions import ValidationError
 from .models import Appointment, AppointmentAction
 from .serializers import AppointmentSerializer, AppointmentStatusSerializer
 from backend.common.permissions import IsFaculty
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import permissions
+
+class FacultyListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # placeholder response
+        return Response({"message": "Faculty list endpoint placeholder"})
 
 class AppointmentListCreateView(generics.ListCreateAPIView):
     serializer_class = AppointmentSerializer

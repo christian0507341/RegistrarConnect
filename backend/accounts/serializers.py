@@ -7,6 +7,13 @@ User = get_user_model()
 
 PHINMAED_PATTERN = re.compile(r'.+\.up@phinmaed\.com$', re.IGNORECASE)
 
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'first_name', 'middle_name', 'last_name', 'role')
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
@@ -31,7 +38,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         validated_data.pop('password2')
         user = User(**validated_data)
-        user.is_active = True  # you said skip verification/forgot for now; set False if you re-enable later
+        user.is_active = True  # skip verification for now
         user.set_password(password)
         user.save()
         return user
