@@ -1,10 +1,8 @@
 # backend/accounts/urls.py
 from django.urls import path
-from .views import RegisterView, LoginView, UserProfileView, VerifyEmailView
+from .views import RegisterView, LoginView
 
 urlpatterns = [
-    path('register/', RegisterView.as_view(), name='register'),
-    path('login/', LoginView.as_view(), name='login'),
-    path('me/', UserProfileView.as_view(), name='user-profile'),
-    path('verify-email/', VerifyEmailView.as_view(), name='email-verify')
+    path("register/", RegisterView.as_view(), name="api_register"),
+    path("login/",    LoginView.as_view(),    name="api_login"),
 ]

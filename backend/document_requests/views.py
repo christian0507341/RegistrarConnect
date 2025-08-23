@@ -16,11 +16,10 @@ class DocumentRequestListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         instance = serializer.save(student=self.request.user)
-        # audit: submitted
         DocumentRequestAction.objects.create(
             request=instance,
             actor=self.request.user,
-            action='submitted',
+            action='created',
             to_status=instance.status,
             notes=instance.purpose or ''
         )
@@ -54,14 +53,3 @@ class DocumentRequestStatusUpdateView(generics.UpdateAPIView):
             to_status=updated.status,
             notes=self.request.data.get('notes', '')
         )
-
-class DocumentRequestStatusUpdateView(generics.UpdateAPIView):
-    """
-    Faculty can update the status of a document request.
-    """
-    queryset = DocumentRequest.objects.all()
-    serializer_class = DocumentRequestStatusSerializer
-    permission_classes = [permissions.IsAuthenticated, IsFaculty]
-
-    def perform_update(self, serializer):
-        serializer.save(processed_by=self.request.user)

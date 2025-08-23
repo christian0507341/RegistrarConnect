@@ -17,10 +17,16 @@ class DocumentRequestSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['status', 'requested_at', 'processed_by', 'student', 'actions']
 
+    def update(self, instance, validated_data):
+        # If client attempts to change purpose after creation, reject it
+        if 'purpose' in validated_data and validated_data['purpose'] != instance.purpose:
+            raise serializers.ValidationError({"purpose": "Purpose cannot be changed after submission."})
+        return super().update(instance, validated_data)
+
 class DocumentRequestStatusSerializer(serializers.ModelSerializer):
     """Used by faculty to update status and optional notes/purpose."""
     notes = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = DocumentRequest
-        fields = ("status", "purpose", "notes")
+        fields = ("status", "notes")
