@@ -105,8 +105,7 @@ DATABASES = {
     }
 }
 
-AUTHENTICATION_BACKENDS = [
-    'backend.common.auth_backends.EmailOrUsernameModelBackend',  # email OR username
+AUTHENTICATION_BACKENDS = [ # email OR username
     'django.contrib.auth.backends.ModelBackend',                 # keep default perms backend
 ]
 

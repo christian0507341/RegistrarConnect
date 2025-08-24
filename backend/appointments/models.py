@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
 class AppointmentAction(models.Model):
     ACTIONS = [
@@ -43,4 +44,7 @@ class Appointment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.student.email} with {self.faculty.email} on {self.schedule}"
+        student = getattr(self.student, "email", None) or getattr(self.student, "username", None) or "student?"
+        faculty = getattr(self.faculty, "email", None) or getattr(self.faculty, "username", None) or "faculty?"
+        when = self.schedule.strftime("%Y-%m-%d %H:%M") if getattr(self, "schedule", None) else "unscheduled"
+        return f"{student} with {faculty} on {when}"
