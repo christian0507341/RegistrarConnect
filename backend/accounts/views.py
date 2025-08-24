@@ -12,6 +12,7 @@ from .models import User
 class RegisterView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
+    queryset = User.objects.all()
 
 class LoginView(generics.GenericAPIView):
     permission_classes = [AllowAny]
