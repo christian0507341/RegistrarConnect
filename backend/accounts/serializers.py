@@ -4,6 +4,7 @@ from django.contrib.auth.hashers import check_password
 from .models import User
 from .validators import validate_phinma_email, validate_student_id
 
+
 class RegisterSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(choices=User.Roles.choices)
     password = serializers.CharField(write_only=True, min_length=8)
@@ -29,6 +30,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         validate_phinma_email(value)
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
         return value
 
     def validate_student_id(self, value):
