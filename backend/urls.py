@@ -16,4 +16,6 @@ urlpatterns = [
     # Other APIs
     path("api/document-requests/", include("backend.document_requests.urls")),
     path("api/appointments/", include("backend.appointments.urls")),
+
+    path("api/ai/", include("backend.ai.urls")),
 ]
