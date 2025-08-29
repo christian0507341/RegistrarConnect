@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.env
+.env.*
+*.log
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# ML artifacts
+# ML artifacts (large model files – DO NOT COMMIT)
+backend/ai/services/train/checkpoints/
+backend/models/
+huggingface/
+.huggingface/
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
