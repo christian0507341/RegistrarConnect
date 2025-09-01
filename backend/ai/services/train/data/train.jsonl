@@ -76,3 +76,26 @@
 {"text":"Clearance certificate for records","doc_type":"OTHERS","semester":"NA"}
 {"text":"Certificate of candidacy to graduate","doc_type":"OTHERS","semester":"NA"}
 {"text":"Beneficiary / scholarship verification letter","doc_type":"OTHERS","semester":"NA"}
+
+{"text": "Need my TOR asap", "doc_type": "OTR", "semester": "NA"}
+{"text": "Transcript of Records for job application", "doc_type": "OTR", "semester": "NA"}
+{"text": "Kindly provide my OTR", "doc_type": "OTR", "semester": "NA"}
+{"text": "Official Transcript request sy 2025", "doc_type": "OTR", "semester": "NA"}
+
+{"text": "COG request sem 2 SY 25-26", "doc_type": "COG", "semester": "2"}
+{"text": "Need my grades for first semester", "doc_type": "COG", "semester": "1"}
+{"text": "Certificate of Grades (second sem)", "doc_type": "COG", "semester": "2"}
+{"text": "COG s1 sy2526", "doc_type": "COG", "semester": "1"}
+{"text": "Please issue Certificate of Grades for sem 2", "doc_type": "COG", "semester": "2"}
+
+{"text": "Request COE sem 1 school year 2025-26", "doc_type": "COE", "semester": "1"}
+{"text": "Need COE for 2nd semester", "doc_type": "COE", "semester": "2"}
+{"text": "Certificate of Enrollment for SY 2025 1st sem", "doc_type": "COE", "semester": "1"}
+{"text": "COE sem2 sy25/26 please", "doc_type": "COE", "semester": "2"}
+{"text": "Enrollment certificate needed for scholarship sem 1", "doc_type": "COE", "semester": "1"}
+
+{"text": "Certification of enrollment verification", "doc_type": "OTHERS", "semester": "NA"}
+{"text": "Need a certificate of residency", "doc_type": "OTHERS", "semester": "NA"}
+{"text": "Request for internship certificate", "doc_type": "OTHERS", "semester": "NA"}
+{"text": "Clearance certification please", "doc_type": "OTHERS", "semester": "NA"}
+{"text": "Please issue a Good Moral Certificate", "doc_type": "OTHERS", "semester": "NA"}

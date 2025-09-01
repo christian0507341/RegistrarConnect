@@ -31,3 +31,6 @@ huggingface/
 Thumbs.db
 .vscode/
 .idea/
+
+# Chat sessions (CLI/dev only)
+backend/ai/services/train/sessions/

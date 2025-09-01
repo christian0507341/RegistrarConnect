@@ -9,3 +9,15 @@
 
 {"text":"Good Moral Certificate please","doc_type":"OTHERS","semester":"NA"}
 {"text":"Requesting Honorable Dismissal","doc_type":"OTHERS","semester":"NA"}
+
+{"text":"Kindly issue my TOR", "doc_type":"OTR", "semester":"NA"}
+{"text":"I need my transcript for job", "doc_type":"OTR", "semester":"NA"}
+
+{"text":"Grades for sem 1 sy 2025-26", "doc_type":"COG", "semester":"1"}
+{"text":"COG needed for second semester", "doc_type":"COG", "semester":"2"}
+
+{"text":"Certificate of Enrollment first semester", "doc_type":"COE", "semester":"1"}
+{"text":"COE for 2nd sem please", "doc_type":"COE", "semester":"2"}
+
+{"text":"Need a Good Moral", "doc_type":"OTHERS", "semester":"NA"}
+{"text":"Certification of graduation", "doc_type":"OTHERS", "semester":"NA"}

@@ -1,54 +1,48 @@
-import os
-import sys
-import torch
+import os, json
+from typing import Dict
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
 
-# --- paths ---
 HERE = os.path.dirname(__file__)
-CHECKPOINTS = os.path.join(HERE, "checkpoints")
+CKPT_DIR = os.path.join(HERE, "checkpoints")
+DOC_DIR = os.path.join(CKPT_DIR, "doc_type")
+SEM_DIR = os.path.join(CKPT_DIR, "semester")
 
-DOC_PATH = os.path.join(CHECKPOINTS, "doc_type")
-SEM_PATH = os.path.join(CHECKPOINTS, "semester")
+with open(os.path.join(CKPT_DIR, "labels.json"), "r", encoding="utf-8") as f:
+    LBL = json.load(f)
+DOC_LABELS = LBL["DOC_LABELS"]      # e.g., ["OTR","COG","COE","OTHERS"]
+SEM_LABELS = LBL["SEM_LABELS"]      # e.g., [0,1,2]
 
-# labels (must match training labels.json)
-DOC_LABELS = ["OTR", "COG", "COE", "OTHERS"]
-SEM_LABELS = [0, 1, 2]  # 0 = unknown/NA
+# Load once
+_tok_doc = AutoTokenizer.from_pretrained(DOC_DIR)
+_mod_doc = AutoModelForSequenceClassification.from_pretrained(DOC_DIR)
+_tok_sem = AutoTokenizer.from_pretrained(SEM_DIR)
+_mod_sem = AutoModelForSequenceClassification.from_pretrained(SEM_DIR)
 
-def load_head(path: str, num_labels: int):
-    tok = AutoTokenizer.from_pretrained(path)
-    model = AutoModelForSequenceClassification.from_pretrained(path, num_labels=num_labels)
-    return tok, model
+ID2DOC = {i: l for i, l in enumerate(DOC_LABELS)}
 
-def predict(text: str):
-    # load models
-    doc_tok, doc_model = load_head(DOC_PATH, num_labels=len(DOC_LABELS))
-    sem_tok, sem_model = load_head(SEM_PATH, num_labels=len(SEM_LABELS))
+def _softmax(x):
+    ex = torch.exp(x - torch.max(x))
+    return ex / ex.sum(-1, keepdim=True)
 
-    # put models in eval mode
-    doc_model.eval()
-    sem_model.eval()
-
-    # no gradient needed
+def _predict_logits(tok, mod, text: str):
+    t = tok(text, return_tensors="pt", truncation=True, max_length=128)
     with torch.no_grad():
-        # --- doc type prediction ---
-        doc_inputs = doc_tok(text, return_tensors="pt", truncation=True, max_length=128)
-        doc_logits = doc_model(**doc_inputs).logits
-        doc_pred = int(torch.argmax(doc_logits, dim=-1))
-        doc_label = DOC_LABELS[doc_pred]
+        out = mod(**t)
+    return out.logits[0]
 
-        # --- semester prediction ---
-        sem_inputs = sem_tok(text, return_tensors="pt", truncation=True, max_length=128)
-        sem_logits = sem_model(**sem_inputs).logits
-        sem_pred = int(torch.argmax(sem_logits, dim=-1))
-        sem_label = SEM_LABELS[sem_pred]
+def predict(text: str) -> Dict[str, object]:
+    """Return {'doc_type': <str>, 'semester': <int 0/1/2>}"""
+    doc_logits = _predict_logits(_tok_doc, _mod_doc, text)
+    doc_id = int(torch.argmax(doc_logits).item())
+    doc_type = ID2DOC.get(doc_id, "OTHERS")
 
-    return {"doc_type": doc_label, "semester": sem_label}
+    sem_logits = _predict_logits(_tok_sem, _mod_sem, text)
+    sem_id = int(torch.argmax(sem_logits).item())  # 0,1,2 as trained
+
+    return {"doc_type": doc_type, "semester": sem_id}
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python infer_doc_sem.py \"your text here\"")
-        sys.exit(1)
-
-    text = " ".join(sys.argv[1:])
-    out = predict(text)
-    print(out)
+    import sys
+    query = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else "Request my COG sem 2 sy 25/26"
+    print(predict(query))
