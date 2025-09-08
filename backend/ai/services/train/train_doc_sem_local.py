@@ -23,7 +23,7 @@ def find_project_root(start):
 
 HERE = os.path.dirname(__file__)
 PROJECT_ROOT = find_project_root(HERE)
-LOCAL_BASE = os.path.join(PROJECT_ROOT, "backend", "models", "distilbert-base-uncased")
+LOCAL_BASE = os.path.join(PROJECT_ROOT, "backend", "ai", "models", "distilbert-base-uncased")
 DATA_DIR = os.path.join(HERE, "data")
 OUT_DIR = os.path.join(HERE, "checkpoints")
 

@@ -1,11 +1,11 @@
-# Python
+# ======================
+# Python / Django
+# ======================
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.egg-info/
-.env
-.env.*
 *.log
 
 # Virtual environments
@@ -14,10 +14,21 @@ venv/
 env/
 ENV/
 
-# ML artifacts
-# ML artifacts (large model files – DO NOT COMMIT)
+# Local DB / media (don’t commit local SQLite or generated files)
+db.sqlite3
+media/
+staticfiles/
+
+# Environment variables
+.env
+.env.*
+
+# ======================
+# Machine Learning Artifacts
+# ======================
 backend/ai/services/train/checkpoints/
-backend/models/
+backend/ai/services/train/sessions/   # CLI/dev chat logs
+backend/ai/models/
 huggingface/
 .huggingface/
 *.safetensors
@@ -25,12 +36,84 @@ huggingface/
 *.pt
 *.ckpt
 
+# ======================
+# Flutter / Dart (mobile/)
+# ======================
+mobile/.dart_tool/
+mobile/.packages
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.metadata
+mobile/.idea/
 
-# OS / editors
+# Build outputs
+mobile/build/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/macos/Flutter/ephemeral/
+mobile/windows/flutter/ephemeral/
+mobile/linux/flutter/ephemeral/
+mobile/web/.dart_tool/
+
+# Auto-generated plugin registrants
+mobile/**/GeneratedPluginRegistrant.*
+mobile/**/generated_plugin_registrant.*
+mobile/**/generated_plugins.cmake
+
+# ======================
+# OS / IDE / Misc
+# ======================
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 
-# Chat sessions (CLI/dev only)
-backend/ai/services/train/sessions/
+# --- Python / Django ---
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.tox/
+.env
+.env.*
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Virtualenv ---
+venv/
+.env.local/
+.venv/
+
+# --- Django artifacts ---
+staticfiles/
+media/
+
+# --- ML: Hugging Face / training outputs ---
+# local HF cache dir you pointed at
+backend/ai/models/hub/
+# trainer outputs/checkpoints
+backend/ai/services/train/checkpoints/
+# any accidental large artifacts
+backend/ai/models/**/*.bin
+backend/ai/models/**/*.pt
+backend/ai/models/**/*.ckpt
+# keep safetensors/config/tokenizer/json files under models
+!backend/ai/models/**/model.safetensors
+!backend/ai/models/**/config.json
+!backend/ai/models/**/tokenizer_config.json
+!backend/ai/models/**/tokenizer.json
+!backend/ai/models/**/vocab.txt
+!backend/ai/models/**/special_tokens_map.json
