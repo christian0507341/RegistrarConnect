@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'auth_response.g.dart';
+part 'auth_response_serialization.dart';
 
 /// Matches the JSON your backend returns from /api/token/
 /// { access, refresh, role, name, email }

@@ -1,8 +1,11 @@
-import '../../../core/services/secure_storage.dart';
-import 'auth_api.dart';
-import 'models/auth_response.dart';
+import 'package:mobile/core/services/secure_storage.dart';
+import 'package:mobile/features/auth/data/models/auth_response.dart';
+import 'package:mobile/features/auth/data/sources/auth_api.dart';
+import 'package:mobile/features/auth/domain/entities/auth_user.dart';
+import 'package:mobile/features/auth/domain/repositories/auth_repository.dart'
+    as domain;
 
-class AuthRepository {
+class AuthRepository implements domain.IAuthRepository {
   AuthRepository({required AuthApi api, required SecureStorageService storage})
     : _api = api,
       _storage = storage;
@@ -10,8 +13,11 @@ class AuthRepository {
   final AuthApi _api;
   final SecureStorageService _storage;
 
-  /// Calls /api/token/, saves tokens, and returns the session payload.
-  Future<AuthResponse> signIn({
+  AuthUser _toEntity(AuthResponse dto) =>
+      AuthUser(name: dto.name, email: dto.email, role: dto.role);
+
+  @override
+  Future<AuthUser> signIn({
     required String role,
     required String email,
     required String password,
@@ -19,15 +25,13 @@ class AuthRepository {
     final res = await _api.login(role: role, email: email, password: password);
     await _storage.saveAccess(res.access);
     await _storage.saveRefresh(res.refresh);
-    // Optionally save profile fields if you added helpers:
-    // await _storage.saveString('user_role', res.role);
-    // await _storage.saveString('user_name', res.name);
-    // await _storage.saveString('user_email', res.email);
-    return res;
+    return _toEntity(res);
   }
 
+  @override
   Future<void> signOut() => _storage.clear();
 
+  @override
   Future<bool> hasSession() async {
     final access = await _storage.readAccess();
     final refresh = await _storage.readRefresh();
