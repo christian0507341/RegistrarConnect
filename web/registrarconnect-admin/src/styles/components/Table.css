@@ -1,0 +1,36 @@
+.table-wrap { overflow-x:auto; }
+
+.table {
+  width:100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+
+.table th, .table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eef2f7;
+  text-align:left;
+  font-size: 0.95rem;
+}
+
+.table thead th {
+  background: #fbfdff;
+  color:#0f172a;
+  font-weight:600;
+  border-bottom: 1px solid #e6eef8;
+}
+
+.table tbody tr:nth-child(odd) { background: #fff; }
+.table tbody tr:nth-child(even) { background: #fbfdff; }
+
+.status-badge {
+  display:inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight:600;
+}
+
+.status-pending { background:#fff7ed; color:#b45309; }
+.status-approved { background:#ecfdf5; color:#166534; }
+.status-rejected { background:#fff1f2; color:#981b1b; }

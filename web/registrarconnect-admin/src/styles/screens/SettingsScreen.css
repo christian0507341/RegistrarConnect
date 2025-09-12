@@ -1,0 +1,6 @@
+.settings-form { display:flex; flex-direction:column; gap:12px; max-width:480px; }
+.settings-form label { display:flex; flex-direction:column; gap:6px; font-size:0.95rem; }
+.settings-form input[type="time"], .settings-form input[type="email"] {
+  padding:8px 10px; border-radius:8px; border:1px solid #e6eef8; outline:none; font-size:0.95rem;
+}
+.form-actions { display:flex; gap:10px; margin-top:6px; }

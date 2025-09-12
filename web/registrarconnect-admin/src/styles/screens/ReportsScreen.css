@@ -1,0 +1,4 @@
+.reports-screen .grid-two { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+@media (max-width:900px){ .reports-screen .grid-two { grid-template-columns: 1fr; } }
+
+.chart-placeholder { height: 200px; display:flex; align-items:center; justify-content:center; color:#6b7280; background:#fbfdff; border-radius:8px; border:1px dashed #e6eef8; }

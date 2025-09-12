@@ -1,0 +1,281 @@
+
+.appointments-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.card-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.grid-two {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+}
+
+.calendar-placeholder {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+.cal-header {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-day {
+  border: 1px solid #eee;
+  text-align: center;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.upcoming-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.upcoming-list li {
+  padding: 0.75rem;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  position: relative;
+  background: #fff;
+}
+
+.appointment-main {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.status-badge {
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.status-confirmed .status-badge {
+  background: #d1fae5;
+  color: #065f46;
+}
+.status-pending .status-badge {
+  background: #fef3c7;
+  color: #92400e;
+}
+.status-cancelled .status-badge {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.react-calendar {
+  width: 100% !important;
+  border: none !important;
+  font-family: inherit;
+}
+
+.react-calendar__tile--now {
+  background: #e0f2fe !important;
+  border-radius: 6px;
+}
+
+.react-calendar__tile--active {
+  background: #60a5fa !important;
+  color: white !important;
+  border-radius: 6px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background: #2563eb; 
+  border-radius: 50%;
+  margin: 2px auto 0;
+}
+
+.claim-badge {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.claim-claim-today {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.claim-claimable-until-sep-7-2025 {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.claim-expired {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.appointments-list-container {
+  max-height: 300px;   
+  overflow-y: auto;
+  padding-right: 6px; 
+}
+
+.appointments-list-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.appointments-list-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.appointments-list-container::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 4px;
+}
+
+.appointments-list-container::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+.upcoming-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.upcoming-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.status-blocked {
+  background: #f8f9fa;
+  border-left: 4px solid #dc3545;
+}
+.status-badge.blocked {
+  background: #dc3545;
+  color: white;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+}
+.modal h3 {
+  margin-bottom: 1rem;
+}
+.modal label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.modal input {
+  width: 100%;
+  padding: 5px;
+  margin-top: 0.2rem;
+  margin-bottom: 1rem;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+.block-btn {
+  margin-top: 10px;
+  width: 100%;
+}
+
+/* Forecast Section */
+.forecast-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.forecast-list li {
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f9fafb; /* subtle background */
+}
+
+
+.forecast-badge {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.forecast-badge.low {
+  background: #dcfce7;
+  color: #166534;
+}
+.forecast-badge.moderate {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.forecast-badge.high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Forecast dots in calendar */
+.forecast-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin: 2px auto 0;
+}
+.forecast-dot.low {
+  background: #16a34a;
+}
+.forecast-dot.moderate {
+  background: #eab308;
+}
+.forecast-dot.high {
+  background: #dc2626;
+}
+

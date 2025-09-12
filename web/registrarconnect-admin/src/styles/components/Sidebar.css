@@ -1,0 +1,66 @@
+.sidebar {
+  width: 240px;
+  background: linear-gradient(180deg, #0f172a 0%, #0b1220 100%);
+  color: #e6eef8;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 12px;
+}
+
+.brand {
+  display:flex;
+  gap: 12px;
+  align-items:center;
+}
+
+.brand-mark {
+  width:44px;
+  height:44px;
+  border-radius:10px;
+  background: linear-gradient(135deg,#60a5fa,#2563eb);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  color:white;
+}
+
+.brand-name { font-weight:700; font-size:1rem; color:#e6f0ff; }
+.brand-sub { font-size:0.8rem; color:#9fb9e9; margin-top:2px; }
+
+.sidebar-nav {
+  display:flex;
+  flex-direction: column;
+  margin-top: 18px;
+  gap: 6px;
+}
+
+.nav-item {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:8px;
+  color: #cfe7ff;
+  text-decoration:none;
+  transition: background .15s, color .15s;
+  font-size:0.95rem;
+}
+
+.nav-item:hover { background: rgba(255,255,255,0.04); color: #fff; }
+.nav-item.active { background: rgba(255,255,255,0.06); color: #fff; box-shadow: 0 2px 8px rgba(10, 132, 255, 0.08); }
+
+.sidebar-footer {
+  margin-top: auto;
+}
+
+.logout-btn {
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border: none;
+  cursor: pointer;
+  background: rgba(255,255,255,0.06);
+  color: #dbeafe;
+}

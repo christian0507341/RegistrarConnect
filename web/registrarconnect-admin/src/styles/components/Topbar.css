@@ -1,0 +1,65 @@
+.topbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding: 16px 20px;
+  background: #fff;
+  border-bottom: 1px solid #e6edf6;
+  box-shadow: 0 1px 0 rgba(16,24,40,0.03);
+}
+
+.topbar-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+
+.topbar-left { display:flex; flex-direction:column; gap:4px; }
+
+.topbar-right { display:flex; align-items:center; gap:12px; }
+
+.search {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:#f1f5f9;
+  padding:6px 10px;
+  border-radius:8px;
+  width:320px;
+  max-width:45%;
+}
+
+.search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width:100%;
+  font-size:0.95rem;
+}
+
+.icon-btn {
+  position:relative;
+  background: transparent;
+  border: none;
+  padding:8px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.icon-btn .badge {
+  position:absolute;
+  top:4px;
+  right:4px;
+  background:#ef4444;
+  color:white;
+  font-size:10px;
+  padding:2px 6px;
+  border-radius:999px;
+}
+
+.profile { display:flex; align-items:center; gap:8px; padding-left:6px; }
+.avatar {
+  width:36px; height:36px; border-radius:8px; background: linear-gradient(135deg,#60a5fa,#2563eb); color:white; display:flex; align-items:center; justify-content:center; font-weight:700;
+}
+.profile-name { font-size:0.95rem; color:#334155; }
