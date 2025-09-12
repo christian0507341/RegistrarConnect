@@ -1,23 +1,15 @@
 import { useState } from "react";
 import Card from "../components/Card";
 import "../styles/screens/AppointmentsScreen.css";
-import {
-  Calendar as CalendarIcon,
-  Clock,
-  User,
-  CheckCircle2,
-  AlertTriangle,
-  FileCheck,
-  Lock,
-} from "lucide-react";
+import { Clock, User, FileCheck, Lock } from "lucide-react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
 type Appointment = {
   name: string;
   purpose: string;
-  status: "Approved" | "Pending" | "Rejected" | "Blocked";
-  date: string; // YYYY-MM-DD
+  status: "Approved" | "Pending" | "Rejected" | "Blocked" | "Claimed";
+  date: string;
   approvedDate?: string;
   startTime?: string;
   endTime?: string;
@@ -58,76 +50,6 @@ export default function AppointmentsScreen() {
       date: "2025-09-03",
       approvedDate: "2025-09-02",
     },
-        {
-      name: "Christian Mondala",
-      purpose: "OTR pickup",
-      status: "Approved",
-      date: "2025-09-03",
-      approvedDate: "2025-09-02",
-    },
-        {
-      name: "Christian Mondala",
-      purpose: "OTR pickup",
-      status: "Approved",
-      date: "2025-09-03",
-      approvedDate: "2025-09-02",
-    },
-        {
-      name: "Christian Mondala",
-      purpose: "OTR pickup",
-      status: "Approved",
-      date: "2025-09-03",
-      approvedDate: "2025-09-02",
-    },
-        {
-      name: "Christian Mondala",
-      purpose: "OTR pickup",
-      status: "Approved",
-      date: "2025-09-03",
-      approvedDate: "2025-09-02",
-    },
-        {
-      name: "Christian Mondala",
-      purpose: "OTR pickup",
-      status: "Approved",
-      date: "2025-09-03",
-      approvedDate: "2025-09-02",
-    },
-        {
-      name: "Christian Mondala",
-      purpose: "OTR pickup",
-      status: "Approved",
-      date: "2025-09-03",
-      approvedDate: "2025-09-02",
-    },
-        {
-      name: "Christian Mondala",
-      purpose: "OTR pickup",
-      status: "Approved",
-      date: "2025-09-03",
-      approvedDate: "2025-09-02",
-    },
-        {
-      name: "Christian Mondala",
-      purpose: "OTR pickup",
-      status: "Approved",
-      date: "2025-09-03",
-      approvedDate: "2025-09-02",
-    },
-        {
-      name: "Christian Mondala",
-      purpose: "OTR pickup",
-      status: "Approved",
-      date: "2025-09-03",
-      approvedDate: "2025-09-02",
-    },
-        {
-      name: "Christian Mondala",
-      purpose: "OTR pickup",
-      status: "Approved",
-      date: "2025-09-03",
-      approvedDate: "2025-09-02",
-    },
     {
       name: "Christian Lloyd Francisco",
       purpose: "COE request",
@@ -144,7 +66,6 @@ export default function AppointmentsScreen() {
     },
   ]);
 
-  // 🔹 Forecast Data (simulated — later can connect to AI/ML backend)
   const [requestForecast] = useState<ForecastDay[]>([
     { date: "2025-09-11", expectedRequests: 12, level: "High" },
     { date: "2025-09-13", expectedRequests: 8, level: "Moderate" },
@@ -155,7 +76,6 @@ export default function AppointmentsScreen() {
   const [blockStart, setBlockStart] = useState("12:00");
   const [blockEnd, setBlockEnd] = useState("13:30");
 
-  // Claim Info Helper
   function getClaimInfo(appointment: Appointment) {
     if (appointment.status !== "Approved" || !appointment.approvedDate)
       return null;
@@ -164,16 +84,12 @@ export default function AppointmentsScreen() {
     const start = new Date(approved);
     start.setDate(start.getDate() + 2);
 
-    if (start.getDay() === 0) {
-      start.setDate(start.getDate() + 1);
-    }
+    if (start.getDay() === 0) start.setDate(start.getDate() + 1);
 
     const claimDates: Date[] = [];
     const iter = new Date(start);
     while (claimDates.length < 3) {
-      if (iter.getDay() !== 0) {
-        claimDates.push(new Date(iter));
-      }
+      if (iter.getDay() !== 0) claimDates.push(new Date(iter));
       iter.setDate(iter.getDate() + 1);
     }
 
@@ -192,7 +108,6 @@ export default function AppointmentsScreen() {
     return { kind: "claimable", text: claimWindowText };
   }
 
-  // Helpers
   function hasAppointmentsOn(date: Date) {
     const ds = date.toISOString().split("T")[0];
     return appointments.some((a) => a.date === ds);
@@ -207,67 +122,59 @@ export default function AppointmentsScreen() {
     (a) => a.date === selectedDate.toISOString().split("T")[0]
   );
 
-  // Block Time Action
   function handleBlockTime() {
     const dateStr = selectedDate.toISOString().split("T")[0];
+
+    // Check for overlapping blocks
+    const hasConflict = appointments.some(
+      (a) =>
+        a.date === dateStr &&
+        a.status === "Blocked" &&
+        a.startTime === blockStart &&
+        a.endTime === blockEnd
+    );
+
+    if (hasConflict) {
+      alert("A block already exists for this time.");
+      return;
+    }
+
+    const reason = prompt("Reason for blocking this time? (optional)");
+
     const newBlock: Appointment = {
       name: "Registrar Office",
-      purpose: "Unavailable",
+      purpose: reason || "Unavailable",
       status: "Blocked",
       date: dateStr,
       startTime: blockStart,
       endTime: blockEnd,
     };
-    setAppointments([...appointments, newBlock]);
+
+    setAppointments((prev) => [...prev, newBlock]);
     setShowModal(false);
   }
 
+
   return (
     <div className="appointments-screen">
-      <div className="card-grid-3">
-        <Card title="Today’s Appointments">
-          <div className="stat">
-            <div className="stat-value">
-              {
-                appointments.filter(
-                  (a) =>
-                    a.date === new Date().toISOString().split("T")[0] &&
-                    a.status !== "Blocked"
-                ).length
-              }
-            </div>
-            <div className="small-muted">scheduled for today</div>
-            <div className="stat-icon">
-              <CalendarIcon size={20} />
-            </div>
-          </div>
-        </Card>
-
-        <Card title="Pending Approvals">
-          <div className="stat">
-            <div className="stat-value">
-              {appointments.filter((a) => a.status === "Pending").length}
-            </div>
-            <div className="small-muted">need confirmation</div>
-            <div className="stat-icon">
-              <AlertTriangle size={20} />
-            </div>
-          </div>
-        </Card>
-
-        <Card title="This Week">
-          <div className="stat">
-            <div className="stat-value">{appointments.length}</div>
-            <div className="small-muted">total appointments</div>
-            <div className="stat-icon">
-              <CheckCircle2 size={20} />
-            </div>
-          </div>
-        </Card>
-      </div>
+      <Card title="Request Forecast">
+        {requestForecast.length === 0 ? (
+          <p className="small-muted">No forecast available.</p>
+        ) : (
+          <ul className="forecast-list">
+            {requestForecast.map((f, i) => (
+              <li key={i} className={`forecast-${f.level.toLowerCase()}`}>
+                <strong>{new Date(f.date).toDateString()}</strong>
+                <span className={`forecast-badge ${f.level.toLowerCase()}`}>
+                  {f.level}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
 
       <div className="grid-two">
-        {/* Calendar with Forecast */}
         <Card title="Calendar">
           <Calendar
             value={selectedDate}
@@ -296,77 +203,83 @@ export default function AppointmentsScreen() {
           </button>
         </Card>
 
-        {/* Request Forecast Card */}
-        <Card title="Request Forecast">
-          {requestForecast.length === 0 ? (
-            <p className="small-muted">No forecast available.</p>
+        <Card title={`Appointments on ${selectedDate.toDateString()}`}>
+          {filtered.length === 0 ? (
+            <p className="small-muted">No appointments scheduled.</p>
           ) : (
-            <ul className="forecast-list">
-              {requestForecast.map((f, i) => (
-                <li key={i} className={`forecast-${f.level.toLowerCase()}`}>
-                  <strong>{new Date(f.date).toDateString()}</strong>
-                  <span className={`forecast-badge ${f.level.toLowerCase()}`}>
-                    {f.level}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div className="appointments-list-container">
+              <ul className="upcoming-list">
+                {filtered.map((a, i) => {
+                  if (a.status === "Blocked") {
+                    return (
+                      <li key={i} className="status-blocked">
+                        <div className="appointment-main">
+                          <Lock size={16} />{" "}
+                          <strong>
+                            {a.startTime} – {a.endTime}
+                          </strong>
+                        </div>
+                        <div className="small-muted">{a.purpose}</div>
+                        <span className="status-badge blocked">Blocked</span>
+
+                        <button
+                          className="btn-remove-block"
+                          onClick={() =>
+                            setAppointments((prev) =>
+                              prev.filter((appt) => appt !== a)
+                            )
+                          }
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    );
+                  }
+
+                  const claimInfo = getClaimInfo(a);
+                  return (
+                    <li key={i} className={`status-${a.status.toLowerCase()}`}>
+                      <div className="appointment-main">
+                        <User size={16} /> <strong>{a.name}</strong>
+                      </div>
+
+                      <div className="small-muted">
+                        <Clock size={14} /> 10:00 AM – 5:00 PM — {a.purpose}
+                      </div>
+
+                      <span className="status-badge">{a.status}</span>
+
+                      {claimInfo && (
+                        <div className="claim-actions">
+                          <div className={`claim-badge claim-${claimInfo.kind}`}>
+                            <FileCheck size={14} /> {claimInfo.text}
+                          </div>
+
+                          {a.status === "Approved" && (
+                            <button
+                              className="claim-btn"
+                              onClick={() => {
+                                setAppointments((prev) =>
+                                  prev.map((app, idx) =>
+                                    idx === i ? { ...app, status: "Claimed" } : app
+                                  )
+                                );
+                              }}
+                            >
+                              Mark as Claimed
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           )}
         </Card>
       </div>
 
-      {/* Appointments List */}
-      <Card title={`Appointments on ${selectedDate.toDateString()}`}>
-        {filtered.length === 0 ? (
-          <p className="small-muted">No appointments scheduled.</p>
-        ) : (
-          <div className="appointments-list-container">
-            <ul className="upcoming-list">
-              {filtered.map((a, i) => {
-                if (a.status === "Blocked") {
-                  return (
-                    <li key={i} className="status-blocked">
-                      <div className="appointment-main">
-                        <Lock size={16} />{" "}
-                        <strong>
-                          {a.startTime} – {a.endTime}
-                        </strong>
-                      </div>
-                      <div className="small-muted">{a.purpose}</div>
-                      <span className="status-badge blocked">Blocked</span>
-                    </li>
-                  );
-                }
-
-                const claimInfo = getClaimInfo(a);
-                return (
-                  <li key={i} className={`status-${a.status.toLowerCase()}`}>
-                    <div className="appointment-main">
-                      <User size={16} /> <strong>{a.name}</strong>
-                    </div>
-
-                    <div className="small-muted">
-                      <Clock size={14} /> 10:00 AM – 5:00 PM — {a.purpose}
-                    </div>
-
-                    <span className="status-badge">{a.status}</span>
-
-                    {claimInfo && (
-                      <div
-                        className={`claim-badge claim-${claimInfo.kind}`}
-                      >
-                        <FileCheck size={14} /> {claimInfo.text}
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
-      </Card>
-
-      {/* Block Time Modal */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal">

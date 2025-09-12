@@ -1,20 +1,13 @@
-
 .appointments-screen {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.card-grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-
 .grid-two {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1rem;
+  grid-template-columns: 1.5fr 2fr; 
+  gap: 1.5rem;
 }
 
 .calendar-placeholder {
@@ -173,12 +166,18 @@
 }
 
 .status-blocked {
-  background: #f8f9fa;
+  background: #fff5f5; 
   border-left: 4px solid #dc3545;
+  padding: 0.75rem;
+  border-radius: 6px;
 }
+
 .status-badge.blocked {
   background: #dc3545;
   color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
 }
 
 .modal-overlay {
@@ -221,7 +220,6 @@
   width: 100%;
 }
 
-/* Forecast Section */
 .forecast-list {
   list-style: none;
   margin: 0;
@@ -238,7 +236,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f9fafb; /* subtle background */
+  background: #f9fafb; 
 }
 
 
@@ -262,7 +260,6 @@
   color: #991b1b;
 }
 
-/* Forecast dots in calendar */
 .forecast-dot {
   width: 6px;
   height: 6px;
@@ -279,3 +276,54 @@
   background: #dc2626;
 }
 
+.claim-actions {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  margin-top: 8px;
+}
+
+.claim-btn {
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb; 
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.claim-btn:hover {
+  background: #1d4ed8; 
+}
+
+.status-claimed .status-badge {
+  background: #c7d2fe;
+  color: #3730a3;
+}
+
+.btn-remove-block {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #fff;
+  background-color: #dc3545;  
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-remove-block:hover {
+  background-color: #b02a37;  
+}
+
+.btn-remove-block:active {
+  background-color: #842029;
+  transform: scale(0.97);
+}
