@@ -1,0 +1,17 @@
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.03);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  background: linear-gradient(180deg, rgba(250,250,255,0.6), rgba(250,250,255,0.2));
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.card-body { padding: 16px; }
