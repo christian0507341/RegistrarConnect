@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@reference tailwindcss;
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --sidebar-w: [16rem];
+  }
+}
+
+@layer components {
+  .layout {
+    @apply flex min-h-screen w-full;
+  }
+
+  .sidebar {
+    @apply w-[var(--sidebar-w)] flex-shrink-0 bg-gray-800 text-white flex flex-col justify-between h-screen fixed left-[0] top-0 p-[5];
+  }
+
+  .sidebar-header {
+    @apply pl-[5] flex flex-col items-start;
+  }
+
+  .logo-circle {
+    @apply text-[2xl] font-bold;
+  }
+
+  .role {
+    @apply text-sm text-gray-400;
+  }
+
+  .menu {
+    @apply list-none p-[0] m-[0] flex-grow flex flex-col gap-[2] mt-[5];
+  }
+
+  .menu li a {
+    @apply block p-[] rounded-[lg] text-gray-300 hover:bg-gray-[700] hover:text-white transition-colors pl-[5];
+  }
+
+  .menu li a .icon {
+    @apply mr-[2.5];
+  }
+
+  .sidebar-footer {
+    @apply pl-[5] text-left;
+  }
+
+  .logout-btn {
+    @apply w-full p-[3] bg-red-600 rounded-[lg] hover:bg-red-[70]0 transition-colors text-white font-medium mx-auto;
+  }
+
+  .main {
+    @apply flex-[1] ml-[var(--sidebar-w)] bg-gray-[100] min-h-screen p-[6];
+  }
+
+  .content {
+    @apply flex-[1] p-[5] flex flex-col justify-start w-full min-h-[calc(100vh-48px)];
+  }
+
+  .styled-table {
+    @apply w-full border-collapse mt-[5];
+  }
+
+  .styled-table th,
+  .styled-table td {
+    @apply p-[3] text-left border-b;
+  }
+
+  .styled-table th {
+    @apply bg-gray-[100] font-semibold;
+  }
+
+  .styled-table tr:hover {
+    @apply bg-gray-[50];
+  }
+
+  .card {
+    @apply bg-white rounded-lg p-[5] shadow-md mb-[4] w-full;
+  }
+}

@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  main {
+    @apply p-5 flex-grow bg-gray-200 min-h-screen;
+  }
+
+  .card {
+    @apply bg-white p-3.75 mb-5 rounded-lg shadow;
+  }
+
+  .button-group {
+    @apply flex gap-2.5 mb-5;
+  }
+
+  .button-group button {
+    @apply px-4 py-2 border-none rounded-lg bg-gray-700 text-white cursor-pointer;
+  }
+
+  .button-group button:hover {
+    @apply bg-gray-600;
+  }
+
+  .layout {
+    @apply flex min-h-screen;
+  }
+
+  .sidebar {
+    @apply w-56 bg-gray-700 text-white p-5;
+  }
+
+  .content {
+    @apply flex-1 p-5 bg-gray-200;
+  }
+}

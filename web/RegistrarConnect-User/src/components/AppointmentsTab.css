@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@reference tailwindcss;
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .custom-calendar {
+    @apply w-full h-[50] max-w-none text-[1.8em] leading-[1.8] border-none bg-white p-[0] pt-[5] pb-[5] pl-[5] pr-[5];
+  }
+
+  .custom-calendar .react-calendar__month-view__days {
+    @apply grid grid-cols-[7] gap-[2];
+  }
+
+  .custom-calendar .react-calendar__tile {
+    @apply p-[6.25] text-center font-light rounded-[lg] transition-background duration-[200];
+  }
+
+  .custom-calendar .react-calendar__tile--now {
+    @apply bg-blue-[50] border-[2] border-dodgerblue;
+  }
+
+  .custom-calendar .react-calendar__tile--active {
+    @apply bg-dodgerblue text-white rounded-[lg];
+  }
+
+  .custom-calendar .react-calendar__navigation {
+    @apply text-[1.5em] mb-[5];
+  }
+
+  .custom-calendar .react-calendar__navigation button {
+    @apply px-[4.5] py-[3] font-semibold;
+  }
+}

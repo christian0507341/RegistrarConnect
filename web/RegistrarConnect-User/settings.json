@@ -1,0 +1,10 @@
+{
+  "tailwindCSS.experimental.configFile": "./tailwind.config.js",
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "editor.inlineSuggest.enabled": true,
+  "css.validate": false,
+  "scss.validate": false,
+  "less.validate": false
+}
