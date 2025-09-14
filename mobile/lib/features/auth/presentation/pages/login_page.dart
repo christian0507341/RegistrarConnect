@@ -176,6 +176,26 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(height: 20),
 
+                            // 🔹 Debug button: Skip to Home
+                            SizedBox(
+                              width: double.infinity,
+                              height: 55,
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: Color(0xFF2E7D32)),
+                                ),
+                                onPressed: () {
+                                  Navigator.pushReplacementNamed(context, '/home');
+                                },
+                                child: const Text(
+                                  "Skip to Home (Debug)",
+                                  style: TextStyle(color: Color.fromARGB(255, 14, 255, 247)),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
+
                             // Register link
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
