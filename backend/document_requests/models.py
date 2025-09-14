@@ -37,6 +37,7 @@ class DocumentRequest(models.Model):
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
         ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),  # ✅ Added for chatbot cancel
     ], default='pending')
     requested_at = models.DateTimeField(auto_now_add=True)
     processed_by = models.ForeignKey(

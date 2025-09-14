@@ -8,6 +8,21 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from .models import User
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_me(request):
+    user = request.user
+    return Response({
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "role": user.role if hasattr(user, "role") else None
+    })
+
 
 class RegisterView(generics.CreateAPIView):
     permission_classes = [AllowAny]
@@ -22,10 +37,17 @@ class LoginView(generics.GenericAPIView):
         ser = self.get_serializer(data=request.data)
         ser.is_valid(raise_exception=True)
         user = ser.validated_data["user"]
+
+        # issue tokens here
+        refresh = RefreshToken.for_user(user)
+        name = ser.validated_data.get("name") or user.get_full_name() or user.username
+
         return Response({
             "message": "Logged in",
+            "access": str(refresh.access_token),   # 🔑 add access token
+            "refresh": str(refresh),               # 🔄 add refresh token
             "role": ser.validated_data["role_out"],
-            "name": ser.validated_data["name"],
+            "name": name,
             "email": user.email,
         })
 

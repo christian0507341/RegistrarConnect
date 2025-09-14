@@ -99,3 +99,40 @@
 {"text": "Request for internship certificate", "doc_type": "OTHERS", "semester": "NA"}
 {"text": "Clearance certification please", "doc_type": "OTHERS", "semester": "NA"}
 {"text": "Please issue a Good Moral Certificate", "doc_type": "OTHERS", "semester": "NA"}
+
+{"text": "colg", "doc_type": "COG", "semester": 0}
+{"text": "cog", "doc_type": "COG", "semester": 0}
+{"text": "cetrificate of gradse", "doc_type": "COG", "semester": 0}
+{"text": "cert of grdes", "doc_type": "COG", "semester": 0}
+{"text": "copy of gradse", "doc_type": "COG", "semester": 0}
+{"text": "cerificate gradse", "doc_type": "COG", "semester": 0}
+{"text": "cetificate of grades", "doc_type": "COG", "semester": 0}
+{"text": "cert of gades", "doc_type": "COG", "semester": 0}
+
+{"text": "coe", "doc_type": "COE", "semester": 0}
+{"text": "coee", "doc_type": "COE", "semester": 0}
+{"text": "ceertificate of enrolment", "doc_type": "COE", "semester": 0}
+{"text": "cert of enrlmnt", "doc_type": "COE", "semester": 0}
+{"text": "enrollmnt cert", "doc_type": "COE", "semester": 0}
+{"text": "certificate of enrolement", "doc_type": "COE", "semester": 0}
+{"text": "enrol cert", "doc_type": "COE", "semester": 0}
+{"text": "coe cerificate", "doc_type": "COE", "semester": 0}
+
+{"text": "otr", "doc_type": "OTR", "semester": 0}
+{"text": "tor", "doc_type": "OTR", "semester": 0}
+{"text": "official trnscipt", "doc_type": "OTR", "semester": 0}
+{"text": "trnscpt of records", "doc_type": "OTR", "semester": 0}
+{"text": "trnscipt recods", "doc_type": "OTR", "semester": 0}
+{"text": "offcial transcript", "doc_type": "OTR", "semester": 0}
+{"text": "otr transcript", "doc_type": "OTR", "semester": 0}
+{"text": "tor recods", "doc_type": "OTR", "semester": 0}
+
+{"text": "good moral", "doc_type": "OTHERS", "semester": 0}
+{"text": "god moral", "doc_type": "OTHERS", "semester": 0}
+{"text": "goodmorals", "doc_type": "OTHERS", "semester": 0}
+{"text": "honrable dismisal", "doc_type": "OTHERS", "semester": 0}
+{"text": "honorable dismsl", "doc_type": "OTHERS", "semester": 0}
+{"text": "honorable dismisal cert", "doc_type": "OTHERS", "semester": 0}
+{"text": "clerance", "doc_type": "OTHERS", "semester": 0}
+{"text": "othrs", "doc_type": "OTHERS", "semester": 0}
+

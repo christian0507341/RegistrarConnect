@@ -21,3 +21,18 @@
 
 {"text":"Need a Good Moral", "doc_type":"OTHERS", "semester":"NA"}
 {"text":"Certification of graduation", "doc_type":"OTHERS", "semester":"NA"}
+
+{"text": "colg", "doc_type": "COG", "semester": 0}
+{"text": "trnscript", "doc_type": "OTR", "semester": 0}
+{"text": "clerance", "doc_type": "OTHERS", "semester": 0}
+
+{"text": "cog certificate", "doc_type": "COG", "semester": 0}
+{"text": "certificat of greads", "doc_type": "COG", "semester": 0}
+
+{"text": "cer of enrollment", "doc_type": "COE", "semester": 0}
+{"text": "enrolmnt doc", "doc_type": "COE", "semester": 0}
+
+{"text": "transcrpt", "doc_type": "OTR", "semester": 0}
+{"text": "trnscrpt of rec", "doc_type": "OTR", "semester": 0}
+
+{"text": "clearanc", "doc_type": "OTHERS", "semester": 0}

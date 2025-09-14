@@ -9,6 +9,7 @@ class DocumentRequestActionSerializer(serializers.ModelSerializer):
         fields = ('id', 'action', 'from_status', 'to_status', 'notes', 'actor', 'actor_email', 'created_at')
         read_only_fields = ('id', 'actor', 'actor_email', 'created_at')
 
+
 class DocumentRequestSerializer(serializers.ModelSerializer):
     actions = DocumentRequestActionSerializer(many=True, read_only=True)
 
@@ -23,6 +24,7 @@ class DocumentRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"purpose": "Purpose cannot be changed after submission."})
         return super().update(instance, validated_data)
 
+
 class DocumentRequestStatusSerializer(serializers.ModelSerializer):
     """Used by faculty to update status and optional notes/purpose."""
     notes = serializers.CharField(write_only=True, required=False, allow_blank=True)
@@ -30,3 +32,26 @@ class DocumentRequestStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentRequest
         fields = ("status", "notes")
+
+
+class DocumentRequestCancelSerializer(serializers.ModelSerializer):
+    """Used to cancel a request"""
+
+    class Meta:
+        model = DocumentRequest
+        fields = ["status"]
+
+    def update(self, instance, validated_data):
+        if instance.status != 'pending':
+            raise serializers.ValidationError("Only pending requests can be cancelled.")
+        instance.status = 'cancelled'
+        instance.save()
+        DocumentRequestAction.objects.create(
+            request=instance,
+            actor=self.context['request'].user,
+            action='status_changed',
+            from_status='pending',
+            to_status='cancelled',
+            notes='Cancelled via chatbot'
+        )
+        return instance
