@@ -1,4 +1,4 @@
-# Miscellaneous
+# ───────── Misc (kept)
 *.class
 *.log
 *.pyc
@@ -12,18 +12,16 @@
 .swiftpm/
 migrate_working_dir/
 
-# IntelliJ related
+# ───────── IntelliJ (kept)
 *.iml
 *.ipr
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
+# If you want to ignore workspace settings, uncomment:
 #.vscode/
 
-# Flutter/Dart/Pub related
+# ───────── Flutter / Dart / Pub (kept + minor add)
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
@@ -32,14 +30,33 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+.metadata
 
-# Symbolication related
+# Symbolication / Obfuscation (kept)
 app.*.symbols
-
-# Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# ───────── Android (added)
+android/.gradle/
+android/local.properties
+*.jks
+*.keystore
+key.properties
+
+# ───────── iOS (added)
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/ServiceDefinitions.json
+*.xcuserstate
+*.xcworkspace
+*.xcuserdatad
+*.xcuserdata/
+
+# ───────── Desktop platforms (ignore to stay mobile-only)
+macos/
+windows/
+linux/
