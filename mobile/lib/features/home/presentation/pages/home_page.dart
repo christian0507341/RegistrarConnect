@@ -3,21 +3,28 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
-import '../../domain/entities/activity.dart';
 import '../pages/widgets/greeting_header.dart';
 import '../pages/widgets/status_card.dart';
+import 'package:mobile/features/chat/presentation/pages/chat_page.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key}); // Removed required homeBloc parameter
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Dispatch once
+    context.read<HomeBloc>().add(LoadActivities());
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Access global HomeBloc
-    final homeBloc = BlocProvider.of<HomeBloc>(context);
-    homeBloc.add(LoadActivities());
-
     return BlocBuilder<HomeBloc, HomeState>(
-      bloc: homeBloc,
       builder: (context, state) {
         Widget body;
 
@@ -54,10 +61,12 @@ class HomePage extends StatelessWidget {
                 "Recent Activities:",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              ...state.activities.map((a) => ListTile(
-                    title: Text(a.title),
-                    subtitle: Text(a.timestamp.toString()),
-                  )),
+              ...state.activities.map(
+                (a) => ListTile(
+                  title: Text(a.title),
+                  subtitle: Text(a.timestamp.toString()),
+                ),
+              ),
             ],
           );
         } else if (state is HomeError) {
@@ -73,7 +82,20 @@ class HomePage extends StatelessWidget {
               child: body,
             ),
           ),
-          // BottomNavigationBar handled by HomeContainer / IndexedStack
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {
+              // TODO: replace with real conversationId from your auth/profile
+              const demoConversationId = 'mobile-demo-conv-1';
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      const ChatPage(conversationId: demoConversationId),
+                ),
+              );
+            },
+            icon: const Icon(Icons.chat_bubble_outline),
+            label: const Text('Ask Registrar Bot'),
+          ),
         );
       },
     );

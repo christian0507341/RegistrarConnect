@@ -19,11 +19,10 @@ class ChatRepository implements IChatRepository {
   ChatAction? _actionFrom(Map<String, dynamic>? a) {
     if (a == null) return null;
     return ChatAction(
-      type: a['type'] as String,
-      requestId: a['request_id'] as String?,
+      type: (a['type'] ?? a['action'] ?? '').toString(),
+      requestId: (a['request_id'] ?? a['requestId']) as String?,
       payload: a,
     );
-    // You can normalize different server keys here if needed.
   }
 
   @override
@@ -42,7 +41,10 @@ class ChatRepository implements IChatRepository {
   Future<List<ChatMessage>> loadHistory({
     required String conversationId,
   }) async {
-    final list = await _api.loadHistory(conversationId: conversationId);
+    final list = await _api.loadHistory(
+      conversationId: conversationId,
+      limit: 30,
+    );
     return list.map(_toEntity).toList();
   }
 }

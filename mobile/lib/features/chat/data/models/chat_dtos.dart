@@ -13,15 +13,33 @@ class ChatMessageDto {
     required this.timestamp,
   });
 
-  factory ChatMessageDto.fromJson(Map<String, dynamic> json) => ChatMessageDto(
-    id: json['id'] as String,
-    conversationId:
-        json['conversation_id'] as String? ??
-        json['conversationId'] as String, // accept either
-    sender: json['sender'] as String,
-    text: json['text'] as String,
-    timestamp: json['timestamp'] as String,
-  );
+  factory ChatMessageDto.fromJson(Map<String, dynamic> json) {
+    // Be tolerant to different backend key variants
+    final id = (json['id'] ?? json['_id'] ?? '').toString();
+    final convId =
+        (json['conversation_id'] ??
+                json['conversationId'] ??
+                json['room_id'] ??
+                '')
+            .toString();
+    final sender = (json['sender'] ?? json['role'] ?? 'bot') as String;
+    final text =
+        (json['text'] ?? json['content'] ?? json['message'] ?? '') as String;
+    final ts =
+        (json['timestamp'] ??
+                json['created_at'] ??
+                json['time'] ??
+                DateTime.now().toIso8601String())
+            as String;
+
+    return ChatMessageDto(
+      id: id,
+      conversationId: convId,
+      sender: sender,
+      text: text,
+      timestamp: ts,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -39,10 +57,14 @@ class ChatReplyDto {
 
   ChatReplyDto({required this.message, this.action});
 
-  factory ChatReplyDto.fromJson(Map<String, dynamic> json) => ChatReplyDto(
-    message: ChatMessageDto.fromJson(json['message'] as Map<String, dynamic>),
-    action: json['action'] as Map<String, dynamic>?,
-  );
+  factory ChatReplyDto.fromJson(Map<String, dynamic> json) {
+    // Accept either {"message": {...}, "action": {...}} or direct message object
+    final rawMessage = (json['message'] ?? json) as Map<String, dynamic>;
+    return ChatReplyDto(
+      message: ChatMessageDto.fromJson(rawMessage),
+      action: json['action'] as Map<String, dynamic>?,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'message': message.toJson(),
