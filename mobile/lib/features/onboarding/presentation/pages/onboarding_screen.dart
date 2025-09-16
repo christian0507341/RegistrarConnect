@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../auth/presentation/pages/login_page.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -7,140 +6,143 @@ class OnboardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Decorative circles
-            Positioned(
-              top: -40,
-              left: -40,
-              child: _circle(120),
-            ),
-            Positioned(
-              bottom: -30,
-              left: -30,
-              child: _circle(100),
-            ),
-            Positioned(
-              bottom: -40,
-              right: -40,
-              child: _circle(140),
-            ),
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // 🔵 Decorative circles
+          Positioned(
+            top: -60,
+            left: -60,
+            child: _circle(160, Colors.blue.shade100),
+          ),
+          Positioned(
+            bottom: -60,
+            right: -60,
+            child: _circle(180, Colors.blue.shade100),
+          ),
 
-            // Content
-            Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const SizedBox(height: 40),
+          // 📄 Main content
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 30),
 
-                Expanded(
-                  child: Column(
+                  // ✅ Logo + App name
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // ✅ Logo
-                      SizedBox(
-                        width: 200,
-                        height: 200,
-                        child: Image.asset(
-                          "assets/images/logo.png", // 🔄 replace with your asset
-                          fit: BoxFit.contain,
-                        ),
+                      Image.asset(
+                        "assets/images/logo.png", // replace with your logo asset
+                        width: 50,
+                        height: 50,
                       ),
-
-                      const SizedBox(height: 30),
-
-                      // ✅ Illustration
-                      SizedBox(
-                        width: 200,
-                        height: 200,
-                        child: Image.asset(
-                          "assets/images/illustration.png", // 🔄 replace with your asset
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Text(
-                          "Feeling lazy? Let the A.I do the work for you.",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        "RegistrarConnect",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
-                ),
 
-                // ✅ Bottom Section
-                Column(
-                  children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 40, vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 40),
+
+                  // ✅ Illustration
+                  Image.asset(
+                    "assets/images/illustration.png", // replace with your illustration asset
+                    width: 200,
+                    height: 200,
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // ✅ Tagline
+                  const Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "Feeling lazy? Let ",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
+                        TextSpan(
+                          text: "RegistrarConnect ",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        TextSpan(
+                          text: "do the work for you.",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // ✅ Subtitle
+                  const Text(
+                    "Fast, Reliable and Easy to use.",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const Spacer(),
+
+                  // ✅ Get Started Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
                       onPressed: () {
-                        // Go to login page
                         Navigator.pushReplacementNamed(context, '/login');
                       },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                       child: const Text(
                         "Get Started",
                         style: TextStyle(fontSize: 16, color: Colors.white),
                       ),
                     ),
+                  ),
 
-                    const SizedBox(height: 20),
-
-                    // Page indicators
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _dot(true),
-                        const SizedBox(width: 8),
-                        _dot(false),
-                        const SizedBox(width: 8),
-                        _dot(false),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ],
+                  const SizedBox(height: 30),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _circle(double size) {
+  Widget _circle(double size, Color color) {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
-        color: Color(0xFF4CAF50),
-        shape: BoxShape.circle,
-      ),
-    );
-  }
-
-  Widget _dot(bool isActive) {
-    return Container(
-      width: isActive ? 12 : 8,
-      height: isActive ? 12 : 8,
       decoration: BoxDecoration(
-        color: isActive ? Colors.green : Colors.grey,
+        color: color,
         shape: BoxShape.circle,
       ),
     );
