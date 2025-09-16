@@ -35,42 +35,99 @@ class _CalendarPageState extends State<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TableCalendar(
-          firstDay: DateTime.utc(2020, 1, 1),
-          lastDay: DateTime.utc(2030, 12, 31),
-          focusedDay: _focusedDay,
-          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-          onDaySelected: (selectedDay, focusedDay) {
-            setState(() {
-              _selectedDay = selectedDay;
-              _focusedDay = focusedDay;
-            });
-          },
-          calendarStyle: const CalendarStyle(
-            todayDecoration: BoxDecoration(
-                color: Colors.green, shape: BoxShape.circle),
-            selectedDecoration: BoxDecoration(
-                color: Colors.lightGreen, shape: BoxShape.circle),
-          ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          "Calendar",
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: BlocBuilder<AppointmentBloc, AppointmentState>(
-            builder: (context, state) {
-              if (state is AppointmentLoaded) {
-                final appointments = state.appointments[_selectedDay] ?? [];
-                return AppointmentList(appointments: appointments);
-              } else if (state is AppointmentInitial) {
-                return const Center(child: CircularProgressIndicator());
-              } else {
-                return const Center(child: Text("Something went wrong"));
-              }
-            },
-          ),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // 📅 Calendar widget
+            Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: TableCalendar(
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                },
+                calendarStyle: CalendarStyle(
+                  todayDecoration: BoxDecoration(
+                    color: Colors.blue.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  selectedDecoration: const BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                  weekendTextStyle: const TextStyle(color: Colors.redAccent),
+                ),
+                headerStyle: HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                  titleTextStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  leftChevronIcon: const Icon(Icons.chevron_left,
+                      color: Colors.blue),
+                  rightChevronIcon: const Icon(Icons.chevron_right,
+                      color: Colors.blue),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // 📌 Appointments
+            Expanded(
+              child: BlocBuilder<AppointmentBloc, AppointmentState>(
+                builder: (context, state) {
+                  if (state is AppointmentLoaded) {
+                    final appointments = state.appointments[_selectedDay] ?? [];
+                    return appointments.isEmpty
+                        ? const Center(
+                            child: Text(
+                              "No appointments on this day.",
+                              style: TextStyle(color: Colors.black54),
+                            ),
+                          )
+                        : AppointmentList(appointments: appointments);
+                  } else if (state is AppointmentInitial) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else {
+                    return const Center(child: Text("Something went wrong"));
+                  }
+                },
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
+
+      // ➕ Floating Add Appointment button
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _navigateToAddAppointment,
+        backgroundColor: Colors.blue,
+        icon: const Icon(Icons.add),
+        label: const Text("Add"),
+      ),
     );
   }
 }
