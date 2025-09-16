@@ -26,6 +26,9 @@ import 'features/appointment/presentation/bloc/appointment_bloc.dart';
 import 'features/appointment/data/repositories/appointment_repository_impl.dart';
 import 'features/appointment/presentation/pages/add_appointment_page.dart';
 
+// Settings
+import 'features/settings/presentation/pages/settings_page.dart';
+
 // Global wrapper
 import 'core/widgets/global_fab_wrapper.dart';
 
@@ -69,11 +72,31 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'RegistrarConnect',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF2E7D32), // 🌿 Green theme across app
+            brightness: Brightness.light,
+          ),
+          scaffoldBackgroundColor: Colors.grey[100],
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color(0xFF2E7D32),
+            foregroundColor: Colors.white,
+            elevation: 0,
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E7D32),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
         ),
         debugShowCheckedModeBanner: false,
 
-        // 👇 FIX: Start from onboarding instead of home
+        // Start from onboarding
         initialRoute: '/',
         onGenerateRoute: (settings) {
           late Widget page;
@@ -97,6 +120,9 @@ class MyApp extends StatelessWidget {
               break;
             case '/add_appointment':
               page = AddAppointmentPage(selectedDate: DateTime.now());
+              break;
+            case '/settings':
+              page = const SettingsPage(); // ✅ New settings page
               break;
             default:
               page = const Scaffold(

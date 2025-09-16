@@ -200,7 +200,7 @@ class _StatusCard extends StatelessWidget {
               onPressed: () {},
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
-                foregroundColor: Colors.blue,
+                foregroundColor: const Color(0xFF2196F3),
                 elevation: 0,
                 side: const BorderSide(color: Colors.blue),
                 padding:
