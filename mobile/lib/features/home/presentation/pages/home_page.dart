@@ -4,6 +4,7 @@ import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
 import '../../domain/entities/activity.dart';
+import 'package:mobile/features/chat/presentation/pages/chat_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -151,6 +152,16 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ),
+          // 🔹 Floating Chat Button
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              // TODO: Navigate to chat page
+             Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage()));
+            },
+            backgroundColor: Colors.blue,
+            child: const Icon(Icons.chat_bubble_outline, color: Colors.white),
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         );
       },
     );
