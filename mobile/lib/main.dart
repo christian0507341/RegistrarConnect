@@ -26,6 +26,9 @@ import 'features/appointment/presentation/bloc/appointment_bloc.dart';
 import 'features/appointment/data/repositories/appointment_repository_impl.dart';
 import 'features/appointment/presentation/pages/add_appointment_page.dart';
 
+// Chat
+import 'features/chat/presentation/pages/chat_page.dart';
+
 // Settings
 import 'features/settings/presentation/pages/settings_page.dart';
 
@@ -123,6 +126,10 @@ class MyApp extends StatelessWidget {
               break;
             case '/settings':
               page = const SettingsPage(); // ✅ New settings page
+              break;
+              case '/chat':
+              page = const ChatPage(); // ✅ New settings page
+              showFab = false;
               break;
             default:
               page = const Scaffold(

@@ -1,95 +1,98 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile/core/services/secure_storage.dart';
-import 'package:mobile/features/auth/presentation/pages/login_page.dart';
-import 'package:mobile/features/chat/presentation/bloc/chat_bloc.dart';
-import 'package:mobile/features/chat/presentation/bloc/chat_event.dart';
-import 'package:mobile/features/chat/presentation/bloc/chat_state.dart';
 
-class ChatPage extends StatefulWidget {
-  const ChatPage({
-    super.key,
-    required this.conversationId,
-    this.title = 'Registrar Bot',
-  });
-  final String conversationId;
-  final String title;
-
-  @override
-  State<ChatPage> createState() => _ChatPageState();
-}
-
-class _ChatPageState extends State<ChatPage> {
-  late final ChatBloc bloc = ChatBloc();
-  final controller = TextEditingController();
-  final scroll = ScrollController();
-
-  // ---- make sure this method is properly closed ----
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!scroll.hasClients) return;
-      scroll.jumpTo(scroll.position.maxScrollExtent);
-    });
-  } // <--- THIS closing brace must exist
-
-  @override
-  void initState() {
-    super.initState();
-    _ensureAuthThenLoad(); // <-- now fine to call
-  }
-
-  // ---- this must be at class level, not inside another method ----
-  Future<void> _ensureAuthThenLoad() async {
-    final s = SecureStorageService();
-    final a = await s.readAccess();
-    final r = await s.readRefresh();
-    final hasSession = (a?.isNotEmpty == true) || (r?.isNotEmpty == true);
-
-    if (!hasSession) {
-      if (!mounted) return;
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginPage()));
-      return;
-    }
-
-    // Auth OK -> load history
-    bloc.add(ChatInit(widget.conversationId));
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    scroll.dispose();
-    bloc.close();
-    super.dispose();
-  }
+class ChatPage extends StatelessWidget {
+  const ChatPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: bloc,
-      child: Scaffold(
-        appBar: AppBar(title: Text(widget.title)),
-        body: Column(
+    return Scaffold(
+      backgroundColor: const Color(0xFFE3F2FD), // light blue theme
+      body: SafeArea(
+        child: Column(
           children: [
-            Expanded(
-              child: BlocBuilder<ChatBloc, ChatState>(
-                builder: (context, state) {
-                  if (state is ChatLoading)
-                    return const Center(child: CircularProgressIndicator());
-                  if (state is ChatError)
-                    return Center(child: Text(state.message));
-                  if (state is ChatLoaded) {
-                    _scrollToBottom();
-                    // ... your list view here ...
-                    return const SizedBox.shrink();
-                  }
-                  return const SizedBox.shrink();
-                },
+            // 🔹 Header with Back + Profile + Name
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Back Button
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.smart_toy, color: Color(0xFF2196F3)),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    "Registrar Bot",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
-            // ... input row here ...
+
+            // 🔹 Chat area
+            Expanded(
+              child: Container(
+                color: Colors.white,
+                child: const Center(
+                  child: Text(
+                    "Chat messages will appear here",
+                    style: TextStyle(color: Colors.black54),
+                  ),
+                ),
+              ),
+            ),
+
+            // 🔹 Input field
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(0, -1),
+                    blurRadius: 4,
+                  )
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: "Ask Anything...",
+                        prefixIcon: const Icon(Icons.add),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.send, color: Color(0xFF2196F3)),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
