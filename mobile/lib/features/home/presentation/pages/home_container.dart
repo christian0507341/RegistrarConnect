@@ -1,17 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:mobile/features/home/presentation/pages/home_page.dart';
 import 'package:mobile/features/notifications/presentation/pages/notification_page.dart';
 import 'package:mobile/features/appointment/presentation/pages/calendar_page.dart';
-
-// Home BLoC
-import 'package:mobile/features/home/presentation/bloc/home_bloc.dart';
-import 'package:mobile/features/home/presentation/bloc/home_event.dart';
-
-// Repo
-import 'package:mobile/features/home/domain/repositories/activity_repository.dart';
-import 'package:mobile/features/home/data/repositories/activity_repository_impl.dart';
+import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
+import 'package:mobile/features/dashboard/presentation/pages/approved_requests_page.dart'; // ✅ New
 
 class HomeContainer extends StatefulWidget {
   const HomeContainer({super.key});
@@ -22,53 +14,40 @@ class HomeContainer extends StatefulWidget {
 
 class _HomeContainerState extends State<HomeContainer> {
   int _selectedIndex = 0;
-  late final List<Widget> _pages;
 
-  @override
-  void initState() {
-    super.initState();
+  final List<Widget> _pages = [
+    const HomePage(),
+    const CalendarPage(),
+    const ApprovedRequestsPage(), // 👈 replaced Dashboard
+    const NotificationPage(),
+    const SettingsPage(),
+  ];
 
-    _pages = [
-      BlocProvider<HomeBloc>(
-        create: (_) {
-          final IActivityRepository repo = ActivityRepositoryImpl();
-          return HomeBloc(repository: repo)..add(LoadActivities());
-        },
-        child: const HomePage(),
-      ),
-      const CalendarPage(), // AppointmentBloc already provided above
-      const Scaffold(body: Center(child: Text("Dashboard"))),
-      const NotificationPage(),
-      const Scaffold(body: Center(child: Text("Settings"))),
-    ];
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
-
-  void _onItemTapped(int index) => setState(() => _selectedIndex = index);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _pages),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF2196F3),
+        selectedItemColor: const Color(0xFF2196F3), // ✅ green theme
+        unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: "Calendar",
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: ""),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: "Notifications",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: "Settings",
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: "Calendar"),
+          BottomNavigationBarItem(icon: Icon(Icons.check_circle), label: "Approved"),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Notifications"),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
         ],
       ),
     );
