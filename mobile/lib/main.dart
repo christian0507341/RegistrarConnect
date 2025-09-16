@@ -15,18 +15,15 @@ import 'features/auth/presentation/pages/register_page.dart';
 import 'features/onboarding/presentation/pages/onboarding_screen.dart';
 
 // Home & Notifications
-import 'features/home/presentation/pages/home_page.dart';
 import 'features/home/presentation/pages/home_container.dart';
 import 'features/home/presentation/bloc/home_bloc.dart';
 import 'features/home/data/repositories/activity_repository_impl.dart';
-import 'features/notifications/presentation/pages/notification_page.dart';
 import 'features/notifications/presentation/bloc/notification_bloc.dart';
 import 'features/notifications/data/repositories/notification_repository_impl.dart';
 
 // Appointment
 import 'features/appointment/presentation/bloc/appointment_bloc.dart';
 import 'features/appointment/data/repositories/appointment_repository_impl.dart';
-import 'features/appointment/presentation/pages/calendar_page.dart';
 import 'features/appointment/presentation/pages/add_appointment_page.dart';
 
 // Global wrapper
@@ -75,7 +72,9 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         ),
         debugShowCheckedModeBanner: false,
-        home: const HomeContainer(),
+
+        // 👇 FIX: Start from onboarding instead of home
+        initialRoute: '/',
         onGenerateRoute: (settings) {
           late Widget page;
           bool showFab = true;
@@ -92,6 +91,9 @@ class MyApp extends StatelessWidget {
             case '/register':
               page = const RegisterPage();
               showFab = false;
+              break;
+            case '/home':
+              page = const HomeContainer();
               break;
             case '/add_appointment':
               page = AddAppointmentPage(selectedDate: DateTime.now());
