@@ -11,12 +11,13 @@ import 'chat_state.dart';
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final LoadHistory _loadHistory;
   final SendMessage _sendMessage;
-  late final String _conversationId;
+  late String _conversationId;
 
   ChatBloc._(this._loadHistory, this._sendMessage) : super(ChatIdle()) {
     on<ChatInit>(_onInit);
     on<ChatLoadMore>(_onLoadMore);
     on<ChatSendPressed>(_onSendPressed);
+    on<ChatActionHandled>(_onActionHandled);
   }
 
   factory ChatBloc() {
@@ -30,7 +31,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _conversationId = e.conversationId;
     try {
       final msgs = await _loadHistory(conversationId: _conversationId);
-      // Ensure ascending by time
       msgs.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       emit(ChatLoaded(conversationId: _conversationId, messages: msgs));
     } catch (err) {
@@ -42,11 +42,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final current = state;
     if (current is! ChatLoaded) return;
     try {
-      // Optional: implement pagination when backend supports before_id
       final more = await _loadHistory(conversationId: _conversationId);
-      final dedup = _mergeUnique(current.messages, more);
-      dedup.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-      emit(ChatLoaded(conversationId: _conversationId, messages: dedup));
+      final merged = _mergeUnique(current.messages, more)
+        ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      emit(current.copyWith(messages: merged));
     } catch (err) {
       emit(ChatError(err.toString()));
     }
@@ -59,15 +58,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final current = state;
     if (current is! ChatLoaded) return;
     try {
-      final (reply, _action) = await _sendMessage(
+      final (reply, action) = await _sendMessage(
         conversationId: _conversationId,
         text: e.text,
       );
       final updated = [...current.messages, reply];
-      emit(ChatLoaded(conversationId: _conversationId, messages: updated));
-      // TODO: if you want to act on _action (e.g., navigate to receipt upload), handle it in the UI with BlocListener.
+      // Emit with potential action (UI will listen and then clear it)
+      emit(current.copyWith(messages: updated, action: action));
     } catch (err) {
       emit(ChatError(err.toString()));
+    }
+  }
+
+  void _onActionHandled(ChatActionHandled e, Emitter<ChatState> emit) {
+    final current = state;
+    if (current is ChatLoaded && current.action != null) {
+      emit(current.copyWith(action: null)); // clear one-shot action
     }
   }
 

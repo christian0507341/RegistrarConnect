@@ -14,3 +14,6 @@ class ChatSendPressed extends ChatEvent {
   final String text;
   ChatSendPressed(this.text);
 }
+
+/// Call this from the UI after you've reacted to a bot action
+class ChatActionHandled extends ChatEvent {}

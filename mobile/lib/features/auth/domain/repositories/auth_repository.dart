@@ -1,7 +1,6 @@
 import 'package:mobile/features/auth/domain/entities/auth_user.dart';
 
 abstract class IAuthRepository {
-  /// Returns AuthUser on success; throws on failure.
   Future<AuthUser> signIn({
     required String role,
     required String email,
@@ -9,6 +8,8 @@ abstract class IAuthRepository {
   });
 
   Future<void> signOut();
-
   Future<bool> hasSession();
+
+  /// Optional but useful if you ever call refresh outside the interceptor.
+  Future<String> refresh();
 }

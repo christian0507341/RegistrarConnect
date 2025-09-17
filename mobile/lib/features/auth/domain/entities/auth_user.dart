@@ -1,7 +1,7 @@
 class AuthUser {
+  final String role;
   final String name;
   final String email;
-  final String role;
 
-  const AuthUser({required this.name, required this.email, required this.role});
+  const AuthUser({required this.role, required this.name, required this.email});
 }

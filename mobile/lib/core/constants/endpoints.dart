@@ -1,31 +1,28 @@
-/// Centralized API paths so the whole app uses the same strings.
-/// NOTE: when testing on Android emulator use 'http://10.0.2.2:8000' instead
-/// of 'http://127.0.0.1:8000'. For iOS Simulator use 'http://127.0.0.1:8000'.
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+/// Centralized API paths
 class Endpoints {
-  // Base URL (switch between iOS/Android simulator manually as needed)
-  static const String baseUrl = 'http://127.0.0.1:8000';
+  /// Base URL per platform
+  static final String baseUrl = kIsWeb
+      ? 'http://localhost:8000'
+      : Platform.isAndroid
+      ? 'http://10.0.2.2:8000' // Android emulator -> host machine
+      : 'http://127.0.0.1:8000'; // iOS simulator / desktop
 
-  // ─── Auth ────────────────────────────────────────────────────────────────
-  static const String token =
-      '/api/token/'; // POST {role,email,password} -> {access,refresh,...}
-  static const String tokenRefresh =
-      '/api/token/refresh/'; // POST {refresh} -> {access}
-  static const String register =
-      '/api/auth/register/'; // POST registration payload
+  // --- Auth ---
+  static const String token = '/api/token/';
+  static const String tokenRefresh = '/api/token/refresh/';
+  static const String register = '/api/auth/register/';
 
-  // ─── Chatbot ─────────────────────────────────────────────────────────────
-  /// Single-endpoint style: send message OR fetch history depending on method
-  static const String chat = '/api/chat/';
+  // --- Chatbot (lives under /api/ai/) ---
+  static const String chat = '/api/ai/chat/';
 
-  /// Split-endpoint style (if backend exposes it). Leave as empty string ""
-  /// if you don’t use it, so ChatApi will fallback to [chat].
-  static const String chatMessages = '/api/chat/messages/';
+  /// Leave empty so the app falls back to [chat] for history.
+  static const String chatMessages = '';
 
-  // ─── Receipt uploads ─────────────────────────────────────────────────────
-  static const String receipts =
-      '/api/receipts/'; // POST multipart: {request_id, image}
-
-  // ─── Feature roots ───────────────────────────────────────────────────────
+  // --- Other features (if any) ---
+  static const String receipts = '/api/receipts/';
   static const String documentRequests = '/api/document-requests/';
   static const String appointments = '/api/appointments/';
 }

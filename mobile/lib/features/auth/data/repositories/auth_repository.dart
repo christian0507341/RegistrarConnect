@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:mobile/core/services/secure_storage.dart';
 import 'package:mobile/features/auth/data/models/auth_response.dart';
 import 'package:mobile/features/auth/data/sources/auth_api.dart';
@@ -6,15 +7,12 @@ import 'package:mobile/features/auth/domain/repositories/auth_repository.dart'
     as domain;
 
 class AuthRepository implements domain.IAuthRepository {
-  AuthRepository({required AuthApi api, required SecureStorageService storage})
-    : _api = api,
-      _storage = storage;
-
   final AuthApi _api;
   final SecureStorageService _storage;
 
-  AuthUser _toEntity(AuthResponse dto) =>
-      AuthUser(name: dto.name, email: dto.email, role: dto.role);
+  AuthRepository({required AuthApi api, required SecureStorageService storage})
+    : _api = api,
+      _storage = storage;
 
   @override
   Future<AuthUser> signIn({
@@ -22,10 +20,25 @@ class AuthRepository implements domain.IAuthRepository {
     required String email,
     required String password,
   }) async {
-    final res = await _api.login(role: role, email: email, password: password);
-    await _storage.saveAccess(res.access);
-    await _storage.saveRefresh(res.refresh);
-    return _toEntity(res);
+    try {
+      final AuthResponse res = await _api.login(
+        role: role,
+        email: email,
+        password: password,
+      );
+
+      // Persist tokens using YOUR storage API
+      await _storage.saveAccess(res.access);
+      await _storage.saveRefresh(res.refresh);
+
+      // Map to domain entity expected by your use case
+      return AuthUser(role: res.role, name: res.name, email: res.email);
+    } on DioException catch (e) {
+      final serverMsg = e.response?.data is Map<String, dynamic>
+          ? (e.response!.data['detail'] ?? e.message)
+          : e.message;
+      throw Exception(serverMsg ?? 'Login failed');
+    }
   }
 
   @override
@@ -37,5 +50,16 @@ class AuthRepository implements domain.IAuthRepository {
     final refresh = await _storage.readRefresh();
     return (access != null && access.isNotEmpty) ||
         (refresh != null && refresh.isNotEmpty);
+  }
+
+  @override
+  Future<String> refresh() async {
+    final refreshToken = await _storage.readRefresh();
+    if (refreshToken == null || refreshToken.isEmpty) {
+      throw Exception('No refresh token available');
+    }
+    final newAccess = await _api.refresh(refreshToken);
+    await _storage.saveAccess(newAccess);
+    return newAccess;
   }
 }

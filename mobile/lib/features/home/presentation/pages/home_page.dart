@@ -6,6 +6,9 @@ import '../bloc/home_state.dart';
 import '../pages/widgets/greeting_header.dart';
 import '../pages/widgets/status_card.dart';
 import 'package:mobile/features/chat/presentation/pages/chat_page.dart';
+import 'package:mobile/core/services/conversation_services.dart'; // <-- NEW
+import 'package:mobile/core/services/secure_storage.dart';
+import 'package:mobile/features/auth/presentation/pages/login_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,7 +21,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Dispatch once
     context.read<HomeBloc>().add(LoadActivities());
   }
 
@@ -83,13 +85,28 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           floatingActionButton: FloatingActionButton.extended(
-            onPressed: () {
-              // TODO: replace with real conversationId from your auth/profile
+            onPressed: () async {
+              final s = SecureStorageService();
+              final a = await s.readAccess();
+              final r = await s.readRefresh();
+              final hasSession =
+                  (a?.isNotEmpty == true) || (r?.isNotEmpty == true);
+
+              if (!hasSession) {
+                if (!mounted) return;
+                // Navigate to login, or just show a message
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const LoginPage()));
+                return;
+              }
+
+              // OK to open chat
               const demoConversationId = 'mobile-demo-conv-1';
+              if (!mounted) return;
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) =>
-                      const ChatPage(conversationId: demoConversationId),
+                  builder: (_) => ChatPage(conversationId: demoConversationId),
                 ),
               );
             },
