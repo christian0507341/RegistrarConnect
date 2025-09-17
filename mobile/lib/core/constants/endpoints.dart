@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 class Endpoints {
   /// Base URL per platform
   static final String baseUrl = kIsWeb
-      ? 'http://localhost:8000'
+      ? 'http://10.0.2.2:8000'
       : Platform.isAndroid
       ? 'http://10.0.2.2:8000' // Android emulator -> host machine
       : 'http://127.0.0.1:8000'; // iOS simulator / desktop
