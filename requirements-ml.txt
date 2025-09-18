@@ -25,7 +25,8 @@ pyarrow==15.0.2
 
 # Torch CPU (install from PyTorch CPU wheel index)
 # Note: pin here for visibility, but use the --index-url when installing.
-torch==2.2.2+cpu
+torch==2.2.2
+#+cpu
 
 # Numerics / scientific
 numpy==1.26.4
