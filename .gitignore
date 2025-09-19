@@ -33,7 +33,6 @@ backend/ai/services/train/sessions/   # CLI/dev chat logs
 backend/ai/models/
 huggingface/
 .huggingface/
-*.safetensors
 *.bin
 *.pt
 *.ckpt
