@@ -5,7 +5,7 @@ import 'package:mobile/features/home/presentation/pages/home_page.dart';
 import 'package:mobile/features/notifications/presentation/pages/notification_page.dart';
 import 'package:mobile/features/appointment/presentation/pages/calendar_page.dart';
 
-// BLoC
+// Home BLoC
 import 'package:mobile/features/home/presentation/bloc/home_bloc.dart';
 import 'package:mobile/features/home/presentation/bloc/home_event.dart';
 
@@ -36,7 +36,7 @@ class _HomeContainerState extends State<HomeContainer> {
         },
         child: const HomePage(),
       ),
-      const CalendarPage(),
+      const CalendarPage(), // AppointmentBloc already provided above
       const Scaffold(body: Center(child: Text("Dashboard"))),
       const NotificationPage(),
       const Scaffold(body: Center(child: Text("Settings"))),
