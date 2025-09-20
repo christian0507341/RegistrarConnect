@@ -9,24 +9,32 @@ class ChatLoading extends ChatState {}
 
 class ChatLoaded extends ChatState {
   final String conversationId;
-  final List<ChatMessage> messages; // ascending by time
-  final ChatAction? action; // non-null only when a new action arrived
+  final List<ChatMessage> messages;
+  final dynamic action;
+  final bool isTyping;
+  final String? error;
 
   ChatLoaded({
     required this.conversationId,
     required this.messages,
     this.action,
+    this.isTyping = false,
+    this.error,
   });
 
   ChatLoaded copyWith({
     String? conversationId,
     List<ChatMessage>? messages,
-    ChatAction? action, // pass null to clear the action
+    dynamic action,
+    bool? isTyping,
+    String? error,
   }) {
     return ChatLoaded(
       conversationId: conversationId ?? this.conversationId,
       messages: messages ?? this.messages,
       action: action,
+      isTyping: isTyping ?? this.isTyping,
+      error: error ?? this.error,
     );
   }
 }

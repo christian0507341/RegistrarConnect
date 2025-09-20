@@ -1,51 +1,38 @@
 import 'package:dio/dio.dart';
-import 'package:mobile/core/constants/endpoints.dart';
-import 'package:mobile/core/services/dio_client.dart';
-import 'package:mobile/core/services/secure_storage.dart';
-import 'package:mobile/features/chat/data/models/chat_dtos.dart';
+import 'package:mobile/features/chat/domain/entities/chat_message.dart';
 
 class ChatApi {
-  ChatApi({Dio? dio}) : _dio = dio ?? DioClient(SecureStorageService()).dio;
+  final Dio _dio = Dio(
+    BaseOptions(baseUrl: "http://10.0.2.2:8000/api/ai"), // Emulator localhost
+  );
 
-  final Dio _dio;
+  Future<List<ChatMessage>> loadHistory(String conversationId) async {
+    final res = await _dio.get(
+      "/chat",
+      queryParameters: {"conversation_id": conversationId},
+      options: Options(
+        headers: {"Authorization": "Bearer YOUR_TOKEN"}, // TODO: plug in auth token
+      ),
+    );
+    final data = res.data as List;
+    return data.map((json) => ChatMessage.fromJson(json)).toList();
+  }
 
-  // Always send messages to /api/chat/
-  String get _sendUrl => Endpoints.chat;
-
-  // Use /api/chat/messages/ only if it exists; else fall back to /api/chat/
-  String get _historyUrl => (Endpoints.chatMessages.isNotEmpty)
-      ? Endpoints.chatMessages
-      : Endpoints.chat;
-
-  Future<ChatReplyDto> sendMessage({
+  Future<(ChatMessage, Map<String, dynamic>?)> sendMessage({
     required String conversationId,
     required String text,
   }) async {
-    final body = <String, dynamic>{
-      'conversation_id': conversationId,
-      'text': text,
-    };
-
-    final resp = await _dio.post<Map<String, dynamic>>(_sendUrl, data: body);
-    return ChatReplyDto.fromJson(resp.data!);
-  }
-
-  Future<List<ChatMessageDto>> loadHistory({
-    required String conversationId,
-    int? limit,
-    String? beforeId,
-  }) async {
-    final qp = <String, dynamic>{'conversation_id': conversationId};
-    if (limit != null) qp['limit'] = limit;
-    if (beforeId != null) qp['before_id'] = beforeId;
-
-    final resp = await _dio.get<List<dynamic>>(
-      _historyUrl,
-      queryParameters: qp,
+    final res = await _dio.post(
+      "/chat",
+      data: {"conversation_id": conversationId, "text": text},
+      options: Options(
+        headers: {"Authorization": "Bearer YOUR_TOKEN"}, // TODO: plug in auth token
+      ),
     );
-    final data = resp.data ?? const [];
-    return data
-        .map((e) => ChatMessageDto.fromJson(e as Map<String, dynamic>))
-        .toList();
+
+    final data = res.data;
+    final msg = ChatMessage.fromJson(data["message"]);
+    final action = data["action"];
+    return (msg, action);
   }
 }

@@ -7,7 +7,7 @@ class Endpoints {
   static final String baseUrl = kIsWeb
       ? 'http://localhost:8000'
       : Platform.isAndroid
-      ? 'http://10.0.2.2:8000' // Android emulator -> host machine
+      ? 'http://192.168.68.115:8000' // Android emulator -> host machine
       : 'http://127.0.0.1:8000'; // iOS simulator / desktop
 
   // --- Auth ---
