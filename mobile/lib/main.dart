@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
-import 'package:mobile/core/services/conversation_services.dart';
 
 // Auth
 import 'features/auth/presentation/pages/login_page.dart';
@@ -38,9 +37,7 @@ import 'core/widgets/global_fab_wrapper.dart';
 
 void main() {
   final dio = Dio(BaseOptions(
-    baseUrl: "http://192.168.68.115:8000", // Android emulator
-    // baseUrl: "http://127.0.0.1:8000", // iOS simulator
-    // baseUrl: "http://192.168.1.xx:8000", // physical device (replace with your LAN IP)
+    baseUrl: "http://localhost:8000",
     connectTimeout: const Duration(seconds: 5),
     receiveTimeout: const Duration(seconds: 5),
   ));
@@ -66,15 +63,13 @@ class MyApp extends StatelessWidget {
           create: (_) => AuthBloc(repo: authRepository),
         ),
         BlocProvider<AppointmentBloc>(
-          create: (_) =>
-              AppointmentBloc(repository: AppointmentRepositoryImpl()),
+          create: (_) => AppointmentBloc(repository: AppointmentRepositoryImpl()),
         ),
         BlocProvider<HomeBloc>(
           create: (_) => HomeBloc(repository: ActivityRepositoryImpl()),
         ),
         BlocProvider<NotificationBloc>(
-          create: (_) =>
-              NotificationBloc(repository: NotificationRepositoryImpl()),
+          create: (_) => NotificationBloc(repository: NotificationRepositoryImpl()),
         ),
       ],
       child: MaterialApp(
@@ -95,8 +90,7 @@ class MyApp extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2E7D32),
               foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -105,7 +99,7 @@ class MyApp extends StatelessWidget {
         ),
         debugShowCheckedModeBanner: false,
 
-        // Start from onboarding for now
+        // Start from onboarding
         initialRoute: '/',
         onGenerateRoute: (settings) {
           late Widget page;
@@ -131,10 +125,10 @@ class MyApp extends StatelessWidget {
               page = AddAppointmentPage(selectedDate: DateTime.now());
               break;
             case '/settings':
-              page = const SettingsPage();
+              page = const SettingsPage(); // ✅ New settings page
               break;
-            case '/chat':
-              page = const ChatPage(); // ✅ fixed comment
+              case '/chat':
+              page = const ChatPage(); // ✅ New settings page
               showFab = false;
               break;
             default:
