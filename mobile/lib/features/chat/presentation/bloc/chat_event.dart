@@ -1,3 +1,4 @@
+// lib/features/chat/presentation/bloc/chat_event.dart
 abstract class ChatEvent {}
 
 class ChatInit extends ChatEvent {
@@ -5,15 +6,17 @@ class ChatInit extends ChatEvent {
   ChatInit(this.conversationId);
 }
 
-class ChatLoadMore extends ChatEvent {
-  final String beforeId;
-  ChatLoadMore(this.beforeId);
-}
+class ChatLoadMore extends ChatEvent {}
 
 class ChatSendPressed extends ChatEvent {
   final String text;
   ChatSendPressed(this.text);
 }
 
-/// Call this from the UI after you've reacted to a bot action
 class ChatActionHandled extends ChatEvent {}
+
+class ChatRequestDocument extends ChatEvent {
+  final String documentType;
+  final String? studentId;
+  ChatRequestDocument(this.documentType, {this.studentId});
+}

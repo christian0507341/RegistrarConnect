@@ -32,7 +32,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'default-key-for-dev-only')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 #DEBUG = True
 
-ALLOWED_HOSTS = ['10.0.2.2', '127.0.0.1', 'localhost', '192.168.1.9']
+ALLOWED_HOSTS = ['10.0.2.2', '127.0.0.1', 'localhost', '192.168.1.10']
 
 
 # Application definition

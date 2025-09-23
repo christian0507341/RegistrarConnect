@@ -1,5 +1,5 @@
 name: mobile
-description: "A new Flutter project."
+description: "A new Flutter project for RegistrarConnect - PHINMA-University of Pangasinan students to request documents."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -35,15 +35,16 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
-  table_calendar: ^3.0.9 
+  table_calendar: ^3.1.0  # Updated from 3.0.9 to latest stable (3.1.0)
 
   # --- State management ---
-  flutter_bloc: ^8.1.6        # BLoC for presentation layer
-  equatable: ^2.0.5           # Value equality for events/states
+  image_picker: ^1.0.4
+  flutter_bloc: ^8.1.6       # BLoC for presentation layer
+  equatable: ^2.0.7           # Value equality for events/states
 
   # --- Networking & storage ---
-  dio: ^5.7.0                 # HTTP client
-  flutter_secure_storage: ^9.2.2  # Store access/refresh tokens securely
+  dio: ^5.4.0                 # HTTP client
+  flutter_secure_storage: ^9.2.4  # Store access/refresh tokens securely
 
   # --- JSON & utilities ---
   json_annotation: ^4.9.0     # Annotations for codegen models
@@ -57,8 +58,8 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
   # Code generation for models
-  build_runner: ^2.4.12
-  json_serializable: ^6.9.0
+  build_runner: ^2.7.0
+  json_serializable: ^6.10.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
