@@ -1,27 +1,21 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import ValidationError
 from .models import DocumentRequest, DocumentRequestAction
-from .serializers import DocumentRequestSerializer, DocumentRequestStatusSerializer
+from .serializers import DocumentRequestSerializer, DocumentRequestStatusSerializer, DocumentRequestCancelSerializer
 from backend.common.permissions import IsFaculty
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from .models import DocumentRequest
-
-from rest_framework import generics
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-from .models import DocumentRequest, DocumentRequestAction
-from .serializers import DocumentRequestSerializer, DocumentRequestStatusSerializer, DocumentRequestCancelSerializer
+from backend.accounts.models import User
+from .permissions import IsFaculty
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def document_request_history(request):
     """Return all requests for the current user"""
     requests = DocumentRequest.objects.filter(student=request.user)
+    print(f"Debug: Querying {requests.query}, Count: {requests.count()}")  # Add this line
     serializer = DocumentRequestSerializer(requests, many=True)
     return Response(serializer.data)
 
@@ -48,28 +42,34 @@ def document_request_cancel(request, pk):
     serializer.save()
     return Response({"message": "Request cancelled"})
 
-
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_document_request(request):
-    doc_type = request.data.get("doc_type")
-    semester = request.data.get("semester")
-    sy = request.data.get("school_year")
+    # Handle both 'doc_type' and 'document_type' for compatibility with chatbot
+    doc_type = request.data.get("document_type") or request.data.get("doc_type")
+    purpose = request.data.get("purpose")  # Required by model
+    semester = request.data.get("semester", "")  # Optional, store in purpose if needed
+    school_year = request.data.get("school_year", "")  # Optional, store in purpose if needed
 
-    if not doc_type:
-        return Response({"error": "doc_type is required"}, status=status.HTTP_400_BAD_REQUEST)
+    if not doc_type or not purpose:
+        return Response({"error": "document_type and purpose are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Combine semester and school_year into purpose if provided
+    full_purpose = purpose
+    if semester or school_year:
+        full_purpose += f" (Semester: {semester}, School Year: {school_year})"
 
     doc_request = DocumentRequest.objects.create(
-        user=request.user,
-        doc_type=doc_type,
-        semester=semester,
-        school_year=sy,
+        student=request.user,
+        document_type=doc_type,
+        purpose=full_purpose,
         status="pending"
     )
     return Response({
         "id": doc_request.id,
-        "doc_type": doc_request.doc_type,
-        "status": doc_request.status
+        "document_type": doc_request.document_type,
+        "status": doc_request.status,
+        "purpose": doc_request.purpose
     }, status=status.HTTP_201_CREATED)
 
 class DocumentRequestListCreateView(generics.ListCreateAPIView):
@@ -78,7 +78,7 @@ class DocumentRequestListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role == 'faculty':
+        if hasattr(user, 'role') and user.role == 'faculty':  # Check if role exists
             return DocumentRequest.objects.all().select_related('student', 'processed_by')
         return DocumentRequest.objects.filter(student=user).select_related('student', 'processed_by')
 
@@ -98,21 +98,22 @@ class DocumentRequestDetailView(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role == 'faculty':
+        if hasattr(user, 'role') and user.role == 'faculty':  # Check if role exists
             return DocumentRequest.objects.all().select_related('student', 'processed_by')
         return DocumentRequest.objects.filter(student=user).select_related('student', 'processed_by')
 
 class DocumentRequestStatusUpdateView(generics.UpdateAPIView):
     queryset = DocumentRequest.objects.all().select_related('student', 'processed_by')
     serializer_class = DocumentRequestStatusSerializer
-    permission_classes = [permissions.IsAuthenticated, IsFaculty]
+    permission_classes = [IsAuthenticated, IsFaculty]
+    http_method_names = ['post', 'put', 'patch']
 
     def perform_update(self, serializer):
         instance = self.get_object()
         old_status = instance.status
         updated = serializer.save(processed_by=self.request.user)
 
-        # audit
+        from .models import DocumentRequestAction
         DocumentRequestAction.objects.create(
             request=updated,
             actor=self.request.user,

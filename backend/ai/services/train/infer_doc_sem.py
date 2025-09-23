@@ -23,6 +23,8 @@ _tok_doc = _mod_doc = _tok_sem = _mod_sem = None
 def _ensure_loaded():
     """Load models/tokenizers once on first use."""
     global _tok_doc, _mod_doc, _tok_sem, _mod_sem
+    if not os.path.isdir(DOC_DIR) or not os.path.isdir(SEM_DIR):
+        raise RuntimeError(f"Checkpoints not found in {CKPT_DIR}. Run train_doc_sem_local.py first.")
     if _tok_doc is None or _mod_doc is None:
         _tok_doc = AutoTokenizer.from_pretrained(DOC_DIR)
         _mod_doc = AutoModelForSequenceClassification.from_pretrained(DOC_DIR)

@@ -19,9 +19,13 @@ class DocumentRequestAction(models.Model):
         ordering = ('-created_at',)
 
     def __str__(self):
-        return f"{self.request_id} {self.action} {self.from_status}->{self.to_status}"
+        return f"{self.request.id} - {self.action} ({self.created_at})"  # Fixed request_id to request.id
 
 class DocumentRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        CANCELLED = 'cancelled', 'Cancelled'
+        PROCESSED = 'processed', 'Processed'
     DOCUMENT_TYPES = [
         ('transcript', 'Transcript of Records'),
         ('good_moral', 'Certificate of Good Moral'),
@@ -37,7 +41,7 @@ class DocumentRequest(models.Model):
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
         ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),  # ✅ Added for chatbot cancel
+        ('cancelled', 'Cancelled'),
     ], default='pending')
     requested_at = models.DateTimeField(auto_now_add=True)
     processed_by = models.ForeignKey(
@@ -46,6 +50,11 @@ class DocumentRequest(models.Model):
         null=True, blank=True,
         related_name="processed_document_requests"
     )
+    receipt_image = models.ImageField(upload_to='receipts/', null=True, blank=True, default=None)
+    notes = models.TextField(blank=True, null=True)  # Add this line
 
     def __str__(self):
         return f"{self.student.email} - {self.document_type} - {self.status}"
+
+    class Meta:
+        ordering = ('-requested_at',)

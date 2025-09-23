@@ -26,12 +26,24 @@ class DocumentRequestSerializer(serializers.ModelSerializer):
 
 
 class DocumentRequestStatusSerializer(serializers.ModelSerializer):
-    """Used by faculty to update status and optional notes/purpose."""
-    notes = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    status = serializers.ChoiceField(choices=DocumentRequest.Status.choices)
+    notes = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = DocumentRequest
-        fields = ("status", "notes")
+        fields = ['status', 'notes']
+
+    def validate_status(self, value):
+        if value not in [choice[0] for choice in DocumentRequest.Status.choices]:
+            raise serializers.ValidationError(f"\"{value}\" is not a valid choice.")
+        return value
+
+    def update(self, instance, validated_data):
+        instance.status = validated_data.get('status', instance.status)
+        instance.notes = validated_data.get('notes', instance.notes)
+        instance.processed_by = self.context['request'].user
+        instance.save()
+        return instance
 
 
 class DocumentRequestCancelSerializer(serializers.ModelSerializer):

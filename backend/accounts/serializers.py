@@ -35,10 +35,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def validate_student_id(self, value):
-        # Let blank/null pass unless role=student (checked in validate())
-        if value in (None, "",):
-            return value
-        validate_student_id(value)
+        if value in (None, "",) and self.initial_data.get("role") == User.Roles.STUDENT:
+            raise serializers.ValidationError("Student ID is required for students.")
+        if value not in (None, "",):
+            validate_student_id(value)
         return value
 
     def validate(self, attrs):
@@ -51,7 +51,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated):
         validated.pop("confirm_password", None)
         password = validated.pop("password")
-        user = User.objects.create(**validated)  # username auto‑fills from email
+        # Only include student_id if provided and valid
+        if validated.get("role") == User.Roles.STUDENT and not validated.get("student_id"):
+            validated["student_id"] = None  # Explicitly set to None for students without ID
+        elif validated.get("role") == User.Roles.FACULTY:
+            validated["student_id"] = None  # Ensure faculty has no student_id
+        user = User.objects.create(**validated)  # username auto-fills from email
         user.set_password(password)
         user.is_active = True
         user.save()

@@ -118,6 +118,9 @@ def get_tok_and_model(num_labels: int):
 def train_head(head: str, train_ds: Dataset, val_ds: Dataset, num_labels: int, out_subdir: str):
     tok, model = get_tok_and_model(num_labels)
 
+    if len(train_ds) == 0 or len(val_ds) == 0:
+        raise ValueError("Training or validation dataset is empty.")
+
     if head == "doc":
         train_tok = train_ds.map(lambda b: tokenize_for("doc_label", tok, b), batched=True, remove_columns=train_ds.column_names)
         val_tok   = val_ds.map(lambda b: tokenize_for("doc_label", tok, b), batched=True, remove_columns=val_ds.column_names)
