@@ -3,7 +3,6 @@ import 'package:mobile/core/services/secure_storage.dart';
 import 'package:mobile/core/services/dio_client.dart';
 import 'package:mobile/features/auth/data/sources/auth_api.dart';
 import 'package:mobile/features/auth/data/repositories/auth_repository.dart';
-import 'package:mobile/features/home/presentation/pages/home_container.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -48,15 +47,12 @@ class _LoginPageState extends State<LoginPage> {
       await repo.signIn(role: 'student', email: email, password: password);
 
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeContainer()),
-        (route) => false,
-      );
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Login failed: $e')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -90,11 +86,14 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 20),
                   Card(
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     elevation: 4,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 32),
+                        horizontal: 24,
+                        vertical: 32,
+                      ),
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 400),
                         child: Column(
@@ -103,7 +102,9 @@ class _LoginPageState extends State<LoginPage> {
                             const Text(
                               "Log in",
                               style: TextStyle(
-                                  fontSize: 24, fontWeight: FontWeight.bold),
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 25),
                             TextField(
@@ -124,11 +125,14 @@ class _LoginPageState extends State<LoginPage> {
                                 hintText: "Password",
                                 border: const OutlineInputBorder(),
                                 suffixIcon: IconButton(
-                                  icon: Icon(obscureText
-                                      ? Icons.visibility
-                                      : Icons.visibility_off),
+                                  icon: Icon(
+                                    obscureText
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                  ),
                                   onPressed: () => setState(
-                                      () => obscureText = !obscureText),
+                                    () => obscureText = !obscureText,
+                                  ),
                                 ),
                               ),
                             ),
@@ -139,9 +143,11 @@ class _LoginPageState extends State<LoginPage> {
                                 Row(
                                   children: [
                                     Checkbox(
-                                        value: rememberMe,
-                                        onChanged: (val) => setState(
-                                            () => rememberMe = val ?? false)),
+                                      value: rememberMe,
+                                      onChanged: (val) => setState(
+                                        () => rememberMe = val ?? false,
+                                      ),
+                                    ),
                                     const Text("Remember Me"),
                                   ],
                                 ),
@@ -163,8 +169,9 @@ class _LoginPageState extends State<LoginPage> {
                                 child: Text(
                                   _loading ? "Signing in…" : "Log in",
                                   style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
@@ -174,10 +181,9 @@ class _LoginPageState extends State<LoginPage> {
                               height: 45,
                               child: OutlinedButton(
                                 onPressed: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => const HomeContainer()),
+                                  Navigator.of(context).pushNamedAndRemoveUntil(
+                                    '/home',
+                                    (route) => false,
                                   );
                                 },
                                 child: const Text(
@@ -196,15 +202,16 @@ class _LoginPageState extends State<LoginPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (_) =>
-                                              const RegisterPage()),
+                                        builder: (_) => const RegisterPage(),
+                                      ),
                                     );
                                   },
                                   child: const Text(
                                     "Register",
                                     style: TextStyle(
-                                        color: Colors.blue,
-                                        fontWeight: FontWeight.bold),
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],

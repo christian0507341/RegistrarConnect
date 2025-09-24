@@ -1,6 +1,6 @@
 # --- Make 'services' importable even when running this file directly ---
 import os, sys
-_THIS = os.path.dirname(__file__)                        # .../backend/ai/services/train
+_THIS = os.path.dirname(__file__)                           # .../backend/ai/services/train
 _AI_DIR = os.path.abspath(os.path.join(_THIS, "..", ".."))  # .../backend/ai
 if _AI_DIR not in sys.path:
     sys.path.insert(0, _AI_DIR)
@@ -9,10 +9,33 @@ if _AI_DIR not in sys.path:
 import re, json, hashlib, datetime as dt
 from typing import Dict, Optional
 import difflib
-from infer_doc_sem import predict as clf_predict
 import requests
 
-API_BASE = "http://127.0.0.1:8000/api"   # <--- change to your backend base
+# ----- package-safe imports -----
+# infer_doc_sem
+try:
+    # when imported as backend.ai.services.train.chatbot_cli
+    from backend.ai.services.train.infer_doc_sem import predict as clf_predict
+except Exception:
+    # when executed directly from this folder
+    from infer_doc_sem import predict as clf_predict
+
+# policy
+try:
+    from backend.ai.services.policy import (
+        POLICY_VERSION,
+        DOC_TYPES as POLICY_DOC_TYPES,
+        DOC_REQUIREMENTS,
+    )
+except Exception:
+    from services.policy import (
+        POLICY_VERSION,
+        DOC_TYPES as POLICY_DOC_TYPES,
+        DOC_REQUIREMENTS,
+    )
+
+# ---------- config ----------
+API_BASE = os.getenv("RC_API_BASE", "http://127.0.0.1:8000/api")
 ACCESS_TOKEN = None
 STUDENT_ID = None   # will be fetched from backend via access token
 
@@ -20,14 +43,9 @@ def login(email: str, password: str, role: Optional[str] = None) -> Optional[dic
     try:
         payload = {"email": email, "password": password}
         if role:
-            payload["role"] = role  # include role if provided
+            payload["role"] = role
 
-        r = requests.post(
-            f"{API_BASE}/auth/login/",
-            json=payload,
-            timeout=10
-        )
-
+        r = requests.post(f"{API_BASE}/auth/login/", json=payload, timeout=10)
         if r.status_code != 200:
             print(f"⚠️ Login failed: {r.status_code} {r.text}")
             return None
@@ -39,9 +57,7 @@ def login(email: str, password: str, role: Optional[str] = None) -> Optional[dic
             print("❌ Login succeeded but no access token returned")
             return None
 
-        # Return full response including token
         return data
-
     except Exception as e:
         print("⚠️ login() error:", e)
         return None
@@ -56,7 +72,6 @@ def get_current_user(token: str) -> dict | None:
         resp = requests.get(f"{API_BASE}/auth/me/", headers=headers, timeout=5)
         if resp.status_code == 200:
             data = resp.json()
-            # Expect backend to include student_id or fallback to numeric id
             STUDENT_ID = data.get("student_id") or str(data.get("id"))
             return data
         else:
@@ -66,17 +81,17 @@ def get_current_user(token: str) -> dict | None:
         print("⚠️ get_current_user error:", e)
         return None
 
-def submit_document_request(token: str, doc_type, semester=None, school_year=None, purpose=None, other_doc_name=None, payment_method=None):
+def submit_document_request(token: str, doc_type, semester=None, school_year=None,
+                            purpose=None, other_doc_name=None, payment_method=None):
     headers = {"Authorization": f"Bearer {token}"}
     data = {
-        "document_type": doc_type,  # Changed from "doc_type" to match backend expectation
+        "document_type": doc_type,  # NOTE: backend expects document_type
         "semester": semester,
         "school_year": school_year,
-        "purpose": purpose,  # Ensure purpose is included
+        "purpose": purpose,
         "other_doc_name": other_doc_name,
         "payment_method": payment_method,
     }
-    # Remove None values to avoid sending empty fields
     data = {k: v for k, v in data.items() if v is not None}
     resp = requests.post(f"{API_BASE}/document-requests/create/", json=data, headers=headers)
     if resp.status_code == 201:
@@ -101,8 +116,6 @@ def fetch_my_requests(token: str):
         print(f"⚠️ fetch_my_requests error: {e}")
         return []
 
-# single source of truth (from backend/ai/services/policy.py)
-from services.policy import POLICY_VERSION, DOC_TYPES as POLICY_DOC_TYPES, DOC_REQUIREMENTS
 DOC_TYPES = set(POLICY_DOC_TYPES)
 
 HERE = os.path.dirname(__file__)
@@ -149,7 +162,6 @@ def normalize_school_year(text: str) -> Optional[str]:
 
 def normalize_semester(text: str) -> Optional[int]:
     s = text.lower()
-    # direct numbers
     if re.search(r"\b(1|first|1st|sem1|s1)\b", s):
         return 1
     if re.search(r"\b(2|second|2nd|sem2|s2)\b", s):
@@ -157,21 +169,10 @@ def normalize_semester(text: str) -> Optional[int]:
     return None
 
 def _two_digit_year_to_full(y: int) -> int:
-    # heuristic: "25" => 2025, "26" => 2026
     return 2000 + y if y < 100 else y
 
 def normalize_school_year(text: str) -> Optional[str]:
-    """
-    Accepts formats like:
-      - 2025-2026
-      - 2025/26  (slash)
-      - 2025-26  (short second year)
-      - 2526     (two-digit years stuck together)
-    Returns normalized "YYYY-YYYY" or None.
-    """
     s = text.replace("–", "-").replace("—", "-").replace("/", "-").strip().lower()
-
-    # 2024-2025 or 2024-25
     m = re.search(r"\b(20\d{2})\s*-\s*(\d{2,4})\b", s)
     if m:
         y1 = int(m.group(1))
@@ -180,15 +181,12 @@ def normalize_school_year(text: str) -> Optional[str]:
         if y2 == y1 + 1:
             return f"{y1}-{y2}"
         return None
-
-    # Stuck two-digit years like "2526"
     m = re.search(r"\b(\d{2})(\d{2})\b", s)
     if m:
         y1 = _two_digit_year_to_full(int(m.group(1)))
         y2 = _two_digit_year_to_full(int(m.group(2)))
         if y2 == y1 + 1:
             return f"{y1}-{y2}"
-
     return None
 
 def is_yes(text: str) -> bool:
@@ -199,7 +197,6 @@ def is_no(text: str) -> bool:
 
 def looks_like_request_intent(text: str) -> bool:
     s = text.lower()
-    # covers: request, apply, issue, process, get, need, want, please...
     return bool(re.search(r"\b(request|apply|issue|process|get|need|want|submit|please|gawa|kuha|kailangan)\b", s))
 
 def looks_like_question_permission(text: str) -> bool:
@@ -207,9 +204,7 @@ def looks_like_question_permission(text: str) -> bool:
     return ("can i" in s) or ("pwede" in s) or ("puwede" in s) or ("?" in s and "request" in s)
 
 def map_doc_synonyms(text: str) -> str:
-    """Normalize user text into one of the known doc types (OTR, COG, COE, OTHERS)."""
     t = text.lower().strip()
-
     if any(x in t for x in ["otr", "tor", "transcript"]):
         return "OTR"
     if any(x in t for x in ["cog", "grades", "certificate of grades", "copy of grades"]):
@@ -218,21 +213,17 @@ def map_doc_synonyms(text: str) -> str:
         return "COE"
     if any(x in t for x in ["good moral", "honorable", "dismissal", "clearance", "others"]):
         return "OTHERS"
-
     return None
 
 def is_howto_question(text: str) -> Optional[str]:
-    """Return doc_type if this looks like a 'how to request <doc>' question, else None."""
     s = text.lower().strip()
     if s.startswith("how to ") or s.startswith("how do i ") or s.startswith("how can i "):
         mapped = map_doc_synonyms(s)
         if mapped:
             return mapped
-        # try exact keywords too
         for key in ["transcript", "otr", "tor", "cog", "certificate of grades", "coe", "certificate of enrollment", "others"]:
             if key in s:
                 return map_doc_synonyms(key) or "OTHERS"
-    # also catch “how to request …”
     if "how to request" in s or "how do i request" in s:
         mapped = map_doc_synonyms(s)
         if mapped:
@@ -240,11 +231,9 @@ def is_howto_question(text: str) -> Optional[str]:
     return None
 
 def doc_from_text(text: str) -> Optional[str]:
-    """Return doc_type if text **is** or clearly contains a single doc keyword."""
     mapped = map_doc_synonyms(text)
     if mapped:
         return mapped
-    # Exactly one token that matches doc shortcut
     t = text.strip().lower()
     if t in {"otr", "tor", "transcript"}:
         return "OTR"
@@ -257,7 +246,6 @@ def doc_from_text(text: str) -> Optional[str]:
     return None
 
 def provide_howto(doc_type: str) -> str:
-    """Informational answer for 'How to request <doc>' (Q&A mode)."""
     base = {
         "OTR":  "For **OTR (Transcript)**: I’ll need your **purpose** (no semester/SY needed). You’ll confirm, then pay, then it goes to faculty for approval. Release is next working day after approval.",
         "COG":  "For **COG (Certificate of Grades)**: I’ll need **semester (1/2)**, **school year** (e.g., 2025-2026), and **purpose**. You confirm, then pay, then it goes to faculty. Release next working day after approval.",
@@ -265,7 +253,6 @@ def provide_howto(doc_type: str) -> str:
         "OTHERS":"For **other certificates**: please tell me the **document name** and your **purpose**. Then confirm → payment → faculty approval → release.",
     }
     extra = ""
-    # Same-day note if enabled
     if SAME_DAY_ENABLED:
         extra = "\n" + sameday_line({"same_day": {"enabled": True, "reason": SAME_DAY_REASON}})
     return base.get(doc_type, base["OTHERS"]) + extra
@@ -306,9 +293,9 @@ def start_new_session(user_id: str) -> Dict:
         "semester": None,
         "school_year": None,
         "purpose": None,
-        "specify": None,          # <— for OTHERS (your policy)
-        "other_doc_name": None,   # <— legacy shim; we’ll mirror into specify
-        "sis_confirmed": None,    # COE only
+        "specify": None,
+        "other_doc_name": None,
+        "sis_confirmed": None,
         "payment_method": None,
         "receipt_hashes": [],
         "expected": None,
@@ -319,9 +306,8 @@ def start_new_session(user_id: str) -> Dict:
     return session
 
 def reset_request_fields(session: Dict):
-    """Clear only the current request fields; keep user/session state + history."""
     for k in ["doc_type","semester","school_year","purpose","specify",
-          "other_doc_name","sis_confirmed","payment_method"]:
+              "other_doc_name","sis_confirmed","payment_method"]:
         session[k] = None
     session["receipt_hashes"] = []
     session["status"] = "draft"
@@ -332,9 +318,7 @@ def next_missing_slot(session: Dict) -> Optional[str]:
     doc = session.get("doc_type")
     if not doc:
         return "doc_type"
-
     req = DOC_REQUIREMENTS.get(doc, {})
-    # 1) required slots first
     for slot in req.get("required", []):
         if slot == "semester":
             if session.get("semester") not in {1, 2}:
@@ -342,20 +326,15 @@ def next_missing_slot(session: Dict) -> Optional[str]:
         elif slot == "school_year":
             if not session.get("school_year"):
                 return "school_year"
-        elif slot == "specify":  # OTHERS
-            # allow legacy field to satisfy it
+        elif slot == "specify":
             if not (session.get("specify") or session.get("other_doc_name")):
                 return "specify"
         else:
             if not session.get(slot):
                 return slot
-
-    # 2) needs_personal_info → sis_confirmed
     if req.get("needs_personal_info"):
         if session.get("sis_confirmed") not in {True, False}:
             return "sis_confirm"
-
-    # 3) optional slots are, well, optional 😊
     return None
 
 def ask_for(slot: str, session: Dict) -> str:
@@ -385,84 +364,52 @@ def sameday_line(session: Dict) -> str:
         return f"Same-day release is enabled today.{extra}"
     return "Release is the **next working day** after approval."
 
-# -------- Edit helpers (parse "edit/change/set ...") --------
+# -------- Edit helpers --------
 EDIT_TRIGGERS = ("edit", "change", "set", "update", "fix")
 
 def parse_edit_intent(text: str):
-    """
-    Returns (field, value) or (None, None).
-    Supports:
-      - edit sem 2 / change semester to 1 / set s2
-      - edit sy 2025-2026 / change school year 25/26 / update sy 2526
-      - edit purpose scholarship / set purpose: scholarship
-      - edit doc cog / change document to coe / set document otr
-      - edit specify good moral / change document name: clearance
-    """
     s = text.strip().lower()
     if not any(s.startswith(t) for t in EDIT_TRIGGERS):
         return None, None
-
-    # remove trigger word(s)
     for t in EDIT_TRIGGERS:
         if s.startswith(t):
             s = s[len(t):].strip()
             break
-
-    # optional fillers at the start
     s = re.sub(r"^(the|my|to)\s+", "", s)
-
-    # document type (prefer this if user names a known type)
     if re.search(r"\b(doc|document|type)\b", s) or any(x in s for x in ["otr","cog","coe","enrollment","grades","transcript","others"]):
         mapped = map_doc_synonyms(s)
         if mapped:
             return "doc_type", mapped
-
-    # semester
     if re.search(r"\b(sem|semester|s1|s2|1st|2nd|first|second)\b", s):
         sem = normalize_semester(s)
         if sem in (1, 2):
             return "semester", sem
-
-    # school year
     if re.search(r"\b(sy|school year|2526|20\d{2}\s*[-/]\s*\d{2,4})\b", s):
         sy = normalize_school_year(s)
         if sy:
             return "school_year", sy
-
-    # purpose
     if "purpose" in s or re.search(r"\b(for|para)\b", s):
         m = re.search(r"purpose[:\s]+(.+)$", s)
         val = (m.group(1) if m else s).strip()
         if len(val) >= 3:
             return "purpose", val
-
-    # specify (OTHERS) — document name to request
-    # catch phrases like: "specify good moral", "document name: clearance", "name honorable dismissal"
     if re.search(r"\b(specify|document(?:\s*name)?|name)\b", s):
         m = re.search(r"(?:specify|document(?:\s*name)?|name)[:\s]+(.+)$", s)
         val = (m.group(1) if m else s).strip()
-        # remove leading fillers again in captured value
         val = re.sub(r"^(the|my|to)\s+", "", val).strip()
         if len(val) >= 3:
             return "specify", val
-
     return None, None
 
 def apply_edit(session: Dict, field: str, value):
-    """
-    Apply a single edit and handle dependent resets.
-    """
     if field == "doc_type":
-        old = session.get("doc_type")
         new = value
         session["doc_type"] = new
-        # reset fields that no longer apply
         if new in {"OTR", "OTHERS"}:
             session["semester"] = None
             session["school_year"] = None
             session["sis_confirmed"] = None
         elif new in {"COG", "COE"}:
-            # keep sem/SY if already valid; else will be re-asked
             if session.get("semester") not in {1,2}:
                 session["semester"] = None
             if not session.get("school_year"):
@@ -483,7 +430,6 @@ def bot_intro(session: Dict) -> str:
         return f"Welcome back. Your last request is **{session['status']}**. How can I help you today?"
     return "Welcome! I can help with registrar document requests. Ask a question or say what you want to request."
 
-# ------- Fuzzy doc synonym matcher (no new deps) -------
 DOC_SYNONYMS = {
     "OTR": ["otr", "tor", "transcript", "transcript of records", "official transcript"],
     "COG": ["cog", "certificate of grades", "grades", "copy of grades"],
@@ -492,28 +438,20 @@ DOC_SYNONYMS = {
 }
 
 def guess_doc_with_fuzzy(text: str):
-    """
-    Try to guess a doc_type from a possibly-typo'd input.
-    Returns (doc_type|None, score: float, matched_word|None).
-    """
     s = text.lower().strip()
     if not s:
         return None, 0.0, None
-
-    # token candidates + full string
     tokens = re.findall(r"[a-zA-Z]+", s)
     candidates = set(tokens + [s])
-
-    best = (None, 0.0, None)  # (doc_type, score, matched)
+    best = (None, 0.0, None)
     for doc, words in DOC_SYNONYMS.items():
         for w in words:
             for cand in candidates:
                 score = difflib.SequenceMatcher(None, cand, w).ratio()
                 if score > best[1]:
                     best = (doc, score, w)
-    return best  # doc_type, score, matched_word
+    return best
 
-# ------- Scope guard (off-topic fallback) -------
 def scope_guard_message() -> str:
     return ("I’m here for **RegistrarConnect** document requests "
             "(OTR, COG, COE, other certifications).\n"
@@ -523,12 +461,11 @@ def log_message(session, sender, text):
     if "history" not in session:
         session["history"] = []
     session["history"].append({"sender": sender, "text": text})
-    # Keep only last 10 messages
     session["history"] = session["history"][-10:]
 
 def handle_user_text(session: Dict, text: str, access_token: str) -> str:
     text_lower = text.strip().lower()
-
+    # (unchanged core logic below)
     # ---------------- Help ----------------
     if text_lower in {"help", "/help"}:
         return (
@@ -542,13 +479,10 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             reqs = fetch_my_requests(access_token)
         except Exception as e:
             return f"⚠️ Could not fetch your requests: {e}"
-
         if not reqs:
             return "You have no recent requests in the system."
-
         latest = reqs[0]
         print("🔍 Latest request payload:", latest)
-
         doc_type = latest.get("doc_type") or latest.get("document_type") or "Unknown"
         status = latest.get("status") or "Unknown"
         return f"📄 Latest request: **{doc_type}** | Status: **{status}**"
@@ -559,9 +493,7 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         tail = session.get("history", [])[-n:]
         if not tail:
             return "No history yet."
-        return "Recent messages:\n" + "\n".join(
-            [f"- {m['sender']}: {m['text']}" for m in tail]
-        )
+        return "Recent messages:\n" + "\n".join([f"- {m['sender']}: {m['text']}" for m in tail])
 
     # ---------------- Reset ----------------
     if text_lower in {"reset", "/reset"}:
@@ -587,37 +519,32 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             return "Your request has been **cancelled**. You can start a new request anytime."
         return "Sorry, the request **cannot be cancelled** after payment."
 
-    # ---------------- Request Flow ----------------
+    # legacy guided flow (kept)
     step = session.get("step")
-
     if step == "choose_document":
         if text_lower in {"otr", "cog", "coe", "others"}:
             session["document"] = text.upper()
             session["step"] = "provide_purpose"
             return f"You chose **{session['document']}**. Please provide your purpose."
         return "Please choose **OTR**, **COG**, **COE**, or **Others**."
-
     if step == "provide_purpose":
         session["purpose"] = text
         session["step"] = "completed"
         return f"Got it! Your request for **{session['document']}** with purpose **{text}** has been recorded."
-
     if step == "completed":
         return "✅ Your request is already recorded. Type **new** to start another."
 
     # ---------------- Expected replies ----------------
     exp = session.get("expected")
 
-    # 1) Consent after a permission question
+    # 1) Consent
     if exp == "consent":
         if is_yes(text):
-            session["mode"] = "request"
-            session["expected"] = None
+            session["mode"] = "request"; session["expected"] = None
             slot = next_missing_slot(session)
             return ask_for(slot, session)
         if is_no(text):
-            session["mode"] = "qa"
-            session["expected"] = None
+            session["mode"] = "qa"; session["expected"] = None
             return "No problem. Feel free to ask anything about registrar requests."
         return "Please answer **Yes** if you want to proceed, or **No** to stay in Q&A."
 
@@ -628,24 +555,15 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             session["doc_type"] = guessed
             session["doc_guess"] = None
             session["expected"] = None
-            slot = next_missing_slot(session)
-            session["expected"] = slot
-
+            slot = next_missing_slot(session); session["expected"] = slot
             if guessed in {"COG", "COE"} and slot == "semester":
-                label = {
-                    "OTR": "Official Transcript of Records (OTR)",
-                    "COG": "Certificate of Grades (COG)",
-                    "COE": "Certificate of Enrollment (COE)",
-                    "OTHERS": "Other certificate",
-                }[guessed]
+                label = {"OTR":"Official Transcript of Records (OTR)","COG":"Certificate of Grades (COG)","COE":"Certificate of Enrollment (COE)","OTHERS":"Other certificate"}[guessed]
                 return (f"Got it — **{label}**.\n"
                         "Please provide **Semester (1/2)** and **School Year** (e.g., 2025-2026).\n"
                         "You can type them together, like: `Sem 2 SY 2025-2026`.")
             return ask_for(slot, session)
-
         if is_no(text):
-            session["doc_guess"] = None
-            session["expected"] = "doc_type"
+            session["doc_guess"] = None; session["expected"] = "doc_type"
             return "No problem — Which document do you need? **OTR / COG / COE / Others**?"
         return "Please answer **Yes** if that’s what you meant, or **No** to choose a different document."
 
@@ -653,24 +571,16 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
     if exp == "semester":
         sem = normalize_semester(text)
         sy = normalize_school_year(text)
-
         if sem in (1, 2):
             session["semester"] = sem
-            if sy:
-                session["school_year"] = sy
-
-            # Check for purpose in the same input
+            if sy: session["school_year"] = sy
             purpose_match = re.search(r"purpose[:\s]+(.+)", text.lower())
-            if purpose_match:
-                session["purpose"] = purpose_match.group(1).strip()
-
+            if purpose_match: session["purpose"] = purpose_match.group(1).strip()
             slot = next_missing_slot(session)
             if slot:
                 session["expected"] = slot
                 return ask_for(slot, session)
-
-            session["status"] = "confirming"
-            session["expected"] = "confirm"
+            session["status"] = "confirming"; session["expected"] = "confirm"
             msg = f"Please review your request: **{summarize_request(session)}**."
             if session["doc_type"] == "COE" and session.get("sis_confirmed") not in {True, False}:
                 msg += "\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)"
@@ -678,25 +588,19 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             else:
                 msg += "\nType **confirm** to proceed or **edit** to change details."
             return msg
-
         return "Please answer with **1** or **2** for the semester."
 
     elif exp == "school_year":
         sy = normalize_school_year(text)
         if sy:
             session["school_year"] = sy
-            # Check for purpose in the same input
             purpose_match = re.search(r"purpose[:\s]+(.+)", text.lower())
-            if purpose_match:
-                session["purpose"] = purpose_match.group(1).strip()
-
+            if purpose_match: session["purpose"] = purpose_match.group(1).strip()
             slot = next_missing_slot(session)
             if slot:
                 session["expected"] = slot
                 return ask_for(slot, session)
-
-            session["status"] = "confirming"
-            session["expected"] = "confirm"
+            session["status"] = "confirming"; session["expected"] = "confirm"
             msg = f"Please review your request: **{summarize_request(session)}**."
             if session["doc_type"] == "COE" and session.get("sis_confirmed") not in {True, False}:
                 msg += "\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)"
@@ -710,16 +614,12 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         purpose = text.strip()
         if len(purpose) < 3:
             return "Please provide a short purpose (e.g., Scholarship, Visa, PRC)."
-        session["purpose"] = purpose
-        session["expected"] = None
-
+        session["purpose"] = purpose; session["expected"] = None
         slot = next_missing_slot(session)
         if slot:
             session["expected"] = slot
             return ask_for(slot, session)
-
-        session["status"] = "confirming"
-        session["expected"] = "confirm"
+        session["status"] = "confirming"; session["expected"] = "confirm"
         msg = f"Please review your request: **{summarize_request(session)}**."
         if session["doc_type"] == "COE" and session.get("sis_confirmed") not in {True, False}:
             msg += "\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)"
@@ -730,11 +630,9 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
 
     elif exp == "sis_confirm":
         if is_yes(text):
-            session["sis_confirmed"] = True
-            session["expected"] = None
+            session["sis_confirmed"] = True; session["expected"] = None
         elif is_no(text):
-            session["sis_confirmed"] = False
-            session["expected"] = None
+            session["sis_confirmed"] = False; session["expected"] = None
             return ("Please **update your SIS details** first, then come back to continue this request.\n"
                     "Type **confirm** when you’re ready to proceed.")
         else:
@@ -744,22 +642,15 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         name = text.strip()
         if len(name) < 3:
             return "Please provide the document name."
-
-        session["specify"] = name
-        session["other_doc_name"] = name
-        session["expected"] = None
-
+        session["specify"] = name; session["other_doc_name"] = name; session["expected"] = None
         mapped = map_doc_synonyms(name)
         if mapped and mapped != "OTHERS":
             session["doc_type"] = mapped
-
         slot = next_missing_slot(session)
         if slot:
             session["expected"] = slot
             return ask_for(slot, session)
-
-        session["status"] = "confirming"
-        session["expected"] = "confirm"
+        session["status"] = "confirming"; session["expected"] = "confirm"
         msg = f"Please review your request: **{summarize_request(session)}**."
         if session.get("doc_type") == "COE" and session.get("sis_confirmed") not in {True, False}:
             msg += "\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)"
@@ -773,12 +664,10 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             session["expected"] = "sis_confirm"
             return ("Before we proceed, please confirm: "
                     "**Are your SIS personal details up to date?** (Yes/No)")
-
         if text_lower == "confirm" or is_yes(text):
             if not session.get("purpose"):
                 session["expected"] = "purpose"
                 return "Oh, it looks like you missed the purpose for your request. Please provide it (e.g., Scholarship, Visa, PRC)."
-
             resp = submit_document_request(access_token,
                 doc_type=session.get("doc_type"),
                 semester=session.get("semester"),
@@ -789,10 +678,8 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             if resp:
                 session["status"] = "awaiting_payment"
                 session["expected"] = "payment_method"
-                msg = (
-                    "Thanks! Your request is confirmed: "
-                    f"**{summarize_request(session)}**\n" + nonrefundable_notice()
-                )
+                msg = ("Thanks! Your request is confirmed: "
+                       f"**{summarize_request(session)}**\n" + nonrefundable_notice())
                 if session.get("same_day", {}).get("enabled"):
                     msg += "\n" + sameday_line(session)
                 return msg
@@ -806,12 +693,10 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
                 session["expected"] = slot
                 return f"⚠️ Missing or invalid {slot}. Please provide it: {ask_for(slot, session)}"
             return "⚠️ Failed to submit request. Please try again or contact support."
-
         if text_lower == "edit":
             session["expected"] = "edit"
             return ("Okay, let’s edit. Try: `edit sem 2`, `change sy 2025-2026`, "
                     "`set purpose scholarship`, or `edit doc OTR`.")
-
         return "Please type **confirm** to proceed or **edit** to change details."
 
     elif exp == "payment_method":
@@ -822,8 +707,7 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             session["payment_method"] = "gcash"
         else:
             return "Please choose **Personal (Finance)** or **Online (GCash)**."
-        session["status"] = "awaiting_payment"
-        session["expected"] = "receipt"
+        session["status"] = "awaiting_payment"; session["expected"] = "receipt"
         if session["payment_method"] == "gcash":
             return ("Great. Please pay using the provided online channel.\n"
                     "After paying, **paste your receipt/reference code** (e.g., `RCPT12345`) "
@@ -834,36 +718,28 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
 
     elif exp == "receipt":
         rid = text.strip()
-        if not rid:  # Handle empty input (e.g., accidental Enter)
+        if not rid:
             return "Oops, it seems you didn’t provide a receipt/reference code. Please enter it or upload an image (future feature)."
         if "receipt_hashes" not in session:
             session["receipt_hashes"] = []
-
         h = md5(rid)
         if h in session["receipt_hashes"]:
             return "This receipt looks **identical** to a previously submitted one. Please upload a **new** receipt."
-
         session["receipt_hashes"].append(h)
-        session["status"] = "pending"
-        session["expected"] = "another"
-
-        msg = (
-            "Thanks, I’ve recorded your receipt.\n"
-            "Your request is now **pending faculty approval**.\n"
-            + sameday_line(session) +
-            "\n\nWould you like to **request another document now**? (Yes/No)"
-        )
+        session["status"] = "pending"; session["expected"] = "another"
+        msg = ("Thanks, I’ve recorded your receipt.\n"
+               "Your request is now **pending faculty approval**.\n"
+               + sameday_line(session) +
+               "\n\nWould you like to **request another document now**? (Yes/No)")
         return msg
 
     elif exp == "another":
         if is_yes(text):
             reset_request_fields(session)
-            session["mode"] = "request"
-            session["expected"] = "doc_type"
+            session["mode"] = "request"; session["expected"] = "doc_type"
             return "Great. What document do you need — **OTR**, **COG**, **COE**, or **Others**?"
         if is_no(text):
-            session["expected"] = None
-            session["mode"] = "qa"
+            session["expected"] = None; session["mode"] = "qa"
             return "Okay. I’m here if you need anything else."
         return "Please answer **Yes** or **No**."
 
@@ -871,21 +747,15 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         name = text.strip()
         if len(name) < 3:
             return "Please provide the document name."
-        session["specify"] = name
-        session["other_doc_name"] = name
-        session["expected"] = None
-
+        session["specify"] = name; session["other_doc_name"] = name; session["expected"] = None
         mapped = map_doc_synonyms(name)
         if mapped and mapped != "OTHERS":
             session["doc_type"] = mapped
-
         slot = next_missing_slot(session)
         if slot:
             session["expected"] = slot
             return ask_for(slot, session)
-
-        session["status"] = "confirming"
-        session["expected"] = "confirm"
+        session["status"] = "confirming"; session["expected"] = "confirm"
         msg = f"Please review your request: **{summarize_request(session)}**."
         if session.get("doc_type") == "COE" and session.get("sis_confirmed") not in {True, False}:
             msg += "\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)"
@@ -894,78 +764,36 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             msg += "\nType **confirm** to proceed or **edit** to change details."
         return msg
 
-    elif exp == "edit":
-        field, value = parse_edit_intent(text)
-        if not field:
-            return ("Sorry, I didn’t catch that edit.\n"
-                    "Try: `edit sem 2`, `change sy 2025-2026`, "
-                    "`set purpose scholarship`, or `edit doc OTR`.")
-
-        apply_edit(session, field, value)
-        if field == "purpose" and value:
-            session["purpose"] = value  # Ensure purpose is set immediately
-
-        missing = next_missing_slot(session)
-        if missing:
-            session["expected"] = missing
-            return ask_for(missing, session)
-
-        session["status"] = "confirming"
-        session["expected"] = "confirm"
-        msg = f"Updated. Please review: **{summarize_request(session)}**."
-        if session["doc_type"] == "COE" and session.get("sis_confirmed") not in {True, False}:
-            msg += ("\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)\n"
-                    "If everything looks good, you can also type **confirm** to proceed.")
-            session["expected"] = "sis_confirm"
-        else:
-            msg += "\nType **confirm** to proceed or **edit** to change details."
-        return msg
-
-    # 3) If we are not expecting a specific field, decide behavior (Q&A vs Request)
+    # 3) Decide behavior when not expecting a field
     if session["mode"] == "qa":
         how_doc = is_howto_question(text)
         if how_doc:
             return provide_howto(how_doc)
-
         shortcut_doc = doc_from_text(text)
         if shortcut_doc:
-            session["mode"] = "request"
-            session["doc_type"] = shortcut_doc
-            label = {
-                "OTR": "Official Transcript of Records (OTR)",
-                "COG": "Certificate of Grades (COG)",
-                "COE": "Certificate of Enrollment (COE)",
-                "OTHERS": "Other certificate",
-            }[shortcut_doc]
-            slot = next_missing_slot(session)
-            session["expected"] = slot
+            session["mode"] = "request"; session["doc_type"] = shortcut_doc
+            label = {"OTR": "Official Transcript of Records (OTR)",
+                     "COG": "Certificate of Grades (COG)",
+                     "COE": "Certificate of Enrollment (COE)",
+                     "OTHERS": "Other certificate"}[shortcut_doc]
+            slot = next_missing_slot(session); session["expected"] = slot
             if shortcut_doc in {"COG", "COE"} and slot == "semester":
                 return (f"Got it — **{label}**.\n"
                         "Please provide **Semester (1/2)** and **School Year** (e.g., 2025-2026).\n"
                         "You can type them together, like: `Sem 1 SY 2025-2026`.")
             return f"Got it — **{label}**.\n{ask_for(slot, session)}"
-
         guess_doc, score, _match = guess_doc_with_fuzzy(text)
         if guess_doc and score >= 0.65:
-            session["expected"] = "confirm_doc_guess"
-            session["doc_guess"] = guess_doc
-            pretty = {
-                "OTR": "OTR (Official Transcript of Records)",
-                "COG": "COG (Certificate of Grades)",
-                "COE": "COE (Certificate of Enrollment)",
-                "OTHERS": "Other certificate",
-            }[guess_doc]
+            session["expected"] = "confirm_doc_guess"; session["doc_guess"] = guess_doc
+            pretty = {"OTR":"OTR (Official Transcript of Records)","COG":"COG (Certificate of Grades)","COE":"COE (Certificate of Enrollment)","OTHERS":"Other certificate"}[guess_doc]
             return f"Just to confirm — did you mean **{pretty}**? (Yes/No)"
-
         if looks_like_question_permission(text):
             session["expected"] = "consent"
             return ("Yes, you can request that. Would you like to **proceed now** "
                     "and provide the requirements? (Yes/No)")
-
         if looks_like_request_intent(text):
             session["mode"] = "request"
             return init_or_fill_from_text(session, text)
-
         return scope_guard_message()
 
     if session.get("mode") == "request":
@@ -982,19 +810,14 @@ def init_or_fill_from_text(session: Dict, text: str) -> str:
         sy = normalize_school_year(text)
         if sy:
             session["school_year"] = sy
-
-        # Extract purpose from text
         purpose_match = re.search(r"purpose[:\s]+(.+)", text.lower())
         if purpose_match:
             session["purpose"] = purpose_match.group(1).strip()
-
         slot = next_missing_slot(session)
         if slot:
             session["expected"] = slot
             return ask_for(slot, session)
-
-        session["status"] = "confirming"
-        session["expected"] = "confirm"
+        session["status"] = "confirming"; session["expected"] = "confirm"
         msg = f"Please review your request: **{summarize_request(session)}**."
         if session["doc_type"] == "COE" and session.get("sis_confirmed") not in {True, False}:
             msg += ("\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)\n"
@@ -1012,14 +835,8 @@ def init_or_fill_from_text(session: Dict, text: str) -> str:
     if not doc_type:
         guess_doc, score, _match = guess_doc_with_fuzzy(text)
         if guess_doc and score >= 0.65:
-            session["expected"] = "confirm_doc_guess"
-            session["doc_guess"] = guess_doc
-            pretty = {
-                "OTR": "OTR (Official Transcript of Records)",
-                "COG": "COG (Certificate of Grades)",
-                "COE": "COE (Certificate of Enrollment)",
-                "OTHERS": "Other certificate",
-            }[guess_doc]
+            session["expected"] = "confirm_doc_guess"; session["doc_guess"] = guess_doc
+            pretty = {"OTR":"OTR (Official Transcript of Records)","COG":"COG (Certificate of Grades)","COE":"COE (Certificate of Enrollment)","OTHERS":"Other certificate"}[guess_doc]
             return f"Just to confirm — did you mean **{pretty}**? (Yes/No)"
 
     if not doc_type:
@@ -1037,18 +854,14 @@ def init_or_fill_from_text(session: Dict, text: str) -> str:
         session["semester"] = sem
     if sy:
         session["school_year"] = sy
-
-    # Extract purpose from initial text
     purpose_match = re.search(r"purpose[:\s]+(.+)", text.lower())
     if purpose_match:
         session["purpose"] = purpose_match.group(1).strip()
 
-    label = {
-        "OTR": "Official Transcript of Records (OTR)",
-        "COG": "Certificate of Grades (COG)",
-        "COE": "Certificate of Enrollment (COE)",
-        "OTHERS": "Other certificate",
-    }[doc_type]
+    label = {"OTR":"Official Transcript of Records (OTR)",
+             "COG":"Certificate of Grades (COG)",
+             "COE":"Certificate of Enrollment (COE)",
+             "OTHERS":"Other certificate"}[doc_type]
 
     slot = next_missing_slot(session)
     session["expected"] = slot
@@ -1061,25 +874,21 @@ def init_or_fill_from_text(session: Dict, text: str) -> str:
 # ---------- CLI runner ----------
 def main():
     print("📚 RegistrarConnect Chatbot (type 'help' for help, 'quit' to exit)")
-
     from getpass import getpass
     email = input("Enter your email: ").strip()
     password = getpass("Enter your password: ").strip()
 
-    # Login
     auth_data = login(email, password, role="student")
     if not auth_data:
         print("❌ Could not log in. Exiting.")
         return
 
-    # Dynamic token
-    ACCESS_TOKEN = auth_data["access"]  # dynamic for this session
-    user_id = auth_data.get("email")    # use email as user identifier
+    ACCESS_TOKEN = auth_data["access"]
+    user_id = auth_data.get("email")
     print(f"✅ Logged in as {auth_data.get('name')} ({auth_data.get('role')})")
 
-    # Start session with backend sync
     try:
-        reqs = fetch_my_requests(ACCESS_TOKEN)  # Pass token here
+        reqs = fetch_my_requests(ACCESS_TOKEN)
         if reqs:
             latest = reqs[0]
             session = load_session(user_id) or start_new_session(user_id)
@@ -1094,13 +903,11 @@ def main():
         print(f"(warn) Could not sync with backend: {e}")
         session = load_session(user_id) or start_new_session(user_id)
 
-    # Greet / resume
     greet = bot_intro(session)
     print(greet)
     push_history(session, "bot", greet)
     save_session(session)
 
-    # Chatbot loop
     while True:
         try:
             msg = input("> ").strip()
@@ -1109,14 +916,14 @@ def main():
             break
         if msg.lower() in {"quit", "exit"}:
             try:
-                fetch_my_requests(ACCESS_TOKEN)  # Sync on exit
+                fetch_my_requests(ACCESS_TOKEN)
             except Exception as e:
                 print(f"(warn) Could not sync with backend: {e}")
             print("Bye!")
             break
 
         push_history(session, "user", msg)
-        reply = handle_user_text(session, msg, ACCESS_TOKEN)  # Pass token
+        reply = handle_user_text(session, msg, ACCESS_TOKEN)
         push_history(session, "bot", reply)
         print(reply)
         save_session(session)

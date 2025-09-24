@@ -1,27 +1,25 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-/// Centralized API paths
 class Endpoints {
-  /// Base URL per platform
   static final String baseUrl = kIsWeb
       ? 'http://localhost:8000'
       : Platform.isAndroid
-      ? 'http://192.168.1.10:8000' // Android emulator -> host machine
-      : 'http://127.0.0.1:8000'; // iOS simulator / desktop
+      ? 'http://192.168.1.10:8000'
+      : 'http://127.0.0.1:8000';
 
-  // --- Auth ---
+  // Auth
   static const String token = '/api/token/';
   static const String tokenRefresh = '/api/token/refresh/';
   static const String register = '/api/auth/register/';
 
-  // --- Chatbot (lives under /api/ai/) ---
+  // Chat
   static const String chat = '/api/ai/chat/';
+  static const String chatMessages = '/api/ai/chat/messages/';
+  // If your backend exposes a dedicated history endpoint, set it here:
+  // e.g. '/api/ai/chat/messages/'
 
-  /// Leave empty so the app falls back to [chat] for history.
-  static const String chatMessages = '';
-
-  // --- Other features (if any) ---
+  // Other
   static const String receipts = '/api/receipts/';
   static const String documentRequests = '/api/document-requests/';
   static const String appointments = '/api/appointments/';

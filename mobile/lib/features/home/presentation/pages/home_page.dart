@@ -3,19 +3,29 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
-import '../../domain/entities/activity.dart';
 import 'package:mobile/features/chat/presentation/pages/chat_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final homeBloc = BlocProvider.of<HomeBloc>(context);
-    homeBloc.add(LoadActivities());
+  State<HomePage> createState() => _HomePageState();
+}
 
+class _HomePageState extends State<HomePage> {
+  late final HomeBloc _homeBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _homeBloc = BlocProvider.of<HomeBloc>(context);
+    _homeBloc.add(LoadActivities()); // fire once
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return BlocBuilder<HomeBloc, HomeState>(
-      bloc: homeBloc,
+      bloc: _homeBloc,
       builder: (context, state) {
         Widget body;
 
@@ -25,19 +35,19 @@ class HomePage extends StatelessWidget {
           body = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🔹 Greeting Header
+              // Header
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween, // <-- fixed
                 children: [
                   Row(
-                    children: [
+                    children: const [
                       CircleAvatar(
                         radius: 22,
                         backgroundColor: Colors.white,
                         child: Icon(Icons.home, color: Colors.green),
                       ),
-                      const SizedBox(width: 12),
-                      const Text(
+                      SizedBox(width: 12),
+                      Text(
                         "Hello, Patrick",
                         style: TextStyle(
                           fontSize: 20,
@@ -49,20 +59,26 @@ class HomePage extends StatelessWidget {
                   ),
                   Row(
                     children: const [
-                      Icon(Icons.qr_code_scanner,
-                          color: Colors.white, size: 26),
+                      Icon(
+                        Icons.qr_code_scanner,
+                        color: Colors.white,
+                        size: 26,
+                      ),
                       SizedBox(width: 16),
-                      Icon(Icons.notifications_none,
-                          color: Colors.white, size: 26),
+                      Icon(
+                        Icons.notifications_none,
+                        color: Colors.white,
+                        size: 26,
+                      ),
                     ],
                   ),
                 ],
               ),
               const SizedBox(height: 25),
 
-              // 🔹 Status Cards
+              // Status Cards
               Row(
-                children: [
+                children: const [
                   Expanded(
                     child: _StatusCard(
                       title: "Pending Requests",
@@ -71,7 +87,7 @@ class HomePage extends StatelessWidget {
                       icon: Icons.pending_actions,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16),
                   Expanded(
                     child: _StatusCard(
                       title: "Upcoming Appointments",
@@ -83,7 +99,7 @@ class HomePage extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
-              // 🔹 Recently Opened
+              // Recently Opened
               const Text(
                 "RECENTLY OPENED",
                 style: TextStyle(
@@ -102,7 +118,7 @@ class HomePage extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
-              // 🔹 Recent Activity
+              // Recent Activity
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -115,8 +131,10 @@ class HomePage extends StatelessWidget {
                   children: [
                     const Text(
                       "Recent Activity",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     const Divider(),
                     ...state.activities.map(
@@ -152,11 +170,12 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ),
-          // 🔹 Floating Chat Button
           floatingActionButton: FloatingActionButton(
             onPressed: () {
-              // TODO: Navigate to chat page
-             Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChatPage()),
+              );
             },
             backgroundColor: Colors.blue,
             child: const Icon(Icons.chat_bubble_outline, color: Colors.white),
@@ -168,7 +187,6 @@ class HomePage extends StatelessWidget {
   }
 }
 
-// 🔹 Status Card Widget
 class _StatusCard extends StatelessWidget {
   final String title;
   final String value;
@@ -189,17 +207,17 @@ class _StatusCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 8),
           Text(
             value,
@@ -214,8 +232,10 @@ class _StatusCard extends StatelessWidget {
                 foregroundColor: const Color(0xFF2196F3),
                 elevation: 0,
                 side: const BorderSide(color: Colors.blue),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
               ),
               child: Text(buttonLabel!),
             ),
@@ -225,7 +245,6 @@ class _StatusCard extends StatelessWidget {
   }
 }
 
-// 🔹 Recent Doc Card
 class _RecentDocCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -235,13 +254,20 @@ class _RecentDocCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-                color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
           ],
         ),
         child: const Center(
-          child: Icon(Icons.description_outlined, size: 40, color: Colors.black54),
+          child: Icon(
+            Icons.description_outlined,
+            size: 40,
+            color: Colors.black54,
+          ),
         ),
       ),
     );

@@ -4,14 +4,15 @@
   "status": "pending",
   "doc_type": "COG",
   "semester": 1,
-  "school_year": "2023-2024",
-  "purpose": "scholarship",
+  "school_year": "2022-2023",
+  "purpose": "scholarship (Semester: 1, School Year: 2023-2024)",
   "specify": null,
   "other_doc_name": null,
   "sis_confirmed": null,
   "payment_method": "personal",
   "receipt_hashes": [
-    "340e17f175a096f579d650b92fb5c067"
+    "340e17f175a096f579d650b92fb5c067",
+    "5db0bc46f13d445d01d789ebf3f13f73"
   ],
   "expected": null,
   "same_day": {
@@ -736,6 +737,101 @@
     },
     {
       "ts": "2025-09-23T01:05:46",
+      "sender": "bot",
+      "text": "Okay. I’m here if you need anything else."
+    },
+    {
+      "ts": "2025-09-24T11:34:35",
+      "sender": "bot",
+      "text": "Welcome back. Your request is **pending faculty approval**: Purpose: scholarship (Semester: 1, School Year: 2023-2024).\nRelease is the **next working day** after approval."
+    },
+    {
+      "ts": "2025-09-24T11:34:45",
+      "sender": "user",
+      "text": "cancel"
+    },
+    {
+      "ts": "2025-09-24T11:34:45",
+      "sender": "bot",
+      "text": "Sorry, the request **cannot be cancelled** after payment."
+    },
+    {
+      "ts": "2025-09-24T11:34:47",
+      "sender": "user",
+      "text": ""
+    },
+    {
+      "ts": "2025-09-24T11:34:47",
+      "sender": "bot",
+      "text": "I’m here for **RegistrarConnect** document requests (OTR, COG, COE, other certifications).\nTry: **“Request COG”** or **“How to get OTR?”**"
+    },
+    {
+      "ts": "2025-09-24T11:34:50",
+      "sender": "user",
+      "text": "cog"
+    },
+    {
+      "ts": "2025-09-24T11:34:50",
+      "sender": "bot",
+      "text": "Got it — **Certificate of Grades (COG)**.\nPlease provide **Semester (1/2)** and **School Year** (e.g., 2025-2026).\nYou can type them together, like: `Sem 1 SY 2025-2026`."
+    },
+    {
+      "ts": "2025-09-24T11:35:06",
+      "sender": "user",
+      "text": "sem 1 sy 2223 scholarship purpose"
+    },
+    {
+      "ts": "2025-09-24T11:35:06",
+      "sender": "bot",
+      "text": "Please review your request: **COG, Sem 1, SY 2022-2023, Purpose: scholarship (Semester: 1, School Year: 2023-2024)**.\nType **confirm** to proceed or **edit** to change details."
+    },
+    {
+      "ts": "2025-09-24T11:35:12",
+      "sender": "user",
+      "text": "confirm"
+    },
+    {
+      "ts": "2025-09-24T11:35:12",
+      "sender": "bot",
+      "text": "Thanks! Your request is confirmed: **COG, Sem 1, SY 2022-2023, Purpose: scholarship (Semester: 1, School Year: 2023-2024)**\nNote: once paid, your request **cannot be cancelled** and is **non-refundable**.\nHow would you like to pay — **Personal (Finance)** or **Online (GCash)**?"
+    },
+    {
+      "ts": "2025-09-24T11:35:21",
+      "sender": "user",
+      "text": "finance"
+    },
+    {
+      "ts": "2025-09-24T11:35:21",
+      "sender": "bot",
+      "text": "Okay. Once you finish payment at the Finance Department, please **paste your receipt/reference code** (e.g., `RCPT12345`) or upload an image of your receipt (future feature)."
+    },
+    {
+      "ts": "2025-09-24T11:35:29",
+      "sender": "user",
+      "text": "RCPT12345"
+    },
+    {
+      "ts": "2025-09-24T11:35:29",
+      "sender": "bot",
+      "text": "This receipt looks **identical** to a previously submitted one. Please upload a **new** receipt."
+    },
+    {
+      "ts": "2025-09-24T11:35:34",
+      "sender": "user",
+      "text": "RCPT123456"
+    },
+    {
+      "ts": "2025-09-24T11:35:34",
+      "sender": "bot",
+      "text": "Thanks, I’ve recorded your receipt.\nYour request is now **pending faculty approval**.\nRelease is the **next working day** after approval.\n\nWould you like to **request another document now**? (Yes/No)"
+    },
+    {
+      "ts": "2025-09-24T11:35:39",
+      "sender": "user",
+      "text": "no"
+    },
+    {
+      "ts": "2025-09-24T11:35:39",
       "sender": "bot",
       "text": "Okay. I’m here if you need anything else."
     }

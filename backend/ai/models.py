@@ -1,15 +1,30 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
+
 
 class ChatHistory(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE, 
-        related_name="chat_histories"
-    )
-    history = models.JSONField(default=list)  # stores conversation [{sender, text, ts}, ...]
+    """
+    One record per (user, conversation_id).
+    - history: flat list of UI bubbles [{id, conversation_id, sender, text, timestamp}, ...]
+    - session: full engine state snapshot (slots, expected step, etc.)
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="ai_chat_histories")
+    conversation_id = models.CharField(max_length=128, db_index=True)
+
+    # UI bubbles shown in the mobile app
+    history = models.JSONField(default=list, blank=True)
+
+    # Engine session/state snapshot used by chatbot_cli logic
+    session = models.JSONField(default=dict, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"ChatHistory({self.user.username}) - {self.created_at:%Y-%m-%d %H:%M}"
+    class Meta:
+        unique_together = ("user", "conversation_id")
+        indexes = [
+            models.Index(fields=["user", "conversation_id"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user_id}:{self.conversation_id}"

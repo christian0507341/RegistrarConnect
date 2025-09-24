@@ -21,7 +21,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatLoadMore>(_onLoadMore);
     on<ChatSendPressed>(_onSendPressed);
     on<ChatActionHandled>(_onActionHandled);
-    on<ChatRequestDocument>(_onRequestDocument); // New handler
+    // Removed: on<ChatRequestDocument>(_onRequestDocument);
   }
 
   factory ChatBloc() {
@@ -64,11 +64,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final current = state;
     if (current is! ChatLoaded) return;
 
-    emit(
-      current.copyWith(
-        messages: [...current.messages, _createUserMessage(e.text)],
-      ),
-    );
+    // keep the new user message in-memory for the next emit too
+    final withUser = [...current.messages, _createUserMessage(e.text)];
+    emit(current.copyWith(messages: withUser));
+
     try {
       final (reply, action) = await _sendMessage(
         conversationId: _conversationId,
@@ -78,41 +77,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final updatedReply = _handleDocumentRequest(e.text, reply);
       final updatedAction = _handleActionForRequest(e.text, action);
 
-      final updated = [...current.messages, updatedReply];
-      emit(current.copyWith(messages: updated, action: updatedAction));
-    } catch (err) {
-      emit(ChatError(_handleError(err)));
-    }
-  }
-
-  Future<void> _onRequestDocument(
-    ChatRequestDocument e,
-    Emitter<ChatState> emit,
-  ) async {
-    final current = state;
-    if (current is! ChatLoaded) return;
-
-    final userMessage = _createUserMessage(
-      "Request ${e.documentType}${e.studentId != null ? ' with ID: ${e.studentId}' : ''}",
-    );
-    emit(current.copyWith(messages: [...current.messages, userMessage]));
-    try {
-      final reply = ChatMessage(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        conversationId: _conversationId,
-        sender: ChatSender.bot,
-        text:
-            "Please upload a receipt for your ${e.documentType} request.${e.studentId != null ? ' Student ID: ${e.studentId}' : ''}",
-        timestamp: DateTime.now(),
-      );
-      final action = const ChatAction(
-        type: 'upload_receipt',
-        requestId: null,
-        payload: null,
-      );
-
-      final updated = [...current.messages, reply];
-      emit(current.copyWith(messages: updated, action: action));
+      final withBot = [...withUser, updatedReply];
+      emit(current.copyWith(messages: withBot, action: updatedAction));
     } catch (err) {
       emit(ChatError(_handleError(err)));
     }
@@ -125,11 +91,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
+  // Fallback for free-text document requests (case-insensitive)
   ChatMessage _handleDocumentRequest(String text, ChatMessage reply) {
-    // Fallback for free-text document requests
     final documentMatch = RegExp(
-      r'Request\s+(copy_of_grades|copy_of_enrollment|other)',
-    ).firstMatch(text.toLowerCase());
+      r'request\s+(copy_of_grades|copy_of_enrollment|other)',
+      caseSensitive: false,
+    ).firstMatch(text);
     if (documentMatch != null) {
       final docType = documentMatch.group(1)!;
       return ChatMessage(
@@ -144,10 +111,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   ChatAction? _handleActionForRequest(String text, ChatAction? action) {
-    // Fallback for free-text document requests
     final documentMatch = RegExp(
-      r'Request\s+(copy_of_grades|copy_of_enrollment|other)',
-    ).firstMatch(text.toLowerCase());
+      r'request\s+(copy_of_grades|copy_of_enrollment|other)',
+      caseSensitive: false,
+    ).firstMatch(text);
     if (documentMatch != null) {
       return const ChatAction(
         type: 'upload_receipt',

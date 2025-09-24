@@ -14,9 +14,3 @@ class ChatSendPressed extends ChatEvent {
 }
 
 class ChatActionHandled extends ChatEvent {}
-
-class ChatRequestDocument extends ChatEvent {
-  final String documentType;
-  final String? studentId;
-  ChatRequestDocument(this.documentType, {this.studentId});
-}

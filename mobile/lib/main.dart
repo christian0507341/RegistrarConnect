@@ -28,6 +28,7 @@ import 'features/appointment/presentation/pages/add_appointment_page.dart';
 
 // Chat
 import 'features/chat/presentation/pages/chat_page.dart';
+import 'features/chat/presentation/bloc/chat_bloc.dart';
 
 // Settings
 import 'features/settings/presentation/pages/settings_page.dart';
@@ -35,18 +36,20 @@ import 'features/settings/presentation/pages/settings_page.dart';
 // Global wrapper
 import 'core/widgets/global_fab_wrapper.dart';
 
-void main() {
-  final dio = Dio(BaseOptions(
-    baseUrl: "http://localhost:8000",
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 5),
-  ));
+// ✅ Unify network client
+import 'core/services/dio_client.dart';
 
-  final authApi = AuthApi(dio);
+void main() {
   final secureStorage = SecureStorageService();
 
-  final IAuthRepository authRepository =
-      data.AuthRepository(api: authApi, storage: secureStorage);
+  final dioClient = DioClient(secureStorage);
+  final Dio dio = dioClient.dio;
+
+  final authApi = AuthApi(dio);
+  final IAuthRepository authRepository = data.AuthRepository(
+    api: authApi,
+    storage: secureStorage,
+  );
 
   runApp(MyApp(authRepository: authRepository));
 }
@@ -59,25 +62,26 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<AuthBloc>(
-          create: (_) => AuthBloc(repo: authRepository),
-        ),
+        BlocProvider<AuthBloc>(create: (_) => AuthBloc(repo: authRepository)),
         BlocProvider<AppointmentBloc>(
-          create: (_) => AppointmentBloc(repository: AppointmentRepositoryImpl()),
+          create: (_) =>
+              AppointmentBloc(repository: AppointmentRepositoryImpl()),
         ),
         BlocProvider<HomeBloc>(
           create: (_) => HomeBloc(repository: ActivityRepositoryImpl()),
         ),
         BlocProvider<NotificationBloc>(
-          create: (_) => NotificationBloc(repository: NotificationRepositoryImpl()),
+          create: (_) =>
+              NotificationBloc(repository: NotificationRepositoryImpl()),
         ),
+        BlocProvider<ChatBloc>(create: (_) => ChatBloc()),
       ],
       child: MaterialApp(
         title: 'RegistrarConnect',
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF2E7D32), // 🌿 Green theme across app
+            seedColor: const Color(0xFF2E7D32),
             brightness: Brightness.light,
           ),
           scaffoldBackgroundColor: Colors.grey[100],
@@ -98,8 +102,6 @@ class MyApp extends StatelessWidget {
           ),
         ),
         debugShowCheckedModeBanner: false,
-
-        // Start from onboarding
         initialRoute: '/',
         onGenerateRoute: (settings) {
           late Widget page;
@@ -120,15 +122,17 @@ class MyApp extends StatelessWidget {
               break;
             case '/home':
               page = const HomeContainer();
+              showFab =
+                  false; // 🔧 Turn off global FAB; HomePage has its own FAB
               break;
             case '/add_appointment':
               page = AddAppointmentPage(selectedDate: DateTime.now());
               break;
             case '/settings':
-              page = const SettingsPage(); // ✅ New settings page
+              page = const SettingsPage();
               break;
-              case '/chat':
-              page = const ChatPage(); // ✅ New settings page
+            case '/chat':
+              page = const ChatPage();
               showFab = false;
               break;
             default:
@@ -138,10 +142,7 @@ class MyApp extends StatelessWidget {
           }
 
           return MaterialPageRoute(
-            builder: (_) => GlobalFabWrapper(
-              child: page,
-              showFab: showFab,
-            ),
+            builder: (_) => GlobalFabWrapper(child: page, showFab: showFab),
             settings: settings,
           );
         },

@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile/core/services/conversation_services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+
+import 'package:mobile/core/services/conversation_services.dart';
 import 'package:mobile/features/chat/domain/entities/chat_message.dart';
+
 import '../bloc/chat_bloc.dart';
 import '../bloc/chat_event.dart';
 import '../bloc/chat_state.dart';
-
-// New event for structured document requests
-class ChatRequestDocument extends ChatEvent {
-  final String documentType;
-  final String? studentId;
-
-  ChatRequestDocument(this.documentType, {this.studentId});
-}
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -28,6 +22,7 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   final ConversationService _conversationService = ConversationService();
   final ImagePicker _picker = ImagePicker();
+
   File? _receiptImage;
   bool _showUploadButton = false;
 
@@ -35,6 +30,7 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _conversationService.getOrCreate().then((id) {
+      // ChatBloc is provided globally in main.dart
       context.read<ChatBloc>().add(ChatInit(id));
     });
   }
@@ -50,77 +46,13 @@ class _ChatPageState extends State<ChatPage> {
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
     });
-  }
-
-  void _requestDocument() {
-    String? selectedDocType;
-    String? studentId;
-
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Request a Document",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: "Document Type"),
-                items: const [
-                  DropdownMenuItem(
-                    value: "copy_of_grades",
-                    child: Text("Copy of Grades"),
-                  ),
-                  DropdownMenuItem(
-                    value: "copy_of_enrollment",
-                    child: Text("Copy of Enrollment"),
-                  ),
-                  DropdownMenuItem(value: "other", child: Text("Other")),
-                ],
-                onChanged: (value) => setState(() => selectedDocType = value),
-                value: selectedDocType,
-              ),
-              TextField(
-                decoration: const InputDecoration(labelText: "Student ID"),
-                onChanged: (value) => studentId = value,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed:
-                    selectedDocType != null && studentId?.isNotEmpty == true
-                    ? () {
-                        context.read<ChatBloc>().add(
-                          ChatRequestDocument(
-                            selectedDocType!,
-                            studentId: studentId,
-                          ),
-                        );
-                        Navigator.pop(context);
-                      }
-                    : null,
-                child: const Text("Submit Request"),
-              ),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Close"),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Future<void> _pickReceiptImage() async {
@@ -147,7 +79,7 @@ class _ChatPageState extends State<ChatPage> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                // TODO: Implement API call to upload receipt (placeholder)
+                // TODO: Implement receipt upload API call
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text("Receipt uploaded (placeholder)"),
@@ -157,6 +89,7 @@ class _ChatPageState extends State<ChatPage> {
                   _receiptImage = null;
                   _showUploadButton = false;
                 });
+                context.read<ChatBloc>().add(ChatActionHandled());
               },
               child: const Text("Upload"),
             ),
@@ -169,11 +102,11 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE3F2FD), // light blue theme
+      backgroundColor: const Color(0xFFE3F2FD),
       body: SafeArea(
         child: Column(
           children: [
-            // 🔹 Header with Back + Profile + Name
+            // Header
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: const BoxDecoration(
@@ -185,7 +118,6 @@ class _ChatPageState extends State<ChatPage> {
               ),
               child: Row(
                 children: [
-                  // Back Button
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.pop(context),
@@ -207,7 +139,7 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
 
-            // 🔹 Chat area
+            // Chat list
             Expanded(
               child: BlocListener<ChatBloc, ChatState>(
                 listener: (context, state) {
@@ -260,7 +192,7 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
 
-            // 🔹 Input and Action area
+            // Input area
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -296,13 +228,7 @@ class _ChatPageState extends State<ChatPage> {
                         icon: const Icon(Icons.send, color: Color(0xFF2196F3)),
                         onPressed: _sendMessage,
                       ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.request_page,
-                          color: Color(0xFF2196F3),
-                        ),
-                        onPressed: _requestDocument,
-                      ),
+                      // Removed the document-request button
                     ],
                   ),
                   if (_showUploadButton && _receiptImage == null)
@@ -313,7 +239,7 @@ class _ChatPageState extends State<ChatPage> {
                         icon: const Icon(Icons.upload_file),
                         label: const Text("Upload Receipt"),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF2196F3),
+                          backgroundColor: const Color(0xFF2196F3),
                         ),
                       ),
                     ),
@@ -325,7 +251,7 @@ class _ChatPageState extends State<ChatPage> {
                           Expanded(
                             child: Text(
                               "Selected: ${_receiptImage!.path.split('/').last}",
-                              style: TextStyle(fontSize: 12),
+                              style: const TextStyle(fontSize: 12),
                             ),
                           ),
                           IconButton(
