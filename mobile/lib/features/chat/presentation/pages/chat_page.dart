@@ -157,11 +157,21 @@ class _ChatPageState extends State<ChatPage> {
                     if (state is ChatLoading) {
                       return const Center(child: CircularProgressIndicator());
                     } else if (state is ChatLoaded) {
+                      final itemCount =
+                          state.messages.length + (state.isTyping ? 1 : 0);
+
                       return ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(8),
-                        itemCount: state.messages.length,
+                        itemCount: itemCount,
                         itemBuilder: (context, index) {
+                          // If last item and typing -> show typing bubble
+                          final isTypingItem =
+                              state.isTyping && index == itemCount - 1;
+                          if (isTypingItem) {
+                            return const _TypingBubble();
+                          }
+
                           final msg = state.messages[index];
                           final isBot = msg.sender == ChatSender.bot;
                           return Align(
@@ -221,6 +231,7 @@ class _ChatPageState extends State<ChatPage> {
                             filled: true,
                             fillColor: Colors.white,
                           ),
+                          onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -228,7 +239,6 @@ class _ChatPageState extends State<ChatPage> {
                         icon: const Icon(Icons.send, color: Color(0xFF2196F3)),
                         onPressed: _sendMessage,
                       ),
-                      // Removed the document-request button
                     ],
                   ),
                   if (_showUploadButton && _receiptImage == null)
@@ -270,6 +280,51 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Simple three-dot typing bubble aligned like a bot message.
+class _TypingBubble extends StatefulWidget {
+  const _TypingBubble();
+
+  @override
+  State<_TypingBubble> createState() => _TypingBubbleState();
+}
+
+class _TypingBubbleState extends State<_TypingBubble>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.blue[100],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: AnimatedBuilder(
+          animation: _c,
+          builder: (_, __) {
+            final t = (_c.value * 3).floor() % 3; // 0..2
+            final dots = ['.', '..', '...'][t];
+            return Text('typing$dots');
+          },
         ),
       ),
     );

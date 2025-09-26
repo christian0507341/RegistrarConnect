@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/core/services/conversation_services.dart';
 import 'package:mobile/features/chat/data/sources/chat_api.dart';
@@ -21,7 +22,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatLoadMore>(_onLoadMore);
     on<ChatSendPressed>(_onSendPressed);
     on<ChatActionHandled>(_onActionHandled);
-    // Removed: on<ChatRequestDocument>(_onRequestDocument);
   }
 
   factory ChatBloc() {
@@ -64,22 +64,44 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final current = state;
     if (current is! ChatLoaded) return;
 
-    // keep the new user message in-memory for the next emit too
+    // 1) Show the user message immediately
     final withUser = [...current.messages, _createUserMessage(e.text)];
-    emit(current.copyWith(messages: withUser));
+
+    // 2) Flip on the typing indicator right away
+    emit(current.copyWith(messages: withUser, isTyping: true, action: null));
+
+    final started = DateTime.now();
 
     try {
+      // 3) Ask backend
       final (reply, action) = await _sendMessage(
         conversationId: _conversationId,
         text: e.text,
       );
 
+      // (Optional) adapt reply/action if you keep your fallback logic
       final updatedReply = _handleDocumentRequest(e.text, reply);
       final updatedAction = _handleActionForRequest(e.text, action);
 
+      // 4) Ensure a natural delay for the typing indicator
+      final targetDelay = _typingDelayFor(updatedReply.text);
+      final elapsed = DateTime.now().difference(started);
+      final remaining = targetDelay - elapsed;
+      if (remaining.inMilliseconds > 0) {
+        await Future.delayed(remaining);
+      }
+
+      // 5) Append bot message, turn off typing, push any action
       final withBot = [...withUser, updatedReply];
-      emit(current.copyWith(messages: withBot, action: updatedAction));
+      emit(
+        current.copyWith(
+          messages: withBot,
+          action: updatedAction,
+          isTyping: false,
+        ),
+      );
     } catch (err) {
+      // Turn off typing if error
       emit(ChatError(_handleError(err)));
     }
   }
@@ -89,6 +111,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (current is ChatLoaded && current.action != null) {
       emit(current.copyWith(action: null)); // clear one-shot action
     }
+  }
+
+  // --- Helpers --------------------------------------------------------------
+
+  // Simple natural typing delay: base + per-char with min/max caps
+  Duration _typingDelayFor(String text) {
+    const baseMs = 450; // feels responsive
+    const perCharMs = 18; // ~55 wpm vibe
+    const minMs = 350; // never shorter than this
+    const maxMs = 2400; // don't make it feel stuck
+    final total = baseMs + text.length * perCharMs;
+    final clamped = total < minMs ? minMs : (total > maxMs ? maxMs : total);
+    return Duration(milliseconds: clamped);
   }
 
   // Fallback for free-text document requests (case-insensitive)
