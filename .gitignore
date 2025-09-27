@@ -13,30 +13,33 @@ venv/
 .venv/
 env/
 ENV/
-__pycache__/
-*.pyc
 .env
+.env.*
 
 # Local DB / media (don’t commit local SQLite or generated files)
 db.sqlite3
 media/
 staticfiles/
 
-# Environment variables
-.env
-.env.*
-
 # ======================
 # Machine Learning Artifacts
 # ======================
 backend/ai/services/train/checkpoints/
 backend/ai/services/train/sessions/   # CLI/dev chat logs
-backend/ai/models/
 huggingface/
 .huggingface/
-*.bin
-*.pt
-*.ckpt
+backend/ai/models/hub/  # Local HF cache dir
+backend/ai/models/**/*.bin
+backend/ai/models/**/*.pt
+backend/ai/models/**/*.ckpt
+
+# Keep specific model files
+!backend/ai/models/**/model.safetensors
+!backend/ai/models/**/config.json
+!backend/ai/models/**/tokenizer_config.json
+!backend/ai/models/**/tokenizer.json
+!backend/ai/models/**/vocab.txt
+!backend/ai/models/**/special_tokens_map.json
 
 # ======================
 # Flutter / Dart (mobile/)
@@ -70,12 +73,9 @@ Thumbs.db
 .vscode/
 .idea/
 
-# --- Python / Django ---
-__pycache__/
+# --- Python / Django extras ---
 *.py[cod]
-*.pyd
 *.so
-*.egg-info/
 dist/
 build/
 .coverage
@@ -85,37 +85,4 @@ htmlcov/
 .ruff_cache/
 .pytest_cache/
 .tox/
-.env
-.env.*
-*.log
 *.tmp
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-
-# --- Virtualenv ---
-venv/
-.env.local/
-.venv/
-
-# --- Django artifacts ---
-staticfiles/
-media/
-
-# --- ML: Hugging Face / training outputs ---
-# local HF cache dir you pointed at
-backend/ai/models/hub/
-# trainer outputs/checkpoints
-backend/ai/services/train/checkpoints/
-# any accidental large artifacts
-backend/ai/models/**/*.bin
-backend/ai/models/**/*.pt
-backend/ai/models/**/*.ckpt
-# keep safetensors/config/tokenizer/json files under models
-!backend/ai/models/**/model.safetensors
-!backend/ai/models/**/config.json
-!backend/ai/models/**/tokenizer_config.json
-!backend/ai/models/**/tokenizer.json
-!backend/ai/models/**/vocab.txt
-!backend/ai/models/**/special_tokens_map.json
