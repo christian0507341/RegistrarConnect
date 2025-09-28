@@ -168,27 +168,6 @@ def normalize_semester(text: str) -> Optional[int]:
         return 2
     return None
 
-def _two_digit_year_to_full(y: int) -> int:
-    return 2000 + y if y < 100 else y
-
-def normalize_school_year(text: str) -> Optional[str]:
-    s = text.replace("–", "-").replace("—", "-").replace("/", "-").strip().lower()
-    m = re.search(r"\b(20\d{2})\s*-\s*(\d{2,4})\b", s)
-    if m:
-        y1 = int(m.group(1))
-        y2_raw = int(m.group(2))
-        y2 = _two_digit_year_to_full(y2_raw) if y2_raw < 100 else y2_raw
-        if y2 == y1 + 1:
-            return f"{y1}-{y2}"
-        return None
-    m = re.search(r"\b(\d{2})(\d{2})\b", s)
-    if m:
-        y1 = _two_digit_year_to_full(int(m.group(1)))
-        y2 = _two_digit_year_to_full(int(m.group(2)))
-        if y2 == y1 + 1:
-            return f"{y1}-{y2}"
-    return None
-
 def is_yes(text: str) -> bool:
     return text.strip().lower() in {"yes", "y", "yeah", "yep", "oo", "opo", "sige", "confirm", "ok", "okay"}
 
@@ -306,8 +285,8 @@ def start_new_session(user_id: str) -> Dict:
     return session
 
 def reset_request_fields(session: Dict):
-    for k in ["doc_type","semester","school_year","purpose","specify",
-              "other_doc_name","sis_confirmed","payment_method"]:
+    for k in ["doc_type", "semester", "school_year", "purpose", "specify",
+              "other_doc_name", "sis_confirmed", "payment_method"]:
         session[k] = None
     session["receipt_hashes"] = []
     session["status"] = "draft"
@@ -465,7 +444,6 @@ def log_message(session, sender, text):
 
 def handle_user_text(session: Dict, text: str, access_token: str) -> str:
     text_lower = text.strip().lower()
-    # (unchanged core logic below)
     # ---------------- Help ----------------
     if text_lower in {"help", "/help"}:
         return (
@@ -574,8 +552,10 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         if sem in (1, 2):
             session["semester"] = sem
             if sy: session["school_year"] = sy
+            # Only set purpose if explicitly provided
             purpose_match = re.search(r"purpose[:\s]+(.+)", text.lower())
-            if purpose_match: session["purpose"] = purpose_match.group(1).strip()
+            if purpose_match:
+                session["purpose"] = purpose_match.group(1).strip()
             slot = next_missing_slot(session)
             if slot:
                 session["expected"] = slot
@@ -594,8 +574,10 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         sy = normalize_school_year(text)
         if sy:
             session["school_year"] = sy
+            # Only set purpose if explicitly provided
             purpose_match = re.search(r"purpose[:\s]+(.+)", text.lower())
-            if purpose_match: session["purpose"] = purpose_match.group(1).strip()
+            if purpose_match:
+                session["purpose"] = purpose_match.group(1).strip()
             slot = next_missing_slot(session)
             if slot:
                 session["expected"] = slot
@@ -668,31 +650,13 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             if not session.get("purpose"):
                 session["expected"] = "purpose"
                 return "Oh, it looks like you missed the purpose for your request. Please provide it (e.g., Scholarship, Visa, PRC)."
-            resp = submit_document_request(access_token,
-                doc_type=session.get("doc_type"),
-                semester=session.get("semester"),
-                school_year=session.get("school_year"),
-                purpose=session.get("purpose"),
-                other_doc_name=session.get("other_doc_name"),
-                payment_method=session.get("payment_method"))
-            if resp:
-                session["status"] = "awaiting_payment"
-                session["expected"] = "payment_method"
-                msg = ("Thanks! Your request is confirmed: "
-                       f"**{summarize_request(session)}**\n" + nonrefundable_notice())
-                if session.get("same_day", {}).get("enabled"):
-                    msg += "\n" + sameday_line(session)
-                return msg
-            if resp is None and 'resp' in locals():
-                error_msg = resp.text if resp else "Unknown error from backend"
-            else:
-                error_msg = "Failed to connect to backend or invalid response"
-            print(f"Debug: Error message - {error_msg}")
-            if "document_type" in error_msg or "purpose" in error_msg:
-                slot = "purpose" if not session.get("purpose") else "doc_type"
-                session["expected"] = slot
-                return f"⚠️ Missing or invalid {slot}. Please provide it: {ask_for(slot, session)}"
-            return "⚠️ Failed to submit request. Please try again or contact support."
+            session["status"] = "awaiting_payment"
+            session["expected"] = "payment_method"
+            msg = ("Thanks! Your request is confirmed: "
+                   f"**{summarize_request(session)}**\n" + nonrefundable_notice())
+            if session.get("same_day", {}).get("enabled"):
+                msg += "\n" + sameday_line(session)
+            return msg
         if text_lower == "edit":
             session["expected"] = "edit"
             return ("Okay, let’s edit. Try: `edit sem 2`, `change sy 2025-2026`, "
@@ -726,12 +690,21 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         if h in session["receipt_hashes"]:
             return "This receipt looks **identical** to a previously submitted one. Please upload a **new** receipt."
         session["receipt_hashes"].append(h)
-        session["status"] = "pending"; session["expected"] = "another"
-        msg = ("Thanks, I’ve recorded your receipt.\n"
-               "Your request is now **pending faculty approval**.\n"
-               + sameday_line(session) +
-               "\n\nWould you like to **request another document now**? (Yes/No)")
-        return msg
+        resp = submit_document_request(access_token,
+            doc_type=session.get("doc_type"),
+            semester=session.get("semester"),
+            school_year=session.get("school_year"),
+            purpose=session.get("purpose"),
+            other_doc_name=session.get("other_doc_name"),
+            payment_method=session.get("payment_method"))
+        if resp:
+            session["status"] = "pending"; session["expected"] = "another"
+            msg = ("Thanks, I’ve recorded your receipt.\n"
+                   f"✅ Request created: {resp['document_type']} (Status: {resp['status']})\n"
+                   + sameday_line(session) +
+                   "\n\nWould you like to **request another document now**? (Yes/No)")
+            return msg
+        return "⚠️ Failed to submit request after receipt. Please try again or contact support."
 
     elif exp == "another":
         if is_yes(text):
@@ -810,6 +783,7 @@ def init_or_fill_from_text(session: Dict, text: str) -> str:
         sy = normalize_school_year(text)
         if sy:
             session["school_year"] = sy
+        # Only set purpose if explicitly provided
         purpose_match = re.search(r"purpose[:\s]+(.+)", text.lower())
         if purpose_match:
             session["purpose"] = purpose_match.group(1).strip()
@@ -854,6 +828,7 @@ def init_or_fill_from_text(session: Dict, text: str) -> str:
         session["semester"] = sem
     if sy:
         session["school_year"] = sy
+    # Only set purpose if explicitly provided
     purpose_match = re.search(r"purpose[:\s]+(.+)", text.lower())
     if purpose_match:
         session["purpose"] = purpose_match.group(1).strip()

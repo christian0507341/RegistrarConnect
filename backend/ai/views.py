@@ -86,6 +86,8 @@ def chat(request):
         action = None
         if "receipt" in reply_text.lower():
             action = {"type": "upload_receipt", "request_id": None}
+        elif "up to date" in reply_text and "Yes" in text:  # Detect SIS confirmation
+            action = {"type": "reset_form", "request_id": None}
 
         # build UI bubbles
         user_msg = {
