@@ -109,7 +109,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   void _onActionHandled(ChatActionHandled e, Emitter<ChatState> emit) {
     final current = state;
     if (current is ChatLoaded && current.action != null) {
-      emit(current.copyWith(action: null)); // clear one-shot action
+      if (current.action!.type == 'reset_form') {
+        emit(
+          ChatLoaded(
+            conversationId: _conversationId,
+            messages: current.messages,
+            isTyping: false,
+          ),
+        ); // Reset form-related state
+      } else {
+        emit(current.copyWith(action: null)); // Clear one-shot action
+      }
     }
   }
 

@@ -149,6 +149,12 @@ class _ChatPageState extends State<ChatPage> {
                       setState(() {
                         _showUploadButton = true;
                       });
+                    } else if (state.action?.type == 'reset_form') {
+                      setState(() {
+                        _showUploadButton = false;
+                        _receiptImage = null;
+                      });
+                      context.read<ChatBloc>().add(ChatActionHandled());
                     }
                   }
                 },
