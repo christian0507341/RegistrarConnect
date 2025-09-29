@@ -86,3 +86,10 @@ htmlcov/
 .pytest_cache/
 .tox/
 *.tmp
+/mobile/windows/flutter
+/mobile/linux/flutter
+*.cc
+mobile/linux/flutter/generated_plugin_registrant.cc
+mobile/linux/flutter/generated_plugins.cmake
+mobile/windows/flutter/generated_plugin_registrant.cc
+mobile/windows/flutter/generated_plugins.cmake
