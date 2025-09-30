@@ -245,3 +245,24 @@
   90% { opacity: 1; }
   100% { opacity: 0; transform: translateY(20px); }
 }
+
+
+.requests-table-scroll {
+  max-height: 500px; 
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.requests-table-scroll table thead th {
+  position: sticky;
+  top: 0;
+  background: #f9fafb;
+  z-index: 2;
+}
+.no-results {
+  padding: 1rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.9rem;
+}

@@ -8,9 +8,11 @@ import "../styles/screens/RequestsScreen.css";
 type Request = {
   id: string;
   student: string;
-  document: string;
-  payment: string;
-  submitted: string;
+  studentId: string;
+  documentType: string;
+  semester: string;
+  schoolYear: string;
+  purpose: string;
   aiStatus: "Pending" | "Valid" | "Invalid" | "Checking" | "Approved" | "Rejected";
   aiNote?: string;
   receiptUrl?: string;
@@ -21,40 +23,276 @@ export default function RequestsScreen() {
 
   const [requests, setRequests] = useState<Request[]>([
     {
-      id: "REQ-1042",
+      id: "0001",
       student: "Christian Lloyd Francisco",
-      document: "COM",
-      payment: "Unverified",
-      submitted: "2025-08-29",
-      aiStatus: "Pending", 
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "1st Semester",
+      schoolYear: "2025–2026",
+      purpose: "Scholarship",
+      aiStatus: "Pending",
       receiptUrl: "/receipts/receipt1.png",
     },
     {
-      id: "REQ-1043",
+      id: "0002",
       student: "June Gerald Macalinga",
-      document: "COM",
-      payment: "Paid",
-      submitted: "2025-08-30",
-      aiStatus: "Pending", 
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "2nd Semester",
+      schoolYear: "2025–2026",
+      purpose: "Graduation",
+      aiStatus: "Pending",
       receiptUrl: "/receipts/receipt2.png",
     },
     {
-      id: "REQ-1045",
+      id: "0003",
       student: "Christian Mondala",
-      document: "COG",
-      payment: "Missing",
-      submitted: "2025-08-28",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
       aiStatus: "Pending",
       receiptUrl: "/receipts/receipt3.png",
     },
+
+        {
+      id: "0001",
+      student: "Christian Lloyd Francisco",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "1st Semester",
+      schoolYear: "2025–2026",
+      purpose: "Scholarship",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt1.png",
+    },
+    {
+      id: "0002",
+      student: "June Gerald Macalinga",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "2nd Semester",
+      schoolYear: "2025–2026",
+      purpose: "Graduation",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt2.png",
+    },
+    {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt3.png",
+    },
+        {
+      id: "0001",
+      student: "Christian Lloyd Francisco",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "1st Semester",
+      schoolYear: "2025–2026",
+      purpose: "Scholarship",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt1.png",
+    },
+    {
+      id: "0002",
+      student: "June Gerald Macalinga",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "2nd Semester",
+      schoolYear: "2025–2026",
+      purpose: "Graduation",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt2.png",
+    },
+    {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt3.png",
+    },
+        {
+      id: "0001",
+      student: "Christian Lloyd Francisco",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "1st Semester",
+      schoolYear: "2025–2026",
+      purpose: "Scholarship",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt1.png",
+    },
+    {
+      id: "0002",
+      student: "June Gerald Macalinga",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "2nd Semester",
+      schoolYear: "2025–2026",
+      purpose: "Graduation",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt2.png",
+    },
+    {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt3.png",
+    },
+        {
+      id: "0001",
+      student: "Christian Lloyd Francisco",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "1st Semester",
+      schoolYear: "2025–2026",
+      purpose: "Scholarship",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt1.png",
+    },
+    {
+      id: "0002",
+      student: "June Gerald Macalinga",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "2nd Semester",
+      schoolYear: "2025–2026",
+      purpose: "Graduation",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt2.png",
+    },
+    {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt3.png",
+    },
+        {
+      id: "0001",
+      student: "Christian Lloyd Francisco",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "1st Semester",
+      schoolYear: "2025–2026",
+      purpose: "Scholarship",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt1.png",
+    },
+    {
+      id: "0002",
+      student: "June Gerald Macalinga",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "2nd Semester",
+      schoolYear: "2025–2026",
+      purpose: "Graduation",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt2.png",
+    },
+    {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt3.png",
+    },
+        {
+      id: "0001",
+      student: "Christian Lloyd Francisco",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "1st Semester",
+      schoolYear: "2025–2026",
+      purpose: "Scholarship",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt1.png",
+    },
+    {
+      id: "0002",
+      student: "June Gerald Macalinga",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "2nd Semester",
+      schoolYear: "2025–2026",
+      purpose: "Graduation",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt2.png",
+    },
+    {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt3.png",
+    },
+        {
+      id: "0001",
+      student: "Christian Lloyd Francisco",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "1st Semester",
+      schoolYear: "2025–2026",
+      purpose: "Scholarship",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt1.png",
+    },
+    {
+      id: "0002",
+      student: "June Gerald Macalinga",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "2nd Semester",
+      schoolYear: "2025–2026",
+      purpose: "Graduation",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt2.png",
+    },
+    {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      aiStatus: "Pending",
+      receiptUrl: "/receipts/receipt3.png",
+    },
+    
   ]);
 
 
   const [selected, setSelected] = useState<Request | null>(null);
   const [filter, setFilter] = useState<"All" | "Pending" | "Approved" | "Rejected">("All");
-
-  const [enableManualCheck, setEnableManualCheck] = useState(false);
-  const [autoCheck, setAutoCheck] = useState(false);
 
   const [toast, setToast] = useState<string | null>(null);
     useEffect(() => {
@@ -70,29 +308,6 @@ export default function RequestsScreen() {
         window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [navigate]);
-
-
-  const handleAICheck = (id: string) => {
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, aiStatus: "Checking", aiNote: undefined } : r
-      )
-    );
-
-    setTimeout(() => {
-      setRequests((prev) =>
-        prev.map((r) =>
-          r.id === id
-            ? {
-                ...r,
-                aiStatus: "Valid",
-                aiNote: "Receipt verified successfully.",
-              }
-            : r
-        )
-      );
-    }, 2000);
-  };
 
   const handleApprove = (id: string) => {
     setRequests((prev) =>
@@ -116,40 +331,16 @@ export default function RequestsScreen() {
     setSelected(null);
   };
 
-  const handleApproveAll = () => {
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.aiStatus === "Valid"
-          ? { ...r, aiStatus: "Approved", aiNote: "Approved by admin." }
-          : r
-      )
-    );
-  };
 
-  const handleRejectAll = () => {
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.aiStatus === "Invalid"
-          ? { ...r, aiStatus: "Rejected", aiNote: "Rejected by admin." }
-          : r
-      )
-    );
-  };
-
-  useEffect(() => {
-    if (autoCheck) {
-      requests.forEach((r) => {
-        if (r.aiStatus === "Pending") handleAICheck(r.id);
-      });
-    }
-  }, [autoCheck, requests]);
 
   const headers = [
-    "ID",
+    "Request ID",
     "Student",
-    "Document",
-    "Payment",
-    "Submitted",
+    "Student ID",
+    "Document Type",
+    "Semester",
+    "School Year",
+    "Purpose",
     "Status",
     "Action",
   ];
@@ -166,9 +357,11 @@ export default function RequestsScreen() {
   const rows = filteredRequests.map((r) => [
     r.id,
     r.student,
-    r.document,
-    r.payment,
-    r.submitted,
+    r.studentId,
+    r.documentType,
+    r.semester,
+    r.schoolYear,
+    r.purpose,
     <div key={r.id}>
       <span className={`requests-status-badge ${r.aiStatus.toLowerCase()}`}>
         {r.aiStatus}
@@ -180,38 +373,12 @@ export default function RequestsScreen() {
       )}
     </div>,
     <div key={r.id}>
-      {enableManualCheck && r.aiStatus === "Pending" && !autoCheck && (
-        <button
-          className="btn-primary small"
-          onClick={() => handleAICheck(r.id)}
-        >
-          Run AI Check
-        </button>
-      )}
-
-      {r.aiStatus === "Checking" && (
-        <button className="btn-disabled small" disabled>
-          Checking...
-        </button>
-      )}
-
-      {!enableManualCheck && r.aiStatus === "Pending" && (
-        <button className="btn-view small" onClick={() => setSelected(r)}>
-          View
-        </button>
-      )}
-
-      {(r.aiStatus === "Valid" ||
-        r.aiStatus === "Invalid" ||
-        r.aiStatus === "Approved" ||
-        r.aiStatus === "Rejected") && (
-        <button className="btn-view small" onClick={() => setSelected(r)}>
-          View
-        </button>
-      )}
-    </div>
-
+      <button className="btn-view small" onClick={() => setSelected(r)}>
+        View
+      </button>
+    </div>,
   ]);
+
 
 
   return (
@@ -250,55 +417,21 @@ export default function RequestsScreen() {
           </button>
         </div>
 
-        <div className="bulk-actions">
-          <button
-            className="btn-approve-all"
-            onClick={handleApproveAll}
-            disabled={!requests.some((r) => r.aiStatus === "Valid")}
-          >
-            Approve All Ready ({requests.filter((r) => r.aiStatus === "Valid").length})
-          </button>
-          <button
-            className="btn-reject-all"
-            onClick={handleRejectAll}
-            disabled={!requests.some((r) => r.aiStatus === "Invalid")}
-          >
-            Reject All Invalid ({requests.filter((r) => r.aiStatus === "Invalid").length})
-          </button>
-
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={enableManualCheck}
-              onChange={() => {
-                setEnableManualCheck(!enableManualCheck);
-                if (!enableManualCheck) setAutoCheck(false); 
-              }}
-            />
-            <span className="slider" /> Enable Manual AI Check
-          </label>
-
-          {enableManualCheck && (
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={autoCheck}
-                onChange={() => setAutoCheck(!autoCheck)}
-              />
-              <span className="slider" /> Auto AI Check
-            </label>
+        <div className="requests-table-scroll">
+          {rows.length > 0 ? (
+            <Table headers={headers} rows={rows} />
+          ) : (
+            <div className="no-results">No requests found.</div>
           )}
         </div>
 
-        <div className="requests-table-container">
-          <Table headers={headers} rows={rows} />
-        </div>
       </Card>
+
 
       {selected && (
         <ReceiptModal
           student={selected.student}
-          document={selected.document}
+          document={selected.documentType}
           receiptUrl={selected.receiptUrl}
           aiStatus={selected.aiStatus}
           aiNote={selected.aiNote}

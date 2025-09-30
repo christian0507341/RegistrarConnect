@@ -8,68 +8,201 @@ import "../styles/screens/RequestHistoryScreen.css";
 type HistoryRequest = {
   id: string;
   student: string;
-  document: string;
-  payment: string;
-  submitted: string;
+  studentId: string;
+  documentType: string;
+  semester: string;
+  schoolYear: string;
+  purpose: string;
   status: "Approved" | "Rejected";
   processedNote: string;
   receiptUrl?: string;
+  submitted?: string; 
 };
 
 export default function RequestHistoryScreen() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<HistoryRequest | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
 
   const headers = [
     "ID",
     "Student",
-    "Document",
-    "Payment",
-    "Submitted",
+    "Student ID",
+    "Document Type",
+    "Semester",
+    "School Year",
+    "Purpose",
     "Status",
     "Action",
   ];
 
   const data: HistoryRequest[] = [
     {
-      id: "REQ-1001",
+      id: "0001",
       student: "Christian Lloyd Francisco",
-      document: "COM",
-      payment: "Paid",
-      submitted: "2025-07-15",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "1st Semester",
+      schoolYear: "2025–2026",
+      purpose: "Scholarship",
       status: "Approved",
       processedNote: "Approved by Admin",
       receiptUrl: "/receipts/receipt1.png",
+      submitted: "2025-07-15",
+    },
+        {
+      id: "0001",
+      student: "Christian Lloyd Francisco",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "1st Semester",
+      schoolYear: "2025–2026",
+      purpose: "Scholarship",
+      status: "Approved",
+      processedNote: "Approved by Admin",
+      receiptUrl: "/receipts/receipt1.png",
+      submitted: "2025-07-15",
     },
     {
-      id: "REQ-1002",
+      id: "0001",
+      student: "Christian Lloyd Francisco",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "1st Semester",
+      schoolYear: "2025–2026",
+      purpose: "Scholarship",
+      status: "Approved",
+      processedNote: "Approved by Admin",
+      receiptUrl: "/receipts/receipt1.png",
+      submitted: "2025-07-15",
+    },
+    {
+      id: "0002",
       student: "June Gerald Macalinga",
-      document: "COM",
-      payment: "Paid",
-      submitted: "2025-07-18",
+      studentId: "03-2122-0123",
+      documentType: "COM",
+      semester: "2nd Semester",
+      schoolYear: "2025–2026",
+      purpose: "Graduation",
       status: "Rejected",
       processedNote: "Rejected by Admin",
       receiptUrl: "/receipts/receipt2.png",
+      submitted: "2025-07-18",
     },
     {
-      id: "REQ-1003",
+      id: "0003",
       student: "Christian Mondala",
-      document: "COG",
-      payment: "Paid",
-      submitted: "2025-07-20",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
       status: "Approved",
       processedNote: "Approved by AI",
       receiptUrl: "/receipts/receipt3.png",
+      submitted: "2025-07-20",
+    },
+        {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      status: "Approved",
+      processedNote: "Approved by AI",
+      receiptUrl: "/receipts/receipt3.png",
+      submitted: "2025-07-20",
+    },
+        {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      status: "Approved",
+      processedNote: "Approved by AI",
+      receiptUrl: "/receipts/receipt3.png",
+      submitted: "2025-07-20",
+    },
+        {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      status: "Approved",
+      processedNote: "Approved by AI",
+      receiptUrl: "/receipts/receipt3.png",
+      submitted: "2025-07-20",
+    },
+        {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      status: "Approved",
+      processedNote: "Approved by AI",
+      receiptUrl: "/receipts/receipt3.png",
+      submitted: "2025-07-20",
+    },
+        {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      status: "Approved",
+      processedNote: "Approved by AI",
+      receiptUrl: "/receipts/receipt3.png",
+      submitted: "2025-07-20",
+    },
+        {
+      id: "0003",
+      student: "Christian Mondala",
+      studentId: "03-2122-0123",
+      documentType: "COG",
+      semester: "Summer",
+      schoolYear: "2024–2025",
+      purpose: "Transfer",
+      status: "Approved",
+      processedNote: "Approved by AI",
+      receiptUrl: "/receipts/receipt3.png",
+      submitted: "2025-07-20",
     },
   ];
 
-  const rows = data.map((r) => [
+  const filteredData = data.filter((r) => {
+    const matchesSearch =
+      r.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.documentType.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesDate = !selectedDate || r.submitted === selectedDate;
+
+    return matchesSearch && matchesDate;
+  });
+
+  const rows = filteredData.map((r) => [
     r.id,
     r.student,
-    r.document,
-    r.payment,
-    r.submitted,
+    r.studentId,
+    r.documentType,
+    r.semester,
+    r.schoolYear,
+    r.purpose,
     <div key={r.id}>
       <span
         className={`history-status-badge ${
@@ -87,7 +220,6 @@ export default function RequestHistoryScreen() {
     </button>,
   ]);
 
-  // 🔹 Keyboard shortcut: Esc to go back
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -95,7 +227,7 @@ export default function RequestHistoryScreen() {
         setTimeout(() => {
           setToast(null);
           navigate("/requests");
-        }, 1000); // show toast for 1s before navigating
+        }, 1000);
       }
     };
 
@@ -107,25 +239,46 @@ export default function RequestHistoryScreen() {
 
   return (
     <div className="request-history-screen">
-      {/* 🔹 Back button */}
       <div className="back-button" onClick={() => navigate("/requests")}>
         ← Back to Requests
       </div>
 
       <Card title="Request History">
-        <p className="small-muted">
-          All processed document requests are archived here for reference.
-        </p>
+        <div className="card-subheader">
+          <p className="small-muted">
+            All processed document requests are archived here for reference.
+          </p>
+          <div className="history-filters">
+            <input
+              type="text"
+              className="history-search"
+              placeholder="Search requests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <input
+              type="date"
+              className="history-date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+          </div>
+        </div>
+
         <div style={{ height: 12 }} />
         <div className="table-scroll">
-          <Table headers={headers} rows={rows} />
+          {rows.length > 0 ? (
+            <Table headers={headers} rows={rows} />
+          ) : (
+            <div className="no-results">No matching requests found.</div>
+          )}
         </div>
       </Card>
 
       {selected && (
         <ReceiptModal
           student={selected.student}
-          document={selected.document}
+          document={selected.documentType}
           receiptUrl={selected.receiptUrl}
           aiStatus={selected.status}
           aiNote={selected.processedNote}
@@ -133,7 +286,6 @@ export default function RequestHistoryScreen() {
         />
       )}
 
-      {/* 🔹 Toast Notification */}
       {toast && <div className="toast">{toast}</div>}
     </div>
   );
