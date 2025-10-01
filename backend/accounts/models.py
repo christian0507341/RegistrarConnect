@@ -18,6 +18,7 @@ class User(AbstractUser):
     class Roles(models.TextChoices):
         STUDENT = "student", _("Student")
         FACULTY = "faculty", _("Faculty")
+        ADMIN = "admin", _("Admin")
 
     # Tighten built‑ins
     username = models.CharField(

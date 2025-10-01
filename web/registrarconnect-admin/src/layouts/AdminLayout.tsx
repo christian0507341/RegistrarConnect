@@ -1,17 +1,16 @@
-import { useLocation } from "react-router-dom";
-import type { ReactNode } from "react";
+// src/layouts/AdminLayout.tsx
+import { useLocation, Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar.tsx";
 import Topbar from "../components/Topbar.tsx";
 import "../styles/layouts/AdminLayout.css";
 
-type Props = {
-  children: ReactNode;
+type AdminLayoutProps = {
+  onLogout: () => void;
 };
 
-export default function AdminLayout({ children }: Props) {
+export default function AdminLayout({ onLogout }: AdminLayoutProps) {
   const location = useLocation();
 
-  // Map routes to titles
   const pageTitles: Record<string, string> = {
     "/dashboard": "Dashboard",
     "/appointments": "Appointments",
@@ -22,13 +21,22 @@ export default function AdminLayout({ children }: Props) {
   };
 
   const title = pageTitles[location.pathname] || "RegistrarConnect";
+  const adminName = localStorage.getItem("name") || "Admin";
 
   return (
     <div className="admin-layout">
-      <Sidebar />
+      {/* Sidebar with Logout */}
+      <Sidebar onLogout={onLogout} />
+
+      {/* Main Area */}
       <div className="main-area">
+        {/* ✅ Removed logout from Topbar */}
         <Topbar title={title} />
-        <div className="content-area">{children}</div>
+
+        <div className="content-area">
+          {/* Nested Routes will render here */}
+          <Outlet />
+        </div>
       </div>
     </div>
   );

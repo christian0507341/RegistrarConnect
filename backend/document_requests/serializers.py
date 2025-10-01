@@ -1,6 +1,36 @@
 from rest_framework import serializers
 from .models import DocumentRequest, DocumentRequestAction
 
+class DocumentRequestWebSerializer(serializers.ModelSerializer):
+    student = serializers.CharField(source="student.get_full_name")  # or student.email if you prefer
+    student_id = serializers.CharField(source="student.student_id")  # make sure your User model has this field
+    semester = serializers.SerializerMethodField()
+    school_year = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DocumentRequest
+        fields = [
+            "id",
+            "student",
+            "student_id",
+            "document_type",
+            "semester",
+            "school_year",
+            "purpose",
+        ]
+
+    def get_semester(self, obj):
+        # If stored in purpose like "(Semester: 1st, School Year: 2025-2026)"
+        import re
+        match = re.search(r"Semester:\s*([^,)]*)", obj.purpose)
+        return match.group(1) if match else ""
+
+    def get_school_year(self, obj):
+        import re
+        match = re.search(r"School Year:\s*([^)]+)", obj.purpose)
+        return match.group(1) if match else ""
+    
+    
 class DocumentRequestActionSerializer(serializers.ModelSerializer):
     actor_email = serializers.EmailField(source='actor.email', read_only=True)
 

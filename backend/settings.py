@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
 
     # Third-party apps
     'rest_framework',
@@ -194,3 +195,8 @@ DEFAULT_FROM_EMAIL = 'noreply@registrarconnect.com'
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = 'apikey'
 # EMAIL_HOST_PASSWORD = 'your_sendgrid_api_key'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+

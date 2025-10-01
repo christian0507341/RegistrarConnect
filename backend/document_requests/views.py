@@ -9,6 +9,24 @@ from rest_framework.response import Response
 from rest_framework import status
 from backend.accounts.models import User
 from .permissions import IsFaculty
+from .serializers import DocumentRequestWebSerializer
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def document_requests_web(request):
+    """
+    Fetch all document requests for faculty or student,
+    returning only fields needed for web table.
+    """
+    user = request.user
+    if hasattr(user, 'role') and user.role == 'faculty':
+        queryset = DocumentRequest.objects.all().select_related('student')
+    else:
+        queryset = DocumentRequest.objects.filter(student=user).select_related('student')
+
+    serializer = DocumentRequestWebSerializer(queryset, many=True)
+    return Response(serializer.data)
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -71,6 +89,25 @@ def create_document_request(request):
         "status": doc_request.status,
         "purpose": doc_request.purpose
     }, status=status.HTTP_201_CREATED)
+
+class DocumentRequestListView(generics.ListAPIView):
+    serializer_class = DocumentRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = DocumentRequest.objects.all()
+        status = self.request.query_params.get("status")
+        student = self.request.query_params.get("student")
+        document_type = self.request.query_params.get("document_type")
+
+        if status:
+            queryset = queryset.filter(status=status.lower())
+        if student:
+            queryset = queryset.filter(student_id=student)
+        if document_type:
+            queryset = queryset.filter(document_type=document_type.lower())
+
+        return queryset
 
 class DocumentRequestListCreateView(generics.ListCreateAPIView):
     serializer_class = DocumentRequestSerializer
