@@ -3,7 +3,7 @@ import 'package:mobile/features/home/presentation/pages/home_page.dart';
 import 'package:mobile/features/notifications/presentation/pages/notification_page.dart';
 import 'package:mobile/features/appointment/presentation/pages/calendar_page.dart';
 import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
-import 'package:mobile/features/dashboard/presentation/pages/approved_requests_page.dart';
+import 'package:mobile/features/status/presentation/pages/status_page.dart';
 
 class HomeContainer extends StatefulWidget {
   const HomeContainer({super.key});
@@ -15,21 +15,17 @@ class HomeContainer extends StatefulWidget {
 class _HomeContainerState extends State<HomeContainer> {
   int _selectedIndex = 0;
 
-  /// Use nullable slots so we only create a tab the first time it's shown.
-  /// IndexedStack will keep the subtree alive once created.
   final List<Widget?> _tabs = List<Widget?>.filled(5, null, growable: false);
 
   @override
   void initState() {
     super.initState();
-    // Eager-create the first tab only
     _tabs[0] = const HomePage();
   }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      // Lazy instantiate the tab when first selected
       _tabs[index] ??= _buildTab(index);
     });
   }
@@ -41,7 +37,7 @@ class _HomeContainerState extends State<HomeContainer> {
       case 1:
         return const CalendarPage();
       case 2:
-        return const ApprovedRequestsPage();
+        return const StatusPage();
       case 3:
         return const NotificationPage();
       case 4:
@@ -53,7 +49,6 @@ class _HomeContainerState extends State<HomeContainer> {
 
   @override
   Widget build(BuildContext context) {
-    // Make sure the currently selected tab is created
     _tabs[_selectedIndex] ??= _buildTab(_selectedIndex);
 
     return Scaffold(
@@ -78,7 +73,7 @@ class _HomeContainerState extends State<HomeContainer> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.check_circle),
-            label: "Approved",
+            label: "Status",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications),

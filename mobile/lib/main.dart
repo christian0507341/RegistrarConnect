@@ -33,18 +33,23 @@ import 'features/chat/presentation/bloc/chat_bloc.dart';
 // Settings
 import 'features/settings/presentation/pages/settings_page.dart';
 
+// Status
+import 'features/status/presentation/pages/status_page.dart';
+import 'features/status/presentation/bloc/status_bloc.dart';
+
 // Global wrapper
 import 'core/widgets/global_fab_wrapper.dart';
 
-// ✅ Unify network client
+// Unify network client
 import 'core/services/dio_client.dart';
+import 'injection_container.dart' as di;
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await di.init();
   final secureStorage = SecureStorageService();
-
   final dioClient = DioClient(secureStorage);
   final Dio dio = dioClient.dio;
-
   final authApi = AuthApi(dio);
   final IAuthRepository authRepository = data.AuthRepository(
     api: authApi,
@@ -75,6 +80,9 @@ class MyApp extends StatelessWidget {
               NotificationBloc(repository: NotificationRepositoryImpl()),
         ),
         BlocProvider<ChatBloc>(create: (_) => ChatBloc()),
+        BlocProvider<StatusBloc>(
+          create: (_) => StatusBloc(getStatusesUseCase: di.sl()),
+        ),
       ],
       child: MaterialApp(
         title: 'RegistrarConnect',
@@ -122,8 +130,7 @@ class MyApp extends StatelessWidget {
               break;
             case '/home':
               page = const HomeContainer();
-              showFab =
-                  false; // 🔧 Turn off global FAB; HomePage has its own FAB
+              showFab = false;
               break;
             case '/add_appointment':
               page = AddAppointmentPage(selectedDate: DateTime.now());
@@ -134,6 +141,9 @@ class MyApp extends StatelessWidget {
             case '/chat':
               page = const ChatPage();
               showFab = false;
+              break;
+            case '/status':
+              page = const StatusPage();
               break;
             default:
               page = const Scaffold(
