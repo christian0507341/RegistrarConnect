@@ -176,23 +176,6 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 45,
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  Navigator.of(context).pushNamedAndRemoveUntil(
-                                    '/home',
-                                    (route) => false,
-                                  );
-                                },
-                                child: const Text(
-                                  "Skip to Home (Debug)",
-                                  style: TextStyle(color: Colors.blue),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
