@@ -1,9 +1,9 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/status_entity.dart';
 
 abstract class StatusState extends Equatable {
+  const StatusState();
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class StatusInitial extends StatusState {}
@@ -11,19 +11,17 @@ class StatusInitial extends StatusState {}
 class StatusLoading extends StatusState {}
 
 class StatusLoaded extends StatusState {
-  final List<StatusEntity> statuses;
-
-  StatusLoaded(this.statuses);
+  final List<Map<String, dynamic>> statuses;
+  const StatusLoaded(this.statuses);
 
   @override
-  List<Object> get props => [statuses];
+  List<Object?> get props => [statuses];
 }
 
 class StatusError extends StatusState {
   final String message;
-
-  StatusError(this.message);
+  const StatusError(this.message);
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message];
 }

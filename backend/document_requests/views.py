@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from backend.accounts.models import User
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -162,6 +163,33 @@ class StatusUpdateView(generics.UpdateAPIView):
     def perform_update(self, serializer):
         serializer.save()
 
+@login_required
 def status_web_view(request):
-    requests = DocumentRequest.objects.all() if hasattr(request.user, 'role') and request.user.role == 'faculty' else DocumentRequest.objects.filter(student=request.user)
+    if not request.user.is_authenticated or (hasattr(request.user, 'role') and request.user.role != 'faculty'):
+        return render(request, 'document_requests/permission_denied.html', {'message': 'Only faculty can access this page.'})
+    
+    requests = DocumentRequest.objects.all()
+    if request.method == 'POST':
+        request_id = request.POST.get('request_id')
+        payment = request.POST.get('payment') == 'on'
+        document = request.POST.get('document') == 'on'
+        try:
+            doc_request = DocumentRequest.objects.get(id=request_id)
+            if hasattr(request.user, 'role') and request.user.role == 'faculty':
+                old_payment = doc_request.payment
+                old_document = doc_request.document
+                doc_request.payment = payment
+                doc_request.document = document
+                doc_request.save()
+                DocumentRequestAction.objects.create(
+                    request=doc_request,
+                    actor=request.user,
+                    action='status_changed',
+                    from_status=f"payment: {old_payment}, document: {old_document}",
+                    to_status=f"payment: {payment}, document: {document}",
+                    notes=f"Updated by faculty via web"
+                )
+                return render(request, 'document_requests/status_form.html', {'requests': requests, 'message': 'Status updated successfully.'})
+        except DocumentRequest.DoesNotExist:
+            return render(request, 'document_requests/status_form.html', {'requests': requests, 'message': 'Request not found.'})
     return render(request, 'document_requests/status_form.html', {'requests': requests})

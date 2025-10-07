@@ -5,6 +5,8 @@ import 'package:dio/dio.dart';
 // Auth
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/auth/presentation/bloc/auth_state.dart';
+import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/data/repositories/auth_repository.dart' as data;
 import 'features/auth/data/sources/auth_api.dart';
@@ -67,17 +69,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<AuthBloc>(create: (_) => AuthBloc(repo: authRepository)),
+        BlocProvider<AuthBloc>(
+          create: (_) => AuthBloc(repo: authRepository)..add(const CheckSession()),
+        ),
         BlocProvider<AppointmentBloc>(
-          create: (_) =>
-              AppointmentBloc(repository: AppointmentRepositoryImpl()),
+          create: (_) => AppointmentBloc(repository: AppointmentRepositoryImpl()),
         ),
         BlocProvider<HomeBloc>(
           create: (_) => HomeBloc(repository: ActivityRepositoryImpl()),
         ),
         BlocProvider<NotificationBloc>(
-          create: (_) =>
-              NotificationBloc(repository: NotificationRepositoryImpl()),
+          create: (_) => NotificationBloc(repository: NotificationRepositoryImpl()),
         ),
         BlocProvider<ChatBloc>(create: (_) => ChatBloc()),
         BlocProvider<StatusBloc>(
@@ -110,7 +112,18 @@ class MyApp extends StatelessWidget {
           ),
         ),
         debugShowCheckedModeBanner: false,
-        initialRoute: '/',
+        home: BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthUnauthenticated) {
+              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+            } else if (state is AuthAuthenticated) {
+              if (ModalRoute.of(context)?.settings.name == '/') {
+                Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+              }
+            }
+          },
+          child: const OnboardingScreen(), // Initial widget
+        ),
         onGenerateRoute: (settings) {
           late Widget page;
           bool showFab = true;

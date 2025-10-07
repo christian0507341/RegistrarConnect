@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Update Status</title>
+    <title>Status Update</title>
 </head>
 <body>
-    <h1>Document Requests</h1>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
     {% for request in requests %}
-        <form method="POST" action="/api/statuses/{{ request.id }}/update/">
+        <form method="post" action="">
             {% csrf_token %}
-            <p>{{ request.document_type }} (ID: {{ request.id }})</p>
+            <input type="hidden" name="request_id" value="{{ request.id }}">
+            <p>{{ request.student.email }} - {{ request.document_type }}</p>
             <label>Payment: <input type="checkbox" name="payment" {% if request.payment %}checked{% endif %}></label>
             <label>Document: <input type="checkbox" name="document" {% if request.document %}checked{% endif %}></label>
             <button type="submit">Update</button>
         </form>
-    {% empty %}
-        <p>No requests found.</p>
     {% endfor %}
 </body>
 </html>

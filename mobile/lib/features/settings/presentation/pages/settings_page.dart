@@ -6,9 +6,11 @@ import 'package:mobile/features/auth/presentation/bloc/auth_event.dart';
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
-  void _logout(BuildContext context) {
-    // Dispatch logout event via AuthBloc
-    context.read<AuthBloc>().add(const LogoutRequested());
+  Future<void> _logout(BuildContext context) async {
+    // Dispatch logout event and wait for state change
+    final authBloc = context.read<AuthBloc>();
+    authBloc.add(const LogoutRequested());
+    await Future.delayed(const Duration(milliseconds: 100)); // Brief delay to ensure state update
     Navigator.pushReplacementNamed(context, '/login');
   }
 
@@ -100,8 +102,7 @@ class SettingsPage extends StatelessWidget {
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

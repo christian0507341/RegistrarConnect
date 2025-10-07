@@ -92,18 +92,12 @@ class DocumentRequestCancelSerializer(serializers.ModelSerializer):
 
 class StatusSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source='document_type')
-    payment = serializers.SerializerMethodField()
-    document = serializers.SerializerMethodField()
+    payment = serializers.BooleanField()
+    document = serializers.BooleanField()
 
     class Meta:
         model = DocumentRequest
         fields = ['title', 'payment', 'document']
-
-    def get_payment(self, obj):
-        return 't' if obj.payment else 'f'
-
-    def get_document(self, obj):
-        return 't' if obj.document else 'f'
 
 class StatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -116,13 +110,13 @@ class StatusUpdateSerializer(serializers.ModelSerializer):
         old_document = instance.document
         instance = super().update(instance, validated_data)
         if old_payment != instance.payment or old_document != instance.document:
-            notes = f"Payment: {'t' if instance.payment else 'f'}, Document: {'t' if instance.document else 'f'}"
+            notes = f"Payment: {instance.payment}, Document: {instance.document}"
             DocumentRequestAction.objects.create(
                 request=instance,
                 actor=self.context['request'].user,
                 action='status_changed',
-                from_status=f"payment: {'t' if old_payment else 'f'}, document: {'t' if old_document else 'f'}",
-                to_status=f"payment: {'t' if instance.payment else 'f'}, document: {'t' if instance.document else 'f'}",
+                from_status=f"payment: {old_payment}, document: {old_document}",
+                to_status=f"payment: {instance.payment}, document: {instance.document}",
                 notes=notes
             )
         return instance
