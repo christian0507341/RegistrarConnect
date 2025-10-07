@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Status</title>
+</head>
+<body>
+    <h1>Document Requests</h1>
+    {% for request in requests %}
+        <form method="POST" action="/api/statuses/{{ request.id }}/update/">
+            {% csrf_token %}
+            <p>{{ request.document_type }} (ID: {{ request.id }})</p>
+            <label>Payment: <input type="checkbox" name="payment" {% if request.payment %}checked{% endif %}></label>
+            <label>Document: <input type="checkbox" name="document" {% if request.document %}checked{% endif %}></label>
+            <button type="submit">Update</button>
+        </form>
+    {% empty %}
+        <p>No requests found.</p>
+    {% endfor %}
+</body>
+</html>

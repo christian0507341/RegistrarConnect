@@ -19,13 +19,14 @@ class DocumentRequestAction(models.Model):
         ordering = ('-created_at',)
 
     def __str__(self):
-        return f"{self.request.id} - {self.action} ({self.created_at})"  # Fixed request_id to request.id
+        return f"{self.request.id} - {self.action} ({self.created_at})"
 
 class DocumentRequest(models.Model):
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'
         CANCELLED = 'cancelled', 'Cancelled'
         PROCESSED = 'processed', 'Processed'
+
     DOCUMENT_TYPES = [
         ('transcript', 'Transcript of Records'),
         ('good_moral', 'Certificate of Good Moral'),
@@ -51,7 +52,9 @@ class DocumentRequest(models.Model):
         related_name="processed_document_requests"
     )
     receipt_image = models.ImageField(upload_to='receipts/', null=True, blank=True, default=None)
-    notes = models.TextField(blank=True, null=True)  # Add this line
+    notes = models.TextField(blank=True, null=True)
+    payment = models.BooleanField(default=False)  # Added for payment status
+    document = models.BooleanField(default=False)  # Added for document status
 
     def __str__(self):
         return f"{self.student.email} - {self.document_type} - {self.status}"

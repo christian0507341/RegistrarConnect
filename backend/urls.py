@@ -17,6 +17,7 @@ urlpatterns = [
     path("api/document-requests/", include("backend.document_requests.urls")),
     path("api/appointments/", include("backend.appointments.urls")),
     path("api/ai/", include("backend.ai.urls")),
+    path("web/", include("backend.document_requests.urls")),  # Added for /web/statuses/
 
     #path('api/document-requests/<int:pk>/status/', DocumentRequestStatusUpdateView.as_view(), name='document-request-status-update'),
 ]

@@ -2,8 +2,8 @@ from rest_framework import serializers
 from .models import DocumentRequest, DocumentRequestAction
 
 class DocumentRequestWebSerializer(serializers.ModelSerializer):
-    student = serializers.CharField(source="student.get_full_name")  # or student.email if you prefer
-    student_id = serializers.CharField(source="student.student_id")  # make sure your User model has this field
+    student = serializers.CharField(source="student.get_full_name")
+    student_id = serializers.CharField(source="student.student_id")
     semester = serializers.SerializerMethodField()
     school_year = serializers.SerializerMethodField()
 
@@ -20,7 +20,6 @@ class DocumentRequestWebSerializer(serializers.ModelSerializer):
         ]
 
     def get_semester(self, obj):
-        # If stored in purpose like "(Semester: 1st, School Year: 2025-2026)"
         import re
         match = re.search(r"Semester:\s*([^,)]*)", obj.purpose)
         return match.group(1) if match else ""
@@ -29,8 +28,7 @@ class DocumentRequestWebSerializer(serializers.ModelSerializer):
         import re
         match = re.search(r"School Year:\s*([^)]+)", obj.purpose)
         return match.group(1) if match else ""
-    
-    
+
 class DocumentRequestActionSerializer(serializers.ModelSerializer):
     actor_email = serializers.EmailField(source='actor.email', read_only=True)
 
@@ -38,7 +36,6 @@ class DocumentRequestActionSerializer(serializers.ModelSerializer):
         model = DocumentRequestAction
         fields = ('id', 'action', 'from_status', 'to_status', 'notes', 'actor', 'actor_email', 'created_at')
         read_only_fields = ('id', 'actor', 'actor_email', 'created_at')
-
 
 class DocumentRequestSerializer(serializers.ModelSerializer):
     actions = DocumentRequestActionSerializer(many=True, read_only=True)
@@ -49,11 +46,9 @@ class DocumentRequestSerializer(serializers.ModelSerializer):
         read_only_fields = ['status', 'requested_at', 'processed_by', 'student', 'actions']
 
     def update(self, instance, validated_data):
-        # If client attempts to change purpose after creation, reject it
         if 'purpose' in validated_data and validated_data['purpose'] != instance.purpose:
             raise serializers.ValidationError({"purpose": "Purpose cannot be changed after submission."})
         return super().update(instance, validated_data)
-
 
 class DocumentRequestStatusSerializer(serializers.ModelSerializer):
     status = serializers.ChoiceField(choices=DocumentRequest.Status.choices)
@@ -75,10 +70,7 @@ class DocumentRequestStatusSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 class DocumentRequestCancelSerializer(serializers.ModelSerializer):
-    """Used to cancel a request"""
-
     class Meta:
         model = DocumentRequest
         fields = ["status"]
@@ -96,4 +88,41 @@ class DocumentRequestCancelSerializer(serializers.ModelSerializer):
             to_status='cancelled',
             notes='Cancelled via chatbot'
         )
+        return instance
+
+class StatusSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source='document_type')
+    payment = serializers.SerializerMethodField()
+    document = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DocumentRequest
+        fields = ['title', 'payment', 'document']
+
+    def get_payment(self, obj):
+        return 't' if obj.payment else 'f'
+
+    def get_document(self, obj):
+        return 't' if obj.document else 'f'
+
+class StatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentRequest
+        fields = ['payment', 'document']
+        read_only_fields = []
+
+    def update(self, instance, validated_data):
+        old_payment = instance.payment
+        old_document = instance.document
+        instance = super().update(instance, validated_data)
+        if old_payment != instance.payment or old_document != instance.document:
+            notes = f"Payment: {'t' if instance.payment else 'f'}, Document: {'t' if instance.document else 'f'}"
+            DocumentRequestAction.objects.create(
+                request=instance,
+                actor=self.context['request'].user,
+                action='status_changed',
+                from_status=f"payment: {'t' if old_payment else 'f'}, document: {'t' if old_document else 'f'}",
+                to_status=f"payment: {'t' if instance.payment else 'f'}, document: {'t' if instance.document else 'f'}",
+                notes=notes
+            )
         return instance
