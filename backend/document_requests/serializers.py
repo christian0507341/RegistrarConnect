@@ -28,16 +28,16 @@ class DocumentRequestWebSerializer(serializers.ModelSerializer):
         import re
         match = re.search(r"School Year:\s*([^)]+)", obj.purpose)
         return match.group(1) if match else ""
-    
-    
+
 class DocumentRequestActionSerializer(serializers.ModelSerializer):
     actor_email = serializers.EmailField(source='actor.email', read_only=True)
+    payment = serializers.CharField(required=False, allow_blank=True, help_text="Payment reference or method details")
+    document = serializers.CharField(required=False, allow_blank=True, help_text="Document details or reference")
 
     class Meta:
         model = DocumentRequestAction
-        fields = ('id', 'action', 'from_status', 'to_status', 'notes', 'actor', 'actor_email', 'created_at')
+        fields = ('id', 'action', 'from_status', 'to_status', 'notes', 'actor', 'actor_email', 'payment', 'document', 'created_at')
         read_only_fields = ('id', 'actor', 'actor_email', 'created_at')
-
 
 class DocumentRequestSerializer(serializers.ModelSerializer):
     actions = DocumentRequestActionSerializer(many=True, read_only=True)
@@ -51,7 +51,6 @@ class DocumentRequestSerializer(serializers.ModelSerializer):
         if 'purpose' in validated_data and validated_data['purpose'] != instance.purpose:
             raise serializers.ValidationError({"purpose": "Purpose cannot be changed after submission."})
         return super().update(instance, validated_data)
-
 
 class DocumentRequestStatusSerializer(serializers.ModelSerializer):
     status = serializers.ChoiceField(choices=DocumentRequest.Status.choices)
@@ -72,7 +71,6 @@ class DocumentRequestStatusSerializer(serializers.ModelSerializer):
         instance.processed_by_id = self.context['request'].user
         instance.save()
         return instance
-
 
 class DocumentRequestCancelSerializer(serializers.ModelSerializer):
     """Used to cancel a request"""

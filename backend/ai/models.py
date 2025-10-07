@@ -17,6 +17,9 @@ class ChatHistory(models.Model):
     # Engine session/state snapshot used by chatbot_cli logic
     session = models.JSONField(default=dict, blank=True)
 
+    # Status of the conversation (e.g., draft, confirming, awaiting_payment, etc.)
+    status = models.CharField(max_length=50, default="draft")
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

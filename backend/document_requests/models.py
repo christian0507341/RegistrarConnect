@@ -14,6 +14,8 @@ class DocumentRequestAction(models.Model):
     to_status = models.CharField(max_length=20, blank=True, null=True)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    payment = models.BooleanField(default=False)
+    document = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('-created_at',)
@@ -30,6 +32,7 @@ class DocumentRequest(models.Model):
         CANCELLED = 'cancelled', 'Cancelled'
         REJECTED = 'rejected', 'Rejected'
         READY_TO_CLAIM = 'ready_to_claim', 'Ready to Claim'
+        ON_PROCESS = 'on_process', 'On Process'
 
     DOCUMENT_TYPES = [
         ('OTR', 'Official Transcript of Records'),
@@ -55,3 +58,15 @@ class DocumentRequest(models.Model):
 
     class Meta:
         ordering = ('-requested_at',)
+
+class AIChatHistory(models.Model):
+    history = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_histories')
+    conversation_id = models.CharField(max_length=100, unique=True)
+    session = models.JSONField(default=dict)
+    status = models.CharField(max_length=20, choices=DocumentRequest.Status.choices, default=DocumentRequest.Status.DRAFT)
+
+    def __str__(self):
+        return f"Chat {self.conversation_id} for {self.user_id}"
