@@ -2,8 +2,8 @@ from rest_framework import serializers
 from .models import DocumentRequest, DocumentRequestAction
 
 class DocumentRequestWebSerializer(serializers.ModelSerializer):
-    student = serializers.CharField(source="student.get_full_name")  # or student.email if you prefer
-    student_id = serializers.CharField(source="student.student_id")  # make sure your User model has this field
+    student = serializers.CharField(source="student_id.get_full_name")  # or student_id.email if you prefer
+    student_id = serializers.CharField(source="student_id.student_id")  # make sure your User model has this field
     semester = serializers.SerializerMethodField()
     school_year = serializers.SerializerMethodField()
 
@@ -20,7 +20,6 @@ class DocumentRequestWebSerializer(serializers.ModelSerializer):
         ]
 
     def get_semester(self, obj):
-        # If stored in purpose like "(Semester: 1st, School Year: 2025-2026)"
         import re
         match = re.search(r"Semester:\s*([^,)]*)", obj.purpose)
         return match.group(1) if match else ""
@@ -46,10 +45,9 @@ class DocumentRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentRequest
         fields = '__all__'
-        read_only_fields = ['status', 'requested_at', 'processed_by', 'student', 'actions']
+        read_only_fields = ['status', 'requested_at', 'processed_by_id', 'student_id', 'actions']
 
     def update(self, instance, validated_data):
-        # If client attempts to change purpose after creation, reject it
         if 'purpose' in validated_data and validated_data['purpose'] != instance.purpose:
             raise serializers.ValidationError({"purpose": "Purpose cannot be changed after submission."})
         return super().update(instance, validated_data)
@@ -71,7 +69,7 @@ class DocumentRequestStatusSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.status = validated_data.get('status', instance.status)
         instance.notes = validated_data.get('notes', instance.notes)
-        instance.processed_by = self.context['request'].user
+        instance.processed_by_id = self.context['request'].user
         instance.save()
         return instance
 

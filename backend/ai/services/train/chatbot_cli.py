@@ -91,8 +91,9 @@ def submit_document_request(token: str, doc_type, semester=None, school_year=Non
         "purpose": purpose,
         "other_doc_name": other_doc_name,
         "payment_method": payment_method,
+        "student_id": STUDENT_ID  # Add student_id to the payload
     }
-    data = {k: v for k, v in data.items() if v is not None}
+    data = {k: v for k, v in data.items() if v is not None}  # Filter out None values
     resp = requests.post(f"{API_BASE}/document-requests/create/", json=data, headers=headers)
     if resp.status_code == 201:
         doc = resp.json()
@@ -674,21 +675,19 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         session["status"] = "awaiting_payment"; session["expected"] = "receipt"
         if session["payment_method"] == "gcash":
             return ("Great. Please pay using the provided online channel.\n"
-                    "After paying, **paste your receipt/reference code** (e.g., `RCPT12345`) "
-                    "or upload an image of your receipt (future feature).")
+                    "After paying, **paste your receipt/reference code** (e.g., `RCPT12345`).")
         return ("Okay. Once you finish payment at the Finance Department, "
-                "please **paste your receipt/reference code** (e.g., `RCPT12345`) "
-                "or upload an image of your receipt (future feature).")
+                "please **paste your receipt/reference code** (e.g., `RCPT12345`).")
 
     elif exp == "receipt":
         rid = text.strip()
         if not rid:
-            return "Oops, it seems you didn’t provide a receipt/reference code. Please enter it or upload an image (future feature)."
+            return "Oops, it seems you didn’t provide a receipt/reference code. Please enter it."
         if "receipt_hashes" not in session:
             session["receipt_hashes"] = []
         h = md5(rid)
         if h in session["receipt_hashes"]:
-            return "This receipt looks **identical** to a previously submitted one. Please upload a **new** receipt."
+            return "This receipt looks **identical** to a previously submitted one. Please enter a **new** receipt code."
         session["receipt_hashes"].append(h)
         resp = submit_document_request(access_token,
             doc_type=session.get("doc_type"),
@@ -858,9 +857,13 @@ def main():
         print("❌ Could not log in. Exiting.")
         return
 
+    global ACCESS_TOKEN
     ACCESS_TOKEN = auth_data["access"]
     user_id = auth_data.get("email")
     print(f"✅ Logged in as {auth_data.get('name')} ({auth_data.get('role')})")
+
+    # Fetch current user to set STUDENT_ID
+    get_current_user(ACCESS_TOKEN)
 
     try:
         reqs = fetch_my_requests(ACCESS_TOKEN)

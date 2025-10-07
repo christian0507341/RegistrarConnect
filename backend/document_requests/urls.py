@@ -1,6 +1,5 @@
 from django.urls import path
 from .views import document_requests_web
-from .views import DocumentRequestListView
 from .views import (
     DocumentRequestListCreateView,
     DocumentRequestDetailView,
@@ -20,7 +19,7 @@ urlpatterns = [
     # Creation endpoint (separate for clarity)
     path('create/', create_document_request, name="create_document_request"),
     path('api/document-requests/web/', document_requests_web, name='document_requests_web'),
-   path('list/',DocumentRequestListView.as_view(), name="document-request-list"),
+    path('list/', DocumentRequestListCreateView.as_view(), name="document-request-list"),
 
     # Chatbot-specific endpoints (namespaced under /chatbot/)
     path('chatbot/history/', document_request_history, name="document-request-history"),

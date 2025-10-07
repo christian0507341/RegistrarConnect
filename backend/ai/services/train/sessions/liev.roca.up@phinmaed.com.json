@@ -1,0 +1,409 @@
+{
+  "user_id": "liev.roca.up@phinmaed.com",
+  "mode": "qa",
+  "status": "pending",
+  "doc_type": "COG",
+  "semester": 1,
+  "school_year": "2024-2025",
+  "purpose": "scholar",
+  "specify": null,
+  "other_doc_name": null,
+  "sis_confirmed": null,
+  "payment_method": "personal",
+  "receipt_hashes": [
+    "ced337f4df454732ca85ddd1d75d5233"
+  ],
+  "expected": null,
+  "same_day": {
+    "enabled": false,
+    "reason": ""
+  },
+  "history": [
+    {
+      "ts": "2025-10-06T11:43:04",
+      "sender": "bot",
+      "text": "Welcome! I can help with registrar document requests. Ask a question or say what you want to request."
+    },
+    {
+      "ts": "2025-10-06T11:43:07",
+      "sender": "user",
+      "text": ""
+    },
+    {
+      "ts": "2025-10-06T11:43:07",
+      "sender": "bot",
+      "text": "I’m here for **RegistrarConnect** document requests (OTR, COG, COE, other certifications).\nTry: **“Request COG”** or **“How to get OTR?”**"
+    },
+    {
+      "ts": "2025-10-06T12:03:34",
+      "sender": "bot",
+      "text": "Welcome! I can help with registrar document requests. Ask a question or say what you want to request."
+    },
+    {
+      "ts": "2025-10-06T12:03:35",
+      "sender": "user",
+      "text": ""
+    },
+    {
+      "ts": "2025-10-06T12:03:35",
+      "sender": "bot",
+      "text": "I’m here for **RegistrarConnect** document requests (OTR, COG, COE, other certifications).\nTry: **“Request COG”** or **“How to get OTR?”**"
+    },
+    {
+      "ts": "2025-10-06T12:03:37",
+      "sender": "user",
+      "text": "coe"
+    },
+    {
+      "ts": "2025-10-06T12:03:37",
+      "sender": "bot",
+      "text": "Got it — **Certificate of Enrollment (COE)**.\nPlease provide **Semester (1/2)** and **School Year** (e.g., 2025-2026).\nYou can type them together, like: `Sem 1 SY 2025-2026`."
+    },
+    {
+      "ts": "2025-10-06T12:03:41",
+      "sender": "user",
+      "text": "sem 1 sy 2526"
+    },
+    {
+      "ts": "2025-10-06T12:03:41",
+      "sender": "bot",
+      "text": "Before we proceed: **Are your SIS personal details up to date?** (Yes/No)"
+    },
+    {
+      "ts": "2025-10-06T12:03:44",
+      "sender": "user",
+      "text": "yes"
+    },
+    {
+      "ts": "2025-10-06T12:03:44",
+      "sender": "bot",
+      "text": "Please review your request: **COE, Sem 1, SY 2025-2026, Purpose: ?**.\nType **confirm** to proceed or **edit** to change details."
+    },
+    {
+      "ts": "2025-10-06T12:03:46",
+      "sender": "user",
+      "text": "edit"
+    },
+    {
+      "ts": "2025-10-06T12:03:46",
+      "sender": "bot",
+      "text": "Okay, let’s edit. Try: `edit sem 2`, `change sy 2025-2026`, `set purpose scholarship`, or `edit doc OTR`."
+    },
+    {
+      "ts": "2025-10-06T12:03:53",
+      "sender": "user",
+      "text": "set purpose apply work"
+    },
+    {
+      "ts": "2025-10-06T12:03:53",
+      "sender": "bot",
+      "text": "Please review your request: **COE, Sem 1, SY 2025-2026, Purpose: apply work**.\nType **confirm** to proceed or **edit** to change details."
+    },
+    {
+      "ts": "2025-10-06T12:03:56",
+      "sender": "user",
+      "text": "confirm"
+    },
+    {
+      "ts": "2025-10-06T12:03:56",
+      "sender": "bot",
+      "text": "Thanks! Your request is confirmed: **COE, Sem 1, SY 2025-2026, Purpose: apply work**\nNote: once paid, your request **cannot be cancelled** and is **non-refundable**.\nHow would you like to pay — **Personal (Finance)** or **Online (GCash)**?"
+    },
+    {
+      "ts": "2025-10-06T12:03:59",
+      "sender": "user",
+      "text": "personal"
+    },
+    {
+      "ts": "2025-10-06T12:03:59",
+      "sender": "bot",
+      "text": "Okay. Once you finish payment at the Finance Department, please **paste your receipt/reference code** (e.g., `RCPT12345`) or upload an image of your receipt (future feature)."
+    },
+    {
+      "ts": "2025-10-06T12:04:05",
+      "sender": "user",
+      "text": "youngStun123"
+    },
+    {
+      "ts": "2025-10-06T12:04:05",
+      "sender": "bot",
+      "text": "⚠️ Failed to submit request after receipt. Please try again or contact support."
+    },
+    {
+      "ts": "2025-10-06T12:04:13",
+      "sender": "user",
+      "text": ""
+    },
+    {
+      "ts": "2025-10-06T12:04:13",
+      "sender": "bot",
+      "text": "Oops, it seems you didn’t provide a receipt/reference code. Please enter it or upload an image (future feature)."
+    },
+    {
+      "ts": "2025-10-06T12:04:19",
+      "sender": "user",
+      "text": "RCT123"
+    },
+    {
+      "ts": "2025-10-06T12:04:19",
+      "sender": "bot",
+      "text": "⚠️ Failed to submit request after receipt. Please try again or contact support."
+    },
+    {
+      "ts": "2025-10-07T09:32:06",
+      "sender": "bot",
+      "text": "Welcome! I can help with registrar document requests. Ask a question or say what you want to request."
+    },
+    {
+      "ts": "2025-10-07T09:32:08",
+      "sender": "user",
+      "text": ""
+    },
+    {
+      "ts": "2025-10-07T09:32:08",
+      "sender": "bot",
+      "text": "Oops, it seems you didn’t provide a receipt/reference code. Please enter it."
+    },
+    {
+      "ts": "2025-10-07T09:32:18",
+      "sender": "user",
+      "text": "abrikitik123"
+    },
+    {
+      "ts": "2025-10-07T09:32:18",
+      "sender": "bot",
+      "text": "⚠️ Failed to submit request after receipt. Please try again or contact support."
+    },
+    {
+      "ts": "2025-10-07T09:32:27",
+      "sender": "user",
+      "text": "cancel"
+    },
+    {
+      "ts": "2025-10-07T09:32:27",
+      "sender": "bot",
+      "text": "Your request has been **cancelled**. You can start a new request anytime."
+    },
+    {
+      "ts": "2025-10-07T09:32:28",
+      "sender": "user",
+      "text": ""
+    },
+    {
+      "ts": "2025-10-07T09:32:28",
+      "sender": "bot",
+      "text": "I’m here for **RegistrarConnect** document requests (OTR, COG, COE, other certifications).\nTry: **“Request COG”** or **“How to get OTR?”**"
+    },
+    {
+      "ts": "2025-10-07T09:32:30",
+      "sender": "user",
+      "text": "coe"
+    },
+    {
+      "ts": "2025-10-07T09:32:30",
+      "sender": "bot",
+      "text": "Got it — **Certificate of Enrollment (COE)**.\nPlease provide **Semester (1/2)** and **School Year** (e.g., 2025-2026).\nYou can type them together, like: `Sem 1 SY 2025-2026`."
+    },
+    {
+      "ts": "2025-10-07T09:32:33",
+      "sender": "user",
+      "text": "sem 1 sy 2324"
+    },
+    {
+      "ts": "2025-10-07T09:32:33",
+      "sender": "bot",
+      "text": "Before we proceed: **Are your SIS personal details up to date?** (Yes/No)"
+    },
+    {
+      "ts": "2025-10-07T09:32:35",
+      "sender": "user",
+      "text": "yes"
+    },
+    {
+      "ts": "2025-10-07T09:32:35",
+      "sender": "bot",
+      "text": "Please review your request: **COE, Sem 1, SY 2023-2024, Purpose: ?**.\nType **confirm** to proceed or **edit** to change details."
+    },
+    {
+      "ts": "2025-10-07T09:32:37",
+      "sender": "user",
+      "text": "edit"
+    },
+    {
+      "ts": "2025-10-07T09:32:37",
+      "sender": "bot",
+      "text": "Okay, let’s edit. Try: `edit sem 2`, `change sy 2025-2026`, `set purpose scholarship`, or `edit doc OTR`."
+    },
+    {
+      "ts": "2025-10-07T09:32:40",
+      "sender": "user",
+      "text": "purpose schol"
+    },
+    {
+      "ts": "2025-10-07T09:32:40",
+      "sender": "bot",
+      "text": "Please review your request: **COE, Sem 1, SY 2023-2024, Purpose: schol**.\nType **confirm** to proceed or **edit** to change details."
+    },
+    {
+      "ts": "2025-10-07T09:32:42",
+      "sender": "user",
+      "text": "confirm"
+    },
+    {
+      "ts": "2025-10-07T09:32:42",
+      "sender": "bot",
+      "text": "Thanks! Your request is confirmed: **COE, Sem 1, SY 2023-2024, Purpose: schol**\nNote: once paid, your request **cannot be cancelled** and is **non-refundable**.\nHow would you like to pay — **Personal (Finance)** or **Online (GCash)**?"
+    },
+    {
+      "ts": "2025-10-07T09:32:47",
+      "sender": "user",
+      "text": "gcash"
+    },
+    {
+      "ts": "2025-10-07T09:32:47",
+      "sender": "bot",
+      "text": "Great. Please pay using the provided online channel.\nAfter paying, **paste your receipt/reference code** (e.g., `RCPT12345`)."
+    },
+    {
+      "ts": "2025-10-07T09:32:51",
+      "sender": "user",
+      "text": "abrikitik24"
+    },
+    {
+      "ts": "2025-10-07T09:32:51",
+      "sender": "bot",
+      "text": "Thanks, I’ve recorded your receipt.\n✅ Request created: COE (Status: draft)\nRelease is the **next working day** after approval.\n\nWould you like to **request another document now**? (Yes/No)"
+    },
+    {
+      "ts": "2025-10-07T09:33:02",
+      "sender": "user",
+      "text": "no"
+    },
+    {
+      "ts": "2025-10-07T09:33:02",
+      "sender": "bot",
+      "text": "Okay. I’m here if you need anything else."
+    },
+    {
+      "ts": "2025-10-07T09:34:26",
+      "sender": "user",
+      "text": ""
+    },
+    {
+      "ts": "2025-10-07T09:34:26",
+      "sender": "bot",
+      "text": "I’m here for **RegistrarConnect** document requests (OTR, COG, COE, other certifications).\nTry: **“Request COG”** or **“How to get OTR?”**"
+    },
+    {
+      "ts": "2025-10-07T09:34:27",
+      "sender": "user",
+      "text": "cog"
+    },
+    {
+      "ts": "2025-10-07T09:34:27",
+      "sender": "bot",
+      "text": "Got it — **Certificate of Grades (COG)**.\nPlease provide the missing information."
+    },
+    {
+      "ts": "2025-10-07T09:34:31",
+      "sender": "user",
+      "text": ""
+    },
+    {
+      "ts": "2025-10-07T09:34:31",
+      "sender": "bot",
+      "text": "Please review your request: **COG, Sem 1, SY 2023-2024, Purpose: schol**.\nType **confirm** to proceed or **edit** to change details."
+    },
+    {
+      "ts": "2025-10-07T09:34:36",
+      "sender": "user",
+      "text": "cancel"
+    },
+    {
+      "ts": "2025-10-07T09:34:36",
+      "sender": "bot",
+      "text": "Your request has been **cancelled**. You can start a new request anytime."
+    },
+    {
+      "ts": "2025-10-07T09:34:37",
+      "sender": "user",
+      "text": "cog"
+    },
+    {
+      "ts": "2025-10-07T09:34:37",
+      "sender": "bot",
+      "text": "Got it — **Certificate of Grades (COG)**.\nPlease provide **Semester (1/2)** and **School Year** (e.g., 2025-2026).\nYou can type them together, like: `Sem 1 SY 2025-2026`."
+    },
+    {
+      "ts": "2025-10-07T09:34:47",
+      "sender": "user",
+      "text": "sem 1 sy 2425 scholarship purpose"
+    },
+    {
+      "ts": "2025-10-07T09:34:47",
+      "sender": "bot",
+      "text": "Please review your request: **COG, Sem 1, SY 2024-2025, Purpose: ?**.\nType **confirm** to proceed or **edit** to change details."
+    },
+    {
+      "ts": "2025-10-07T09:34:53",
+      "sender": "user",
+      "text": "edit"
+    },
+    {
+      "ts": "2025-10-07T09:34:53",
+      "sender": "bot",
+      "text": "Okay, let’s edit. Try: `edit sem 2`, `change sy 2025-2026`, `set purpose scholarship`, or `edit doc OTR`."
+    },
+    {
+      "ts": "2025-10-07T09:35:00",
+      "sender": "user",
+      "text": "purpose scholar"
+    },
+    {
+      "ts": "2025-10-07T09:35:00",
+      "sender": "bot",
+      "text": "Please review your request: **COG, Sem 1, SY 2024-2025, Purpose: scholar**.\nType **confirm** to proceed or **edit** to change details."
+    },
+    {
+      "ts": "2025-10-07T09:35:02",
+      "sender": "user",
+      "text": "confirm"
+    },
+    {
+      "ts": "2025-10-07T09:35:02",
+      "sender": "bot",
+      "text": "Thanks! Your request is confirmed: **COG, Sem 1, SY 2024-2025, Purpose: scholar**\nNote: once paid, your request **cannot be cancelled** and is **non-refundable**.\nHow would you like to pay — **Personal (Finance)** or **Online (GCash)**?"
+    },
+    {
+      "ts": "2025-10-07T09:35:03",
+      "sender": "user",
+      "text": "personal"
+    },
+    {
+      "ts": "2025-10-07T09:35:03",
+      "sender": "bot",
+      "text": "Okay. Once you finish payment at the Finance Department, please **paste your receipt/reference code** (e.g., `RCPT12345`)."
+    },
+    {
+      "ts": "2025-10-07T09:35:07",
+      "sender": "user",
+      "text": "abrikitikitik"
+    },
+    {
+      "ts": "2025-10-07T09:35:07",
+      "sender": "bot",
+      "text": "Thanks, I’ve recorded your receipt.\n✅ Request created: COG (Status: draft)\nRelease is the **next working day** after approval.\n\nWould you like to **request another document now**? (Yes/No)"
+    },
+    {
+      "ts": "2025-10-07T09:35:09",
+      "sender": "user",
+      "text": "no"
+    },
+    {
+      "ts": "2025-10-07T09:35:09",
+      "sender": "bot",
+      "text": "Okay. I’m here if you need anything else."
+    }
+  ],
+  "policy_version": "v1.0"
+}

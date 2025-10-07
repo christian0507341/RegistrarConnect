@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 
 load_dotenv()
-print(f"Loaded SECRET_KEY: {os.getenv('SECRET_KEY', 'Not found')}")
+#print(f"Loaded SECRET_KEY: {os.getenv('SECRET_KEY', 'Not found')}")
 SECRET_KEY = os.getenv('SECRET_KEY', 'default-key-for-dev-only')
 
 # SECURITY WARNING: don't run with debug turned on in production!

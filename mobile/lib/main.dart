@@ -142,7 +142,7 @@ class MyApp extends StatelessWidget {
           }
 
           return MaterialPageRoute(
-            builder: (_) => GlobalFabWrapper(child: page, showFab: showFab),
+            builder: (_) => GlobalFabWrapper(showFab: showFab, child: page),
             settings: settings,
           );
         },

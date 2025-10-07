@@ -19,42 +19,39 @@ class DocumentRequestAction(models.Model):
         ordering = ('-created_at',)
 
     def __str__(self):
-        return f"{self.request.id} - {self.action} ({self.created_at})"  # Fixed request_id to request.id
+        return f"{self.request.id} - {self.action} ({self.created_at})"
 
 class DocumentRequest(models.Model):
     class Status(models.TextChoices):
+        DRAFT = 'draft', 'Draft'
+        CONFIRMING = 'confirming', 'Confirming'
+        AWAITING_PAYMENT = 'awaiting_payment', 'Awaiting Payment'
         PENDING = 'pending', 'Pending'
         CANCELLED = 'cancelled', 'Cancelled'
-        PROCESSED = 'processed', 'Processed'
+        REJECTED = 'rejected', 'Rejected'
+        READY_TO_CLAIM = 'ready_to_claim', 'Ready to Claim'
+
     DOCUMENT_TYPES = [
-        ('transcript', 'Transcript of Records'),
-        ('good_moral', 'Certificate of Good Moral'),
-        ('enrollment', 'Certificate of Enrollment'),
-        ('grades', 'Copy of Grades'),
+        ('OTR', 'Official Transcript of Records'),
+        ('COG', 'Certificate of Grades'),
+        ('COE', 'Certificate of Enrollment'),
+        ('OTHERS', 'Other Certifications'),
     ]
 
-    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="document_requests")
+    student_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='requests_as_student', db_column='student_id')
     document_type = models.CharField(max_length=50, choices=DOCUMENT_TYPES)
-    purpose = models.TextField()
-    status = models.CharField(max_length=20, choices=[
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
-    ], default='pending')
+    semester = models.IntegerField(null=True, blank=True, choices=[(1, '1st'), (2, '2nd')])
+    school_year = models.CharField(max_length=9, null=True, blank=True)  # e.g., "2025-2026"
+    purpose = models.CharField(max_length=100, null=True, blank=True)
+    payment_method = models.CharField(max_length=20, choices=[('personal', 'Personal (Finance)'), ('gcash', 'Online (GCash)')], null=True, blank=True)
+    receipt_image = models.ImageField(upload_to='receipts/', null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
+    processed_by_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='processed_requests', db_column='processed_by_id')
     requested_at = models.DateTimeField(auto_now_add=True)
-    processed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name="processed_document_requests"
-    )
-    receipt_image = models.ImageField(upload_to='receipts/', null=True, blank=True, default=None)
-    notes = models.TextField(blank=True, null=True)  # Add this line
 
     def __str__(self):
-        return f"{self.student.email} - {self.document_type} - {self.status}"
+        return f"{self.student_id} - {self.document_type} - {self.status}"
 
     class Meta:
         ordering = ('-requested_at',)
