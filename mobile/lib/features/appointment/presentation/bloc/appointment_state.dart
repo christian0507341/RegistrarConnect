@@ -4,7 +4,14 @@ abstract class AppointmentState {}
 
 class AppointmentInitial extends AppointmentState {}
 
+class AppointmentLoading extends AppointmentState {}
+
 class AppointmentLoaded extends AppointmentState {
-  final Map<DateTime, List<Appointment>> appointments;
+  final List<Appointment> appointments;
   AppointmentLoaded(this.appointments);
+}
+
+class AppointmentError extends AppointmentState {
+  final String message;
+  AppointmentError(this.message);
 }

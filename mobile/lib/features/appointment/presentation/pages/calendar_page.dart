@@ -5,7 +5,6 @@ import '../bloc/appointment_bloc.dart';
 import '../bloc/appointment_event.dart';
 import '../bloc/appointment_state.dart';
 import '../widgets/appointment_list.dart';
-import 'add_appointment_page.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -22,15 +21,6 @@ class _CalendarPageState extends State<CalendarPage> {
   void initState() {
     super.initState();
     context.read<AppointmentBloc>().add(LoadAppointments());
-  }
-
-  void _navigateToAddAppointment() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddAppointmentPage(selectedDate: _selectedDay),
-      ),
-    );
   }
 
   @override
@@ -50,7 +40,6 @@ class _CalendarPageState extends State<CalendarPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // 📅 Calendar widget
             Card(
               elevation: 3,
               shape: RoundedRectangleBorder(
@@ -85,22 +74,25 @@ class _CalendarPageState extends State<CalendarPage> {
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
-                  leftChevronIcon: const Icon(Icons.chevron_left,
-                      color: Colors.blue),
-                  rightChevronIcon: const Icon(Icons.chevron_right,
-                      color: Colors.blue),
+                  leftChevronIcon: const Icon(
+                    Icons.chevron_left,
+                    color: Colors.blue,
+                  ),
+                  rightChevronIcon: const Icon(
+                    Icons.chevron_right,
+                    color: Colors.blue,
+                  ),
                 ),
               ),
             ),
-
             const SizedBox(height: 16),
-
-            // 📌 Appointments
             Expanded(
               child: BlocBuilder<AppointmentBloc, AppointmentState>(
                 builder: (context, state) {
                   if (state is AppointmentLoaded) {
-                    final appointments = state.appointments[_selectedDay] ?? [];
+                    final appointments = state.appointments
+                        .where((appt) => isSameDay(appt.schedule, _selectedDay))
+                        .toList();
                     return appointments.isEmpty
                         ? const Center(
                             child: Text(
@@ -109,24 +101,26 @@ class _CalendarPageState extends State<CalendarPage> {
                             ),
                           )
                         : AppointmentList(appointments: appointments);
-                  } else if (state is AppointmentInitial) {
+                  } else if (state is AppointmentLoading) {
                     return const Center(child: CircularProgressIndicator());
+                  } else if (state is AppointmentError) {
+                    return Center(child: Text("Error: ${state.message}"));
                   } else {
                     return const Center(child: Text("Something went wrong"));
                   }
                 },
               ),
             ),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                "Missed an appointment? Visit the registrar office in-person with your receipt.",
+                style: TextStyle(color: Colors.redAccent, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+            ),
           ],
         ),
-      ),
-
-      // ➕ Floating Add Appointment button
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToAddAppointment,
-        backgroundColor: Colors.blue,
-        icon: const Icon(Icons.add),
-        label: const Text("Add"),
       ),
     );
   }

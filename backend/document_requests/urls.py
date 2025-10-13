@@ -8,6 +8,7 @@ from .views import (
     document_request_history,
     document_request_status,
     document_request_cancel,
+    upload_receipt,  # NEW
 )
 
 urlpatterns = [
@@ -25,4 +26,7 @@ urlpatterns = [
     path('chatbot/history/', document_request_history, name="document-request-history"),
     path('chatbot/<int:pk>/status/', document_request_status, name="document-request-status-chatbot"),
     path('chatbot/<int:pk>/cancel/', document_request_cancel, name="document-request-cancel-chatbot"),
+
+    # NEW: receipt upload (mobile)
+    path('<int:pk>/upload-receipt/', upload_receipt, name='document-request-upload-receipt'),
 ]

@@ -1,11 +1,12 @@
+# RegistrarConnect/backend/ai/views.py
 from uuid import uuid4
 from django.utils import timezone
 from django.db import transaction
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-
 from .models import ChatHistory
+from backend.document_requests.models import DocumentRequest
 
 # engine pieces from the CLI module
 from backend.ai.services.train.chatbot_cli import (
@@ -19,37 +20,33 @@ def _extract_bearer_token(request):
     parts = auth.split()
     return parts[1] if len(parts) == 2 and parts[0].lower() == "bearer" else None
 
-# -------- Optional legacy endpoint: keep only if some old client still calls it
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def input_check(request):
     return Response({"ok": True}, status=200)
-# -----------------------------------------------------------------------------
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def chat_messages(request):
-    """
-    GET /api/ai/chat/messages/?conversation_id=...
-    Returns: [ {id, conversation_id, sender, text, timestamp}, ... ]
-    """
     conv_id = request.query_params.get("conversation_id") or request.query_params.get("conversationId")
     if not conv_id:
         return Response({"detail": "conversation_id is required"}, status=400)
 
     try:
-        row = ChatHistory.objects.get(user_id=request.user.id, conversation_id=conv_id)
+        row = ChatHistory.objects.get(user_id=str(request.user.id), conversation_id=conv_id)
         return Response(row.history or [], status=200)
     except ChatHistory.DoesNotExist:
         return Response([], status=200)
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def chat(request):
     """
     POST /api/ai/chat/
-      Body: { conversation_id, text (optional), session (optional for save), history (optional for save), status (optional for save) }
-    Uses the same engine as the CLI to produce the reply or save state.
+      Body: { conversation_id, text?, session?, history?, status? }
     """
     data = request.data or {}
     conv_id = data.get("conversation_id") or data.get("conversationId")
@@ -60,9 +57,11 @@ def chat(request):
     access_token = _extract_bearer_token(request)
     now_iso = timezone.now().isoformat()
 
+    LOCKED_STATUSES = {"pending", "on_process", "ready_to_claim"}
+
     with transaction.atomic():
         row, _created = ChatHistory.objects.select_for_update().get_or_create(
-            user_id=request.user.id,
+            user_id=str(request.user.id),
             conversation_id=conv_id,
             defaults={
                 "history": [],
@@ -70,24 +69,80 @@ def chat(request):
             },
         )
 
-        session = data.get("session") or getattr(row, "session", None) or start_new_session(str(request.user.id))
-        history = data.get("history") or row.history or []
-        status = data.get("status") or row.status
+        # Merge inbound data
+        merged_session = dict(getattr(row, "session", {}) or {})
+        inbound_session = data.get("session") or {}
+        merged_session.update(inbound_session)
 
-        reply_text = "State saved successfully"  # Default response for state save
+        history = (row.history or []) + (data.get("history") or [])
+
+        # Status preference: payload -> session -> row -> draft
+        status_val = data.get("status") or merged_session.get("status") or row.status or "draft"
+
+        reply_text = "State saved successfully"
         action = None
 
-        if text:  # Process as a new message if text is provided
-            push_history(session, "user", text)
-            reply_text = handle_user_text(session, text, access_token)
+        if text:
+            # If the chat is locked to a submitted request, just notify
+            if row.document_request and row.document_request.status in LOCKED_STATUSES:
+                user_msg = {
+                    "id": str(uuid4()),
+                    "conversation_id": conv_id,
+                    "sender": "student",
+                    "text": text,
+                    "timestamp": now_iso,
+                }
+                locked_notice = (
+                    "This conversation is **locked** to a submitted request "
+                    f"(**{row.document_request.document_type}**, status **{row.document_request.status}**). "
+                    "To request another document, please start a **new request** in the app."
+                )
+                bot_msg = {
+                    "id": str(uuid4()),
+                    "conversation_id": conv_id,
+                    "sender": "bot",
+                    "text": locked_notice,
+                    "timestamp": timezone.now().isoformat(),
+                }
+                history.extend([user_msg, bot_msg])
 
-            # Simple action hook (optional: pattern-based)
-            if "receipt" in reply_text.lower():
-                action = {"type": "upload_receipt", "request_id": None}
-            elif "up to date" in reply_text and "Yes" in text:
-                action = {"type": "reset_form", "request_id": None}
+                status_val = row.document_request.status
+                row.history = history
+                row.session = merged_session
+                row.status = status_val
+                row.save(update_fields=["history", "session", "status", "updated_at"])
 
-            # Build UI bubbles
+                return Response({"message": bot_msg, "action": action}, status=200)
+
+            # Normal engine path
+            push_history(merged_session, "user", text)
+            reply_text = handle_user_text(merged_session, text, access_token)
+
+            # Try to link the chat to the most recent relevant DocumentRequest
+            if not row.document_request and merged_session.get("doc_type"):
+                q = DocumentRequest.objects.filter(
+                    student_id=request.user,
+                    document_type=merged_session.get("doc_type"),
+                ).order_by("-requested_at")
+
+                sem = merged_session.get("semester")
+                sy = merged_session.get("school_year")
+                purpose = merged_session.get("purpose")
+                if sem in (1, 2):
+                    q = q.filter(semester=sem)
+                if sy:
+                    q = q.filter(school_year=sy)
+                if purpose:
+                    q = q.filter(purpose=purpose)
+
+                doc = q.filter(status__in=["draft", "awaiting_payment", "pending"]).first()
+                if doc:
+                    row.document_request = doc
+                    row.status = doc.status
+                    row.save(update_fields=["document_request", "status", "updated_at"])
+                    status_val = doc.status
+
+            # Add the two chat bubbles
             user_msg = {
                 "id": str(uuid4()),
                 "conversation_id": conv_id,
@@ -102,14 +157,24 @@ def chat(request):
                 "text": reply_text,
                 "timestamp": timezone.now().isoformat(),
             }
-            history = history + [user_msg, bot_msg]
-        else:  # Save state without processing a new message
-            pass  # Session, history, and status are already updated from data
+            history.extend([user_msg, bot_msg])
 
-        # Update the row with the latest state
+        # Persist merged state
         row.history = history
-        row.session = session
-        row.status = status
+        row.session = merged_session
+        row.status = status_val
         row.save(update_fields=["history", "session", "status", "updated_at"])
 
-    return Response({"message": {"id": str(uuid4()), "conversation_id": conv_id, "sender": "bot", "text": reply_text, "timestamp": now_iso}, "action": action}, status=200)
+    return Response(
+        {
+            "message": {
+                "id": str(uuid4()),
+                "conversation_id": conv_id,
+                "sender": "bot",
+                "text": reply_text,
+                "timestamp": now_iso,
+            },
+            "action": action,
+        },
+        status=200,
+    )

@@ -24,7 +24,6 @@ import 'features/notifications/data/repositories/notification_repository_impl.da
 // Appointment
 import 'features/appointment/presentation/bloc/appointment_bloc.dart';
 import 'features/appointment/data/repositories/appointment_repository_impl.dart';
-import 'features/appointment/presentation/pages/add_appointment_page.dart';
 
 // Chat
 import 'features/chat/presentation/pages/chat_page.dart';
@@ -124,9 +123,6 @@ class MyApp extends StatelessWidget {
               page = const HomeContainer();
               showFab =
                   false; // 🔧 Turn off global FAB; HomePage has its own FAB
-              break;
-            case '/add_appointment':
-              page = AddAppointmentPage(selectedDate: DateTime.now());
               break;
             case '/settings':
               page = const SettingsPage();

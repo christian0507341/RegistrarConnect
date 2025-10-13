@@ -73,8 +73,17 @@ def get_current_user(token: str) -> dict | None:
         print("⚠️ get_current_user error:", e)
         return None
 
-def submit_document_request(token: str, doc_type, semester=None, school_year=None,
-                            purpose=None, other_doc_name=None, payment_method=None):
+def submit_document_request(
+    token: str,
+    doc_type,
+    semester=None,
+    school_year=None,
+    purpose=None,
+    other_doc_name=None,
+    payment_method=None,
+    receipt_reference=None,
+    conversation_id: Optional[str] = None,   # NEW
+):
     headers = {"Authorization": f"Bearer {token}"}
     data = {
         "document_type": doc_type,
@@ -83,7 +92,9 @@ def submit_document_request(token: str, doc_type, semester=None, school_year=Non
         "purpose": purpose,
         "other_doc_name": other_doc_name,
         "payment_method": payment_method,
-        "student_id": STUDENT_ID
+        "student_id": STUDENT_ID,
+        "receipt_reference": receipt_reference,
+        "conversation_id": conversation_id,  # NEW: tell backend which chat to link
     }
     data = {k: v for k, v in data.items() if v is not None}
     resp = requests.post(f"{API_BASE}/document-requests/create/", json=data, headers=headers)
@@ -92,7 +103,7 @@ def submit_document_request(token: str, doc_type, semester=None, school_year=Non
         print(f"✅ Request created: {doc['document_type']} (Status: {doc['status']})")
         return doc
     else:
-        print(f"❌ Failed to create request: {resp.text}")
+        print(f"❌ Failed to create request: {resp.status_code} {resp.text}")
         return None
 
 def fetch_my_requests(token: str):
@@ -482,6 +493,8 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         session.clear()
         session.update(start_new_session(keep["user_id"]))
         session["same_day"] = keep["same_day"]
+        # NEW: rotate conversation id on hard reset
+        session["conversation_id"] = slugify(f"{session['user_id']}_{now_iso()}")
         save_to_db(session, access_token)
         return "Okay, I’ve reset the conversation. What do you need?"
 
@@ -489,6 +502,8 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         reset_request_fields(session)
         session["mode"] = "request"
         session["expected"] = "doc_type"
+        # NEW: rotate conversation id when starting a new request
+        session["conversation_id"] = slugify(f"{session['user_id']}_{now_iso()}")
         save_to_db(session, access_token)
         return "Starting a new request. What document do you need — **OTR**, **COG**, **COE**, or **Others**?"
 
@@ -502,8 +517,6 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         return "Sorry, the request **cannot be cancelled** after payment."
 
     exp = session.get("expected")
-
-    # [Rest of the function remains the same, just ensure save_to_db(session, access_token) is called where needed]
 
     if exp == "consent":
         if is_yes(text):
@@ -691,42 +704,98 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
                 "please **paste your receipt/reference code** (e.g., `RCPT12345`).")
 
     elif exp == "receipt":
+        # --- Early guard: once submitted, do not accept more receipts
+        if session.get("status") in {"pending", "on_process", "ready_to_claim"}:
+            return (
+                "Your request is already **submitted** and awaiting processing. "
+                "If you want to start a new request, please answer **Yes** to request another, "
+                "or type **new**."
+            )
+
         rid = text.strip()
         if not rid:
             return "Oops, it seems you didn’t provide a receipt/reference code. Please enter it."
+
         if "receipt_hashes" not in session:
             session["receipt_hashes"] = []
+
         h = md5(rid)
         if h in session["receipt_hashes"]:
-            return "This receipt looks **identical** to a previously submitted one. Please enter a **new** receipt code."
+            return (
+                "This receipt looks **identical** to a previously submitted one. "
+                "Please enter a **new** receipt code."
+            )
         session["receipt_hashes"].append(h)
-        if not session.get("submitted", False):
-            resp = submit_document_request(access_token,
-                doc_type=session.get("doc_type"),
-                semester=session.get("semester"),
-                school_year=session.get("school_year"),
-                purpose=session.get("purpose"),
-                other_doc_name=session.get("other_doc_name"),
-                payment_method=session.get("payment_method"))
-            session["submitted"] = True
-            if resp:
-                session["status"] = "on_process"
-                save_to_db(session, access_token)
-                msg = ("Thanks, I’ve recorded your receipt.\n"
-                    f"✅ Request created: {resp['document_type']} (Status: {resp['status']})\n"
-                    + sameday_line(session) +
-                    "\n\nWould you like to **request another document now**? (Yes/No)")
-                return msg
+
+        # 1) Fetch existing requests to decide create/update and avoid duplicates
+        reqs = fetch_my_requests(access_token) or []
+
+        def is_same_request(r):
+            return (
+                (r.get("document_type") or r.get("doc_type")) == session.get("doc_type")
+                and (r.get("semester") == session.get("semester"))
+                and (r.get("school_year") == session.get("school_year"))
+                and (r.get("purpose") == session.get("purpose"))
+            )
+
+        # If there is already a submitted/processing/ready match, do NOT submit again
+        already_submitted = next(
+            (r for r in reqs if is_same_request(r)
+             and r.get("status") in ["pending", "on_process", "ready_to_claim"]),
+            None
+        )
+        if already_submitted:
+            session["status"] = already_submitted.get("status") or "pending"
+            session["expected"] = "another"
+            session["mode"] = "qa"
+            save_to_db(session, access_token)
+            return (
+                "We already have your request on file for this document. "
+                "Would you like to **request another document now**? (Yes/No)"
+            )
+
+        # Otherwise: create/update the *current* in-progress request
+        resp = submit_document_request(
+            access_token,
+            doc_type=session.get("doc_type"),
+            semester=session.get("semester"),
+            school_year=session.get("school_year"),
+            purpose=session.get("purpose"),
+            other_doc_name=session.get("other_doc_name"),
+            payment_method=session.get("payment_method"),
+            receipt_reference=rid,
+            conversation_id=session.get("conversation_id"),  # NEW
+        )
+
+        if resp:
+            # Success path: flip state and route to "another" prompt
+            session["status"] = "pending"
+            session["expected"] = "another"
+            session["mode"] = "qa"
+            save_to_db(session, access_token)
+            msg = (
+                "Thanks, I’ve recorded your receipt.\n"
+                f"✅ Request created: {resp['document_type']} (Status: {resp['status']})\n"
+                + sameday_line(session)
+                + "\n\nWould you like to **request another document now**? (Yes/No)"
+            )
+            return msg
+
+        # If the backend rejected the submit (e.g., validation), keep user in the receipt step
         return "⚠️ Failed to submit request after receipt. Please try again or contact support."
 
     elif exp == "another":
         if is_yes(text):
             reset_request_fields(session)
-            session["mode"] = "request"; session["expected"] = "doc_type"
+            session["mode"] = "request"
+            session["expected"] = "doc_type"
+            # NEW: rotate conversation id when starting another request
+            session["conversation_id"] = slugify(f"{session['user_id']}_{now_iso()}")
             save_to_db(session, access_token)
             return "Great. What document do you need — **OTR**, **COG**, **COE**, or **Others**?"
         if is_no(text):
-            session["expected"] = None; session["mode"] = "qa"
+            session["expected"] = None
+            session["mode"] = "qa"
             save_to_db(session, access_token)
             return "Okay. I’m here if you need anything else."
         return "Please answer **Yes** or **No**."
@@ -750,7 +819,7 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             msg += "\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)"
             session["expected"] = "sis_confirm"
         else:
-                        msg += "\nType **confirm** to proceed, **edit** to change, or **cancel** to abort."
+            msg += "\nType **confirm** to proceed, **edit** to change, or **cancel** to abort."
         save_to_db(session, access_token)
         return msg
 
@@ -764,10 +833,7 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         if shortcut_doc:
             session["mode"] = "request"
             session["doc_type"] = shortcut_doc
-            label = {"OTR": "Official Transcript of Records (OTR)",
-                     "COG": "Certificate of Grades (COG)",
-                     "COE": "Certificate of Enrollment (COE)",
-                     "OTHERS": "Other certificate"}[shortcut_doc]
+            label = {"OTR": "Official Transcript of Records (OTR)", "COG": "Certificate of Grades (COG)", "COE": "Certificate of Enrollment (COE)", "OTHERS": "Other certificate"}[shortcut_doc]
             slot = next_missing_slot(session)
             session["expected"] = slot
             save_to_db(session, access_token)
@@ -794,16 +860,16 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         if looks_like_request_intent(text):
             session["mode"] = "request"
             save_to_db(session, access_token)
-            return init_or_fill_from_text(session, text, access_token)  # Pass access_token here
+            return init_or_fill_from_text(session, text, access_token)
 
         if session.get("mode") == "request":
             save_to_db(session, access_token)
-            return init_or_fill_from_text(session, text, access_token)  # Pass access_token here
+            return init_or_fill_from_text(session, text, access_token)
         return scope_guard_message()
 
     if session.get("mode") == "request":
         save_to_db(session, access_token)
-        return init_or_fill_from_text(session, text, access_token)  # Pass access_token here
+        return init_or_fill_from_text(session, text, access_token)
 
     save_to_db(session, access_token)
     return ("I can help with registrar document requests (OTR, COG, COE, others). "
@@ -823,7 +889,7 @@ def init_or_fill_from_text(session: Dict, text: str, access_token: str) -> str:
         slot = next_missing_slot(session)
         if slot:
             session["expected"] = slot
-            save_to_db(session, access_token)  # Now uses the passed access_token
+            save_to_db(session, access_token)
             return ask_for(slot, session)
         session["status"] = "confirming"; session["expected"] = "confirm"
         msg = f"Please review your request: **{summarize_request(session)}**."
@@ -833,7 +899,7 @@ def init_or_fill_from_text(session: Dict, text: str, access_token: str) -> str:
             session["expected"] = "sis_confirm"
         else:
             msg += "\nType **confirm** to proceed, **edit** to change, or **cancel** to abort."
-        save_to_db(session, access_token)  # Now uses the passed access_token
+        save_to_db(session, access_token)
         return msg
 
     mapped = map_doc_synonyms(text)
@@ -849,7 +915,7 @@ def init_or_fill_from_text(session: Dict, text: str, access_token: str) -> str:
                       "COG": "COG (Certificate of Grades)",
                       "COE": "COE (Certificate of Enrollment)",
                       "OTHERS": "Other certificate"}[guess_doc]
-            save_to_db(session, access_token)  # Now uses the passed access_token
+            save_to_db(session, access_token)
             return f"Just to confirm — did you mean **{pretty}**? (Yes/No)"
 
     if not doc_type:
@@ -860,7 +926,7 @@ def init_or_fill_from_text(session: Dict, text: str, access_token: str) -> str:
 
     if doc_type not in DOC_TYPES:
         session["expected"] = "doc_type"
-        save_to_db(session, access_token)  # Now uses the passed access_token
+        save_to_db(session, access_token)
         return ask_for("doc_type", session)
 
     session["doc_type"] = doc_type
@@ -879,7 +945,7 @@ def init_or_fill_from_text(session: Dict, text: str, access_token: str) -> str:
 
     slot = next_missing_slot(session)
     session["expected"] = slot
-    save_to_db(session, access_token)  # Now uses the passed access_token
+    save_to_db(session, access_token)
     if doc_type in {"COG", "COE"} and slot == "semester":
         return (f"That’s **{label}**.\n"
                 "Please provide **Semester (1/2)** and **School Year** (e.g., 2025-2026).\n"
@@ -920,11 +986,16 @@ def main():
         print(f"(warn) Could not sync with backend: {e}")
         session = load_session(user_id) or start_new_session(user_id)
 
+    # Sanitize stale local state
+    if session.get("expected") == "receipt" and session.get("status") in {"pending", "on_process", "ready_to_claim"}:
+        session["expected"] = None
+        session["mode"] = "qa"
+
     greet = bot_intro(session)
     print(greet)
     push_history(session, "bot", greet)
     save_session(session)
-    save_to_db(session, access_token)  # Pass access_token here
+    save_to_db(session, access_token)
 
     while True:
         try:
@@ -945,7 +1016,7 @@ def main():
         push_history(session, "bot", reply)
         print(reply)
         save_session(session)
-        save_to_db(session, access_token)  # Pass access_token here
+        save_to_db(session, access_token)
 
 if __name__ == "__main__":
     main()
