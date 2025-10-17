@@ -6,7 +6,7 @@ import 'package:mobile/features/home/presentation/pages/home_page.dart';
 import 'package:mobile/features/notifications/presentation/pages/notification_page.dart';
 import 'package:mobile/features/appointment/presentation/pages/calendar_page.dart';
 import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
-import 'package:mobile/features/dashboard/presentation/pages/approved_requests_page.dart';
+import 'package:mobile/features/dashboard/presentation/pages/status_page.dart';
 
 class HomeContainer extends StatefulWidget {
   const HomeContainer({super.key});
@@ -44,7 +44,7 @@ class _HomeContainerState extends State<HomeContainer> {
       case 1:
         return const CalendarPage();
       case 2:
-        return const ApprovedRequestsPage();
+        return const StatusPage();
       case 3:
         return const NotificationPage();
       case 4:
@@ -128,8 +128,8 @@ class _HomeContainerState extends State<HomeContainer> {
             label: "Calendar",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle),
-            label: "Approved",
+            icon: Icon(Icons.assignment_turned_in),
+            label: "Status",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications),

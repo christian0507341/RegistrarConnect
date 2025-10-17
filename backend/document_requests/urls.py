@@ -9,6 +9,8 @@ from .views import (
     document_request_status,
     document_request_cancel,
     upload_receipt,  # NEW
+    student_transaction_status,  # NEW
+    student_notifications,  # NEW
 )
 
 urlpatterns = [
@@ -29,4 +31,10 @@ urlpatterns = [
 
     # NEW: receipt upload (mobile)
     path('<int:pk>/upload-receipt/', upload_receipt, name='document-request-upload-receipt'),
+    
+    # NEW: student transaction status (mobile)
+    path('student/transactions/', student_transaction_status, name='student-transaction-status'),
+    
+    # NEW: student notifications (mobile)
+    path('student/notifications/', student_notifications, name='student-notifications'),
 ]

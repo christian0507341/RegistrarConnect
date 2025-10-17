@@ -9,6 +9,7 @@ import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/data/repositories/auth_repository.dart' as data;
 import 'features/auth/data/sources/auth_api.dart';
 import 'core/services/secure_storage.dart';
+import 'core/services/notification_manager.dart';
 import 'features/auth/presentation/pages/register_page.dart';
 
 // Onboarding
@@ -58,6 +59,10 @@ void main() async {
     storage: secureStorage,
   );
 
+  // Initialize notification manager
+  final notificationManager = NotificationManager();
+  await notificationManager.initialize();
+
   runApp(MyApp(
     authRepository: authRepository, 
     dioClient: dioClient,
@@ -91,7 +96,7 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<NotificationBloc>(
           create: (_) =>
-              NotificationBloc(repository: NotificationRepositoryImpl()),
+              NotificationBloc(repository: NotificationRepositoryImpl(secureStorage: SecureStorageService())),
         ),
         BlocProvider<ChatBloc>(create: (_) => ChatBloc()),
         BlocProvider<ThemeBloc>(

@@ -32,7 +32,15 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'default-key-for-dev-only')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 #DEBUG = True
 
-ALLOWED_HOSTS = ['10.0.2.2', '127.0.0.1', 'localhost', '192.168.1.7']
+ALLOWED_HOSTS = [
+    '10.0.2.2',  # Android emulator
+    '127.0.0.1', 'localhost',  # Local development
+    '192.168.1.7', '192.168.100.122',  # Your specific IPs
+]
+
+# For development, allow all hosts (remove this in production)
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
 
 
 # Application definition

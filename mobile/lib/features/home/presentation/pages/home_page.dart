@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> {
 
               // Status Cards
               Row(
-                children: const [
+                children: [
                   Expanded(
                     child: _StatusCard(
                       title: "Pending Requests",
@@ -90,7 +90,7 @@ class _HomePageState extends State<HomePage> {
                       icon: Icons.pending_actions,
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: _StatusCard(
                       title: "Upcoming Appointments",

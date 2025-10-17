@@ -10,14 +10,22 @@ class DioClient {
     : dio = Dio(
         BaseOptions(
           baseUrl: Endpoints.baseUrl,
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 20),
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 60),
+          sendTimeout: const Duration(seconds: 30),
           headers: const {'Content-Type': 'application/json'},
           responseType: ResponseType.json,
+          followRedirects: true,
+          maxRedirects: 3,
         ),
       ) {
     // A bare Dio (no interceptors) only for hitting the refresh endpoint to avoid recursion
-    final bare = Dio(BaseOptions(baseUrl: Endpoints.baseUrl));
+    final bare = Dio(BaseOptions(
+      baseUrl: Endpoints.baseUrl,
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 60),
+      sendTimeout: const Duration(seconds: 30),
+    ));
 
     dio.interceptors.addAll([
       AuthInterceptor(_storage),

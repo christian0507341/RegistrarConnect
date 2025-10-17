@@ -339,3 +339,219 @@ class DocumentRequestStatusUpdateView(generics.UpdateAPIView):
                         notes=f"Scheduled for {schedule}"
                     )
             return Response({"status": updated.status})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def student_transaction_status(request):
+    """
+    Get student transaction status from document_requests_documentrequest and 
+    document_requests_documentrequestaction tables.
+    Returns document_type, status, payment, document approval status for the logged-in student.
+    """
+    logger.info(f"Student transaction status endpoint called by user: {request.user.id}")
+    try:
+        # Get all document requests for the current student
+        document_requests = DocumentRequest.objects.filter(student_id=request.user)
+        
+        transactions = []
+        
+        for doc_request in document_requests:
+            # Get the latest action for this request
+            latest_action = DocumentRequestAction.objects.filter(
+                request=doc_request,
+                actor=request.user
+            ).order_by('-created_at').first()
+            
+            # Determine approval status based on payment and document fields
+            payment_approved = False
+            document_approved = False
+            
+            if latest_action:
+                payment_approved = latest_action.payment
+                document_approved = latest_action.document
+            
+            # Determine overall status
+            if doc_request.status == 'approved' and payment_approved and document_approved:
+                overall_status = 'approved'
+            elif doc_request.status == 'pending':
+                if payment_approved and not document_approved:
+                    overall_status = 'payment_approved_document_pending'
+                elif not payment_approved and document_approved:
+                    overall_status = 'document_approved_payment_pending'
+                else:
+                    overall_status = 'pending_review'
+            else:
+                overall_status = doc_request.status
+            
+            transaction = {
+                'id': doc_request.id,
+                'document_type': doc_request.document_type,
+                'status': overall_status,
+                'payment_approved': payment_approved,
+                'document_approved': document_approved,
+                'requested_at': doc_request.requested_at.strftime('%Y-%m-%d'),
+                'last_updated': latest_action.created_at.strftime('%Y-%m-%d') if latest_action else doc_request.requested_at.strftime('%Y-%m-%d'),
+                'original_status': doc_request.status,
+                'purpose': doc_request.purpose,
+                'semester': doc_request.semester,
+                'school_year': doc_request.school_year,
+            }
+            
+            transactions.append(transaction)
+        
+        # Sort by requested_at descending (newest first)
+        transactions.sort(key=lambda x: x['requested_at'], reverse=True)
+        
+        return Response({
+            'transactions': transactions,
+            'total_count': len(transactions)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching student transactions: {str(e)}")
+        return Response(
+            {"error": "Failed to fetch transaction status"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def student_notifications(request):
+    """
+    Get student notifications based on their document requests and actions.
+    Returns notifications for status changes, approvals, and announcements.
+    """
+    logger.info(f"Student notifications endpoint called by user: {request.user.id}")
+    try:
+        # Get all document requests for the current student
+        document_requests = DocumentRequest.objects.filter(student_id=request.user)
+        
+        notifications = []
+        
+        for doc_request in document_requests:
+            # Get the latest action for this request
+            latest_action = DocumentRequestAction.objects.filter(
+                request=doc_request,
+                actor=request.user
+            ).order_by('-created_at').first()
+            
+            if latest_action:
+                # Create notification based on action type
+                notification = {
+                    'id': f"doc_{doc_request.id}_{latest_action.id}",
+                    'title': _getNotificationTitle(doc_request, latest_action),
+                    'message': _getNotificationMessage(doc_request, latest_action),
+                    'time': _getTimeAgo(latest_action.created_at),
+                    'icon': _getNotificationIcon(latest_action.action),
+                    'color': _getNotificationColor(latest_action.action),
+                    'type': 'document_request',
+                    'document_type': doc_request.document_type,
+                    'status': doc_request.status,
+                }
+                notifications.append(notification)
+        
+        # Add system announcements (you can expand this)
+        announcements = [
+            {
+                'id': 'announcement_1',
+                'title': 'System Maintenance',
+                'message': 'The system will be under maintenance on Sunday, 2:00 AM - 4:00 AM.',
+                'time': '2d ago',
+                'icon': 'maintenance',
+                'color': 'orange',
+                'type': 'announcement',
+            }
+        ]
+        
+        # Combine and sort notifications
+        all_notifications = notifications + announcements
+        all_notifications.sort(key=lambda x: x['time'], reverse=True)
+        
+        return Response({
+            'notifications': all_notifications,
+            'total_count': len(all_notifications)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching student notifications: {str(e)}")
+        return Response(
+            {"error": "Failed to fetch notifications"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+def _getNotificationTitle(doc_request, action):
+    """Generate notification title based on action type"""
+    action_titles = {
+        'created': 'Document Request Created',
+        'submitted': 'Document Request Submitted',
+        'payment_method_set': 'Payment Method Set',
+        'receipt_submitted': 'Receipt Submitted',
+        'receipt_uploaded': 'Receipt Uploaded',
+        'status_changed': 'Status Updated',
+        'scheduled': 'Appointment Scheduled',
+        'updated': 'Request Updated',
+    }
+    return action_titles.get(action.action, 'Document Request Updated')
+
+
+def _getNotificationMessage(doc_request, action):
+    """Generate notification message based on action type"""
+    if action.action == 'status_changed':
+        return f"Your {doc_request.document_type} status changed from {action.from_status} to {action.to_status}."
+    elif action.action == 'scheduled':
+        return f"Your {doc_request.document_type} appointment has been scheduled."
+    elif action.action == 'receipt_uploaded':
+        return f"Receipt uploaded for your {doc_request.document_type} request."
+    else:
+        return f"Your {doc_request.document_type} request has been {action.action.replace('_', ' ')}."
+
+
+def _getTimeAgo(created_at):
+    """Convert datetime to human-readable time ago"""
+    from django.utils import timezone
+    now = timezone.now()
+    diff = now - created_at
+    
+    if diff.days > 0:
+        return f"{diff.days}d ago"
+    elif diff.seconds > 3600:
+        hours = diff.seconds // 3600
+        return f"{hours}h ago"
+    elif diff.seconds > 60:
+        minutes = diff.seconds // 60
+        return f"{minutes}m ago"
+    else:
+        return "Just now"
+
+
+def _getNotificationIcon(action_type):
+    """Get appropriate icon for notification type"""
+    icon_map = {
+        'created': 'add_circle',
+        'submitted': 'send',
+        'payment_method_set': 'payment',
+        'receipt_submitted': 'receipt',
+        'receipt_uploaded': 'upload',
+        'status_changed': 'update',
+        'scheduled': 'event',
+        'updated': 'edit',
+    }
+    return icon_map.get(action_type, 'info')
+
+
+def _getNotificationColor(action_type):
+    """Get appropriate color for notification type"""
+    color_map = {
+        'created': 'blue',
+        'submitted': 'blue',
+        'payment_method_set': 'green',
+        'receipt_submitted': 'green',
+        'receipt_uploaded': 'green',
+        'status_changed': 'orange',
+        'scheduled': 'purple',
+        'updated': 'blue',
+    }
+    return color_map.get(action_type, 'blue')

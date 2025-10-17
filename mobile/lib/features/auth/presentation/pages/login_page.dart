@@ -299,20 +299,34 @@ class _LoginPageState extends State<LoginPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(
-                                  children: [
-                                    Checkbox(
-                                      value: rememberMe,
-                                      onChanged: (val) => setState(
-                                        () => rememberMe = val ?? false,
+                                Flexible(
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Checkbox(
+                                        value: rememberMe,
+                                        onChanged: (val) => setState(
+                                          () => rememberMe = val ?? false,
+                                        ),
                                       ),
-                                    ),
-                                    const Text("Remember Me"),
-                                  ],
+                                      const Flexible(
+                                        child: Text(
+                                          "Remember Me",
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                TextButton(
-                                  onPressed: () {},
-                                  child: const Text("Forgot Password?"),
+                                Flexible(
+                                  child: TextButton(
+                                    onPressed: () {},
+                                    child: const Text(
+                                      "Forgot Password?",
+                                      style: TextStyle(fontSize: 12),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
