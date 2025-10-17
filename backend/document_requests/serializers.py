@@ -1,15 +1,11 @@
 from rest_framework import serializers
-from django.utils import timezone
 from .models import DocumentRequest, DocumentRequestAction
-from backend.appointments.serializers import AppointmentSerializer
-
 
 class DocumentRequestWebSerializer(serializers.ModelSerializer):
-    student = serializers.CharField(source="student_id.get_full_name")
-    student_id = serializers.CharField(source="student_id.student_id")
+    student = serializers.CharField(source="student.get_full_name")
+    student_id = serializers.CharField(source="student.student_id")
     semester = serializers.SerializerMethodField()
     school_year = serializers.SerializerMethodField()
-    appointment = serializers.SerializerMethodField()
 
     class Meta:
         model = DocumentRequest
@@ -21,113 +17,58 @@ class DocumentRequestWebSerializer(serializers.ModelSerializer):
             "semester",
             "school_year",
             "purpose",
-            "appointment",
         ]
 
     def get_semester(self, obj):
         import re
-        match = re.search(r"Semester:\s*([^,)]*)", obj.purpose or "")
+        match = re.search(r"Semester:\s*([^,)]*)", obj.purpose)
         return match.group(1) if match else ""
 
     def get_school_year(self, obj):
         import re
-        match = re.search(r"School Year:\s*([^)]+)", obj.purpose or "")
+        match = re.search(r"School Year:\s*([^)]+)", obj.purpose)
         return match.group(1) if match else ""
-
-    def get_appointment(self, obj):
-        appointment = obj.appointments.first()
-        return AppointmentSerializer(appointment).data if appointment else None
-
 
 class DocumentRequestActionSerializer(serializers.ModelSerializer):
     actor_email = serializers.EmailField(source='actor.email', read_only=True)
-    payment = serializers.BooleanField(required=False, help_text="Payment approved")
-    document = serializers.BooleanField(required=False, help_text="Document ready")
 
     class Meta:
         model = DocumentRequestAction
-        fields = (
-            'id',
-            'action',
-            'from_status',
-            'to_status',
-            'notes',
-            'actor',
-            'actor_email',
-            'payment',
-            'document',
-            'created_at',
-        )
+        fields = ('id', 'action', 'from_status', 'to_status', 'notes', 'actor', 'actor_email', 'created_at')
         read_only_fields = ('id', 'actor', 'actor_email', 'created_at')
-
 
 class DocumentRequestSerializer(serializers.ModelSerializer):
     actions = DocumentRequestActionSerializer(many=True, read_only=True)
-    appointment = serializers.SerializerMethodField()
-    receipt_reference = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta:
         model = DocumentRequest
         fields = '__all__'
-        read_only_fields = [
-            'status',
-            'requested_at',
-            'processed_by_id',
-            'student_id',
-            'actions',
-            'appointment',
-        ]
-
-    def get_appointment(self, obj):
-        appointment = obj.appointments.first()
-        return AppointmentSerializer(appointment).data if appointment else None
+        read_only_fields = ['status', 'requested_at', 'processed_by', 'student', 'actions']
 
     def update(self, instance, validated_data):
-        # Purpose cannot change after it's first set/submitted
         if 'purpose' in validated_data and validated_data['purpose'] != instance.purpose:
             raise serializers.ValidationError({"purpose": "Purpose cannot be changed after submission."})
-
-        # JUST persist the receipt_reference if provided; do not change status/notes here.
-        receipt_reference = validated_data.pop('receipt_reference', None)
-        instance = super().update(instance, validated_data)
-
-        if receipt_reference:
-            instance.receipt_reference = receipt_reference
-            instance.save(update_fields=["receipt_reference"])
-
-        return instance
-
-    def create(self, validated_data):
-        # Same: do not mutate status/notes here
-        receipt_reference = validated_data.pop('receipt_reference', None)
-        instance = super().create(validated_data)
-
-        if receipt_reference:
-            instance.receipt_reference = receipt_reference
-            instance.save(update_fields=["receipt_reference"])
-
-        return instance
-
+        return super().update(instance, validated_data)
 
 class DocumentRequestStatusSerializer(serializers.ModelSerializer):
     status = serializers.ChoiceField(choices=DocumentRequest.Status.choices)
     notes = serializers.CharField(required=False, allow_blank=True)
-    schedule = serializers.DateTimeField(required=False, allow_null=True)
 
     class Meta:
         model = DocumentRequest
-        fields = ['status', 'notes', 'schedule']
+        fields = ['status', 'notes']
 
     def validate_status(self, value):
         if value not in [choice[0] for choice in DocumentRequest.Status.choices]:
             raise serializers.ValidationError(f"\"{value}\" is not a valid choice.")
         return value
 
-    def validate_schedule(self, value):
-        if value and value <= timezone.now():
-            raise serializers.ValidationError("Schedule must be in the future.")
-        return value
-
+    def update(self, instance, validated_data):
+        instance.status = validated_data.get('status', instance.status)
+        instance.notes = validated_data.get('notes', instance.notes)
+        instance.processed_by = self.context['request'].user
+        instance.save()
+        return instance
 
 class DocumentRequestCancelSerializer(serializers.ModelSerializer):
     class Meta:
@@ -135,69 +76,80 @@ class DocumentRequestCancelSerializer(serializers.ModelSerializer):
         fields = ["status"]
 
     def update(self, instance, validated_data):
-        if instance.status not in ['draft', 'confirming', 'awaiting_payment']:
-            raise serializers.ValidationError("Only requests before payment can be cancelled.")
-        instance.status = 'cancelled'
+        if instance.status != DocumentRequest.Status.PENDING:
+            raise serializers.ValidationError("Only pending requests can be cancelled.")
+        instance.status = DocumentRequest.Status.CANCELLED
         instance.save()
-
-        # Sync linked chat
-        ch = getattr(instance, "chat_history", None)
-        if ch:
-            ch.status = 'cancelled'
-            ch.save(update_fields=["status", "updated_at"])
-
-        # Log action with from/to
         DocumentRequestAction.objects.create(
             request=instance,
             actor=self.context['request'].user,
             action='status_changed',
-            from_status='pending',
-            to_status='cancelled',
+            from_status=DocumentRequest.Status.PENDING,
+            to_status=DocumentRequest.Status.CANCELLED,
             notes='Cancelled via chatbot'
         )
         return instance
 
-
-# ------------------ Receipt upload serializer (mobile flow) ------------------
-
-class ReceiptUploadSerializer(serializers.ModelSerializer):
-    receipt_image = serializers.ImageField(required=True)
+class StatusSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source='document_type')
+    payment = serializers.BooleanField()
+    document = serializers.BooleanField()
+    status = serializers.CharField()
+    appointment_date = serializers.SerializerMethodField()
 
     class Meta:
         model = DocumentRequest
-        fields = ["receipt_image"]
+        fields = ['title', 'payment', 'document', 'status', 'appointment_date']
+    
+    def get_appointment_date(self, obj):
+        # For now, return a static date or empty string
+        # Later this can be connected to actual appointment system
+        return None  # or return a static date like "2024-01-15"
+
+class StatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentRequest
+        fields = ['payment', 'document']
+        read_only_fields = []
 
     def update(self, instance, validated_data):
-        from .models import DocumentRequestAction
-        request = self.context.get("request")
-        user = getattr(request, "user", None)
-
+        old_payment = instance.payment
+        old_document = instance.document
         old_status = instance.status
-        instance.receipt_image = validated_data["receipt_image"]
-
-        # Move to pending if not yet submitted
-        if instance.status in ["draft", "awaiting_payment"]:
-            instance.status = "pending"
-
-        instance.save(update_fields=["receipt_image", "status"])
-
-        # Log action with from/to
-        DocumentRequestAction.objects.create(
-            request=instance,
-            actor=user,
-            action="receipt_uploaded",
-            from_status=old_status,
-            to_status=instance.status,
-            notes="Receipt image uploaded",
-        )
-
-        # Sync linked ChatHistory if any
-        ch = getattr(instance, "chat_history", None)
-        if ch:
-            try:
-                ch.status = instance.status
-                ch.save(update_fields=["status", "updated_at"])
-            except Exception:
-                pass
-
+        
+        instance = super().update(instance, validated_data)
+        
+        if old_payment != instance.payment or old_document != instance.document:
+            # Determine new status based on payment and document status
+            new_status = self._determine_status(instance.payment, instance.document)
+            
+            # Update status if it should change
+            if new_status != old_status:
+                instance.status = new_status
+                instance.save(update_fields=['status'])
+            
+            # Create action log
+            notes = f"Payment: {instance.payment}, Document: {instance.document}"
+            if new_status != old_status:
+                notes += f" | Status: {old_status} → {new_status}"
+                
+            DocumentRequestAction.objects.create(
+                request=instance,
+                actor=self.context['request'].user,
+                action='status_changed',
+                from_status=f"payment: {old_payment}, document: {old_document}, status: {old_status}",
+                to_status=f"payment: {instance.payment}, document: {instance.document}, status: {new_status}",
+                notes=notes
+            )
         return instance
+    
+    def _determine_status(self, payment_status, document_status):
+        """Determine the overall status based on payment and document status"""
+        if payment_status and document_status:
+            return DocumentRequest.Status.COMPLETED
+        elif payment_status and not document_status:
+            return DocumentRequest.Status.APPROVED  # Payment received, document processing
+        elif not payment_status and document_status:
+            return DocumentRequest.Status.APPROVED  # Document ready, payment pending
+        else:
+            return DocumentRequest.Status.PENDING  # Neither payment nor document ready

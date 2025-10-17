@@ -1,23 +1,32 @@
-import 'package:mobile/core/services/dio_client.dart';
-import 'package:mobile/features/appointment/domain/entities/appointment.dart';
-import 'package:mobile/features/appointment/domain/repositories/appointment_repository.dart';
-import 'package:mobile/features/appointment/data/models/appointment_model.dart';
+import '../../domain/entities/appointment.dart';
+import '../../domain/repositories/appointment_repository.dart';
 
 class AppointmentRepositoryImpl implements AppointmentRepository {
-  final DioClient dioClient;
+  // 🔹 This is the storage for appointments
+  final Map<DateTime, List<Appointment>> _storage = {};
 
-  AppointmentRepositoryImpl(this.dioClient);
+  // Public getter for BLoC
+  Map<DateTime, List<Appointment>> get storage => _storage;
+
+  @override
+  Future<void> addAppointment(Appointment appointment) async {
+    final day = DateTime(
+        appointment.date.year, appointment.date.month, appointment.date.day);
+
+    if (_storage.containsKey(day)) {
+      _storage[day]!.add(appointment);
+    } else {
+      _storage[day] = [appointment];
+    }
+  }
 
   @override
   Future<List<Appointment>> getAppointments() async {
-    try {
-      final response = await dioClient.dio.get('/appointments/');
-      final List<dynamic> data = response.data;
-      return data
-          .map((json) => AppointmentModel.fromJson(json).toEntity())
-          .toList();
-    } catch (e) {
-      throw Exception('Failed to fetch appointments: $e');
-    }
+    return _storage.values.expand((list) => list).toList();
+  }
+
+  List<Appointment> getAppointmentsByDate(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    return _storage[day] ?? [];
   }
 }

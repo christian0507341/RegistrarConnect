@@ -2,8 +2,6 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from backend.accounts.views import EmailTokenObtainPairView
-from django.conf import settings
-from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -19,8 +17,7 @@ urlpatterns = [
     path("api/document-requests/", include("backend.document_requests.urls")),
     path("api/appointments/", include("backend.appointments.urls")),
     path("api/ai/", include("backend.ai.urls")),
-]
+    path("web/", include("backend.document_requests.urls")),  # Added for /web/statuses/
 
-# Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    #path('api/document-requests/<int:pk>/status/', DocumentRequestStatusUpdateView.as_view(), name='document-request-status-update'),
+]

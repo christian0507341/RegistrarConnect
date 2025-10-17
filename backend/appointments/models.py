@@ -7,7 +7,7 @@ class AppointmentAction(models.Model):
         ('created', 'Created'),
         ('status_changed', 'Status Changed'),
         ('assigned', 'Assigned Faculty'),
-        ('scheduled', 'Scheduled'),  # Added for faculty setting specific time
+        ('rescheduled', 'Rescheduled'),
     ]
     appointment = models.ForeignKey('Appointment', on_delete=models.CASCADE, related_name='actions')
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
@@ -26,38 +26,22 @@ class AppointmentAction(models.Model):
 class Appointment(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="appointments")
     faculty = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        related_name="faculty_appointments",
-        limit_choices_to={'role': 'faculty'},
-        null=True,
-        blank=True
-    )
-    document_request = models.ForeignKey(
-        'document_requests.DocumentRequest',
-        on_delete=models.CASCADE,
-        related_name="appointments",
-        null=True,
-        blank=True
-    )  # Link to DocumentRequest
+    settings.AUTH_USER_MODEL,
+    on_delete=models.SET_NULL,     # do not delete appointments if a faculty account is removed
+    related_name="faculty_appointments",
+    limit_choices_to={'role': 'faculty'},
+    null=True,                     # allow empty at creation (student submits first)
+    blank=True
+)
     purpose = models.TextField()
     schedule = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=[
         ('pending', 'Pending'),
-        ('scheduled', 'Scheduled'),  # Aligned with "ready to claim"
-        ('missed', 'Missed'),  # For tracking missed appointments
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
         ('cancelled', 'Cancelled'),
     ], default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['document_request'],
-                condition=models.Q(status='scheduled'),
-                name='unique_scheduled_appointment_per_request'
-            )  # Prevent multiple scheduled appointments per request
-        ]
 
     def __str__(self):
         student = getattr(self.student, "email", None) or getattr(self.student, "username", None) or "student?"
