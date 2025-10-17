@@ -93,3 +93,4 @@ mobile/linux/flutter/generated_plugin_registrant.cc
 mobile/linux/flutter/generated_plugins.cmake
 mobile/windows/flutter/generated_plugin_registrant.cc
 mobile/windows/flutter/generated_plugins.cmake
+/backend/ai/models/distilbert-base-uncased

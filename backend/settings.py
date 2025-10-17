@@ -13,32 +13,51 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-from datetime import timedelta
 
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
+# SECURITY WARNING: keep the secret key used in production secret!
+
 load_dotenv()
+#print(f"Loaded SECRET_KEY: {os.getenv('SECRET_KEY', 'Not found')}")
 SECRET_KEY = os.getenv('SECRET_KEY', 'default-key-for-dev-only')
 
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
+#DEBUG = True
 
 ALLOWED_HOSTS = ['10.0.2.2', '127.0.0.1', 'localhost', '192.168.1.7']
 
+
+# Application definition
 INSTALLED_APPS = [
+    # Django core apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+
+    # Third-party apps
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
+
+    # Custom apps
     'backend.accounts',
     'backend.document_requests',
     'backend.appointments',
     'backend.ai',
 ]
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -56,7 +75,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -70,6 +89,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
+
+# Database
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -81,9 +111,14 @@ DATABASES = {
     }
 }
 
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
+AUTHENTICATION_BACKENDS = [ # email OR username
+    'django.contrib.auth.backends.ModelBackend',                 # keep default perms backend
 ]
+
+
+
+# Password validation
+# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -106,15 +141,30 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+# Internationalization
+# https://docs.djangoproject.com/en/5.2/topics/i18n/
+
 LANGUAGE_CODE = 'en-us'
+
 TIME_ZONE = 'UTC'
+
 USE_I18N = True
+
 USE_TZ = True
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
 
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ✅ Use custom user model
 AUTH_USER_MODEL = 'accounts.User'
 
 REST_FRAMEWORK = {
@@ -123,16 +173,33 @@ REST_FRAMEWORK = {
     ),
 }
 
+# Optional: Set token lifetime
+from datetime import timedelta
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
+#ANO ANO LNG MUNA I2 AH 
+# Email settings (for development: console backend)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@registrarconnect.com'
 
+# For production, you'd use SendGrid, SMTP, etc.
+# Example (commented out):
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.sendgrid.net'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'apikey'
+# EMAIL_HOST_PASSWORD = 'your_sendgrid_api_key'
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "http://10.0.2.2:8000",
 ]
+
+# ------- NEW: media (for receipt uploads) -------
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
