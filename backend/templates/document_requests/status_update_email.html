@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Document Request Status Update</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .status-badge { 
+            display: inline-block; 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            text-transform: uppercase;
+        }
+        .status-pending { background: #ffc107; color: #000; }
+        .status-approved { background: #28a745; color: white; }
+        .status-completed { background: #17a2b8; color: white; }
+        .status-rejected { background: #dc3545; color: white; }
+        .info-box { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #2196F3; }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 Document Request Status Update</h1>
+        </div>
+        
+        <div class="content">
+            <p>Dear {{ student_name }},</p>
+            
+            <p>Your document request has been updated:</p>
+            
+            <div class="info-box">
+                <h3>Request Details</h3>
+                <p><strong>Document Type:</strong> {{ document_type }}</p>
+                <p><strong>Request ID:</strong> #{{ request_id }}</p>
+                <p><strong>Purpose:</strong> {{ purpose }}</p>
+            </div>
+            
+            <div class="info-box">
+                <h3>Status Update</h3>
+                <p><strong>Previous Status:</strong> <span class="status-badge status-{{ old_status }}">{{ old_status|title }}</span></p>
+                <p><strong>Current Status:</strong> <span class="status-badge status-{{ new_status }}">{{ new_status|title }}</span></p>
+            </div>
+            
+            <div class="info-box">
+                <h3>Progress Details</h3>
+                <p><strong>Payment Status:</strong> {% if payment_status %}✅ Completed{% else %}⏳ Pending{% endif %}</p>
+                <p><strong>Document Status:</strong> {% if document_status %}✅ Ready{% else %}⏳ Processing{% endif %}</p>
+            </div>
+            
+            {% if new_status == 'completed' %}
+            <div class="info-box" style="border-left-color: #28a745;">
+                <h3>🎉 Your Document is Ready!</h3>
+                <p>Your {{ document_type }} is now ready for pickup. Please visit the registrar's office during business hours.</p>
+            </div>
+            {% elif new_status == 'approved' %}
+            <div class="info-box" style="border-left-color: #ffc107;">
+                <h3>📋 Processing in Progress</h3>
+                <p>Your request has been approved and is being processed. You will be notified when it's ready.</p>
+            </div>
+            {% endif %}
+            
+            <p>Thank you for using RegistrarConnect!</p>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated message from RegistrarConnect System</p>
+            <p>Please do not reply to this email</p>
+        </div>
+    </div>
+</body>
+</html>

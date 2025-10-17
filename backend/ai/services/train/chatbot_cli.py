@@ -397,17 +397,42 @@ def apply_edit(session: Dict, field: str, value):
 # ---------- main bot logic ----------
 def bot_intro(session: Dict) -> str:
     if session["status"] in {"awaiting_payment"}:
-        return ("Welcome back. We’re **waiting for your payment** for this request: "
-                f"{summarize_request(session)}.\n" + nonrefundable_notice())
+        return (
+            "👋 **Welcome back!**\n\n"
+            "💰 We're **waiting for your payment** for this request:\n"
+            f"📄 {summarize_request(session)}\n\n"
+            f"{nonrefundable_notice()}\n\n"
+            "💡 *Need help with payment? Just ask me!*"
+        )
     if session["status"] == "pending":
-        return ("Welcome back. Your request is **pending faculty approval**: "
-                f"{summarize_request(session)}.\n" + sameday_line(session))
+        return (
+            "👋 **Welcome back!**\n\n"
+            "⏳ Your request is **pending faculty approval**:\n"
+            f"📄 {summarize_request(session)}\n\n"
+            f"{sameday_line(session)}\n\n"
+            "💡 *I'll notify you when there are updates!*"
+        )
     if session["status"] == "confirming":
-        return ("Welcome back. We were confirming this request: "
-                f"{summarize_request(session)}.\nType **confirm** to proceed or **edit** to change details.")
+        return (
+            "👋 **Welcome back!**\n\n"
+            "📋 We were confirming this request:\n"
+            f"📄 {summarize_request(session)}\n\n"
+            "Type **confirm** to proceed or **edit** to change details. 😊"
+        )
     if session["status"] in END_STATUSES:
-        return f"Welcome back. Your last request is **{session['status']}**. How can I help you today?"
-    return "Welcome! I can help with registrar document requests. Ask a question or say what you want to request."
+        return (
+            f"👋 **Welcome back!**\n\n"
+            f"✅ Your last request is **{session['status']}**.\n\n"
+            "How can I help you today? 😊"
+        )
+    return (
+        "🤖 **Welcome to RegistrarConnect AI!**\n\n"
+        "I'm your intelligent assistant for all registrar services. I can help you with:\n\n"
+        "📄 **Document Requests** - Transcripts, certificates, and more\n"
+        "📊 **Status Updates** - Check your request progress\n"
+        "❓ **Questions** - Ask me anything about registrar services\n\n"
+        "Just tell me what you need or ask me anything! 😊"
+    )
 
 DOC_SYNONYMS = {
     "OTR": ["otr", "tor", "transcript", "transcript of records", "official transcript"],
@@ -447,8 +472,14 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
     # ---------------- Help ----------------
     if text_lower in {"help", "/help"}:
         return (
-            "Commands: help · status · history · cancel (only before payment) · reset\n"
-            "Or just type your question or request."
+            "🤖 **RegistrarConnect AI Assistant**\n\n"
+            "I can help you with:\n"
+            "• 📄 **Document Requests** - Request transcripts, certificates, etc.\n"
+            "• 📊 **Status Updates** - Check your request status\n"
+            "• 📝 **History** - View your request history\n"
+            "• ❌ **Cancel** - Cancel requests (before payment)\n"
+            "• 🔄 **Reset** - Start fresh conversation\n\n"
+            "Just type your question or tell me what you need! 😊"
         )
 
     # ---------------- Status ----------------
@@ -456,22 +487,48 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         try:
             reqs = fetch_my_requests(access_token)
         except Exception as e:
-            return f"⚠️ Could not fetch your requests: {e}"
+            return f"⚠️ Sorry, I couldn't fetch your requests right now. Please try again later.\n\nError: {e}"
         if not reqs:
-            return "You have no recent requests in the system."
+            return (
+                "📭 **No Recent Requests**\n\n"
+                "You don't have any document requests yet. Would you like to create one? "
+                "Just tell me what document you need! 😊"
+            )
         latest = reqs[0]
         print("🔍 Latest request payload:", latest)
         doc_type = latest.get("doc_type") or latest.get("document_type") or "Unknown"
         status = latest.get("status") or "Unknown"
-        return f"📄 Latest request: **{doc_type}** | Status: **{status}**"
+        
+        # Enhanced status response with emojis and helpful info
+        status_emoji = {
+            "pending": "⏳",
+            "approved": "✅", 
+            "completed": "🎉",
+            "rejected": "❌",
+            "cancelled": "🚫"
+        }.get(status.lower(), "📋")
+        
+        return (
+            f"📊 **Your Latest Request Status**\n\n"
+            f"📄 **Document:** {doc_type}\n"
+            f"{status_emoji} **Status:** {status.title()}\n\n"
+            f"💡 *Need more details? Just ask me about your request!*"
+        )
 
     # ---------------- History ----------------
     if text_lower in {"history", "/history"}:
         n = min(len(session.get("history", [])), 5)
         tail = session.get("history", [])[-n:]
         if not tail:
-            return "No history yet."
-        return "Recent messages:\n" + "\n".join([f"- {m['sender']}: {m['text']}" for m in tail])
+            return (
+                "📝 **No Conversation History**\n\n"
+                "This is the beginning of our conversation! Feel free to ask me anything about document requests or registrar services. 😊"
+            )
+        return (
+            "📜 **Recent Conversation**\n\n" + 
+            "\n".join([f"**{m['sender'].title()}:** {m['text']}" for m in tail]) +
+            "\n\n💡 *This shows our recent chat history*"
+        )
 
     # ---------------- Reset ----------------
     if text_lower in {"reset", "/reset"}:
@@ -479,7 +536,11 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         session.clear()
         session.update(start_new_session(keep["user_id"]))
         session["same_day"] = keep["same_day"]
-        return "Okay, I’ve reset the conversation. What do you need?"
+        return (
+            "🔄 **Conversation Reset**\n\n"
+            "Perfect! I've cleared our conversation history and I'm ready to help you with a fresh start. 😊\n\n"
+            "What can I help you with today?"
+        )
 
     # ---------------- New Request ----------------
     if text_lower in {"new", "new request", "another", "start over"}:

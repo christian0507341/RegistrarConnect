@@ -52,6 +52,11 @@ dependencies:
   # --- JSON & utilities ---
   json_annotation: ^4.9.0     # Annotations for codegen models
   intl: ^0.19.0               # Dates/formatting (appointments, etc.)
+  
+  # --- Notifications ---
+  flutter_local_notifications: ^17.2.3  # Local notifications
+  permission_handler: ^11.3.1           # Permission handling
+  timezone: ^0.9.4                      # Timezone support for scheduled notifications
 
 dev_dependencies:
   flutter_test:

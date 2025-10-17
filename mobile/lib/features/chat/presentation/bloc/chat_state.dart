@@ -1,5 +1,5 @@
-import 'package:mobile/features/chat/domain/entities/chat_message.dart';
 import 'package:mobile/features/chat/domain/entities/chat_action.dart';
+import 'package:mobile/features/chat/domain/entities/chat_message.dart';
 
 abstract class ChatState {}
 

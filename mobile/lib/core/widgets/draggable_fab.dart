@@ -21,6 +21,7 @@ class _DraggableFabState extends State<DraggableFab> {
       top: offset.dy,
       child: Draggable(
         feedback: FloatingActionButton(
+          heroTag: "draggable_fab_feedback",
           backgroundColor: Colors.grey[300],
           onPressed: widget.onPressed,
           child: const Icon(Icons.chat_bubble_outline, color: Colors.black),
@@ -45,6 +46,7 @@ class _DraggableFabState extends State<DraggableFab> {
           });
         },
         child: FloatingActionButton(
+          heroTag: "draggable_fab_main",
           backgroundColor: Colors.grey[300],
           onPressed: widget.onPressed,
           child: const Icon(Icons.chat_bubble_outline, color: Colors.black),

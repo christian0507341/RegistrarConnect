@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/core/services/secure_storage.dart';
-import 'package:mobile/core/services/dio_client.dart';
-import 'package:mobile/features/auth/data/sources/auth_api.dart';
-import 'package:mobile/features/auth/data/repositories/auth_repository.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:mobile/features/auth/presentation/bloc/auth_event.dart';
+import 'package:mobile/features/auth/presentation/bloc/auth_state.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -17,7 +17,6 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
   bool obscureText = true;
   bool rememberMe = false;
-  bool _loading = false;
 
   @override
   void dispose() {
@@ -35,27 +34,7 @@ class _LoginPageState extends State<LoginPage> {
       );
       return;
     }
-
-    setState(() => _loading = true);
-
-    try {
-      final storage = SecureStorageService();
-      final dio = DioClient(storage).dio;
-      final api = AuthApi(dio);
-      final repo = AuthRepository(api: api, storage: storage);
-
-      await repo.signIn(role: 'student', email: email, password: password);
-
-      if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Login failed: $e')));
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    context.read<AuthBloc>().add(LoginRequested(role: 'student', email: email, password: password));
   }
 
   @override
@@ -84,7 +63,17 @@ class _LoginPageState extends State<LoginPage> {
                     height: 120,
                   ),
                   const SizedBox(height: 20),
-                  Card(
+                  BlocListener<AuthBloc, AuthState>(
+                    listener: (context, state) {
+                      if (state is AuthAuthenticated) {
+                        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+                      } else if (state is AuthError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(state.message)),
+                        );
+                      }
+                    },
+                    child: Card(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -96,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 400),
-                        child: Column(
+                          child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const Text(
@@ -107,6 +96,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                             const SizedBox(height: 25),
+                              // Student is the only role allowed on mobile; no role selector.
                             TextField(
                               controller: emailController,
                               keyboardType: TextInputType.emailAddress,
@@ -161,19 +151,24 @@ class _LoginPageState extends State<LoginPage> {
                             SizedBox(
                               width: double.infinity,
                               height: 45,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blueGrey[300],
+                                child: BlocBuilder<AuthBloc, AuthState>(
+                                  builder: (context, state) {
+                                    final isLoading = state is AuthLoading;
+                                    return ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blueGrey[300],
+                                      ),
+                                      onPressed: isLoading ? null : _submit,
+                                      child: Text(
+                                        isLoading ? "Signing in…" : "Log in",
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
-                                onPressed: _loading ? null : _submit,
-                                child: Text(
-                                  _loading ? "Signing in…" : "Log in",
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
                             ),
                             const SizedBox(height: 20),
                             Row(
@@ -201,6 +196,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ],
                         ),
+                      ),
                       ),
                     ),
                   ),

@@ -1,0 +1,10 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+// Always use the virtual environment (venv) when running terminal commands.
+// Activate your venv before running any terminal command, for example:
+// On Unix/macOS: source .venv/bin/activate
+// On Windows: .\.venv\Scripts\activate
+// Then run your commands while the venv is active.

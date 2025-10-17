@@ -31,7 +31,7 @@ class StatusBloc extends Bloc<StatusEvent, StatusState> {
   }
 
   void _startPeriodicRefresh() {
-    _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 3000), (timer) {
       add(const LoadStatuses()); // Trigger refresh every 30 seconds
     });
   }

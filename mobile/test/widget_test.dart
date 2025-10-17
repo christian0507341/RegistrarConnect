@@ -7,24 +7,30 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:mobile/main.dart';
+import 'package:mobile/features/auth/domain/repositories/auth_repository.dart';
+import 'package:mobile/features/auth/data/repositories/auth_repository.dart' as data;
+import 'package:mobile/core/services/secure_storage.dart';
+import 'package:mobile/core/services/dio_client.dart';
+import 'package:mobile/features/auth/data/sources/auth_api.dart';
+import 'package:dio/dio.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('App loads without crashing', (WidgetTester tester) async {
+    // Create mock dependencies for testing
+    final secureStorage = SecureStorageService();
+    final dioClient = DioClient(secureStorage);
+    final Dio dio = dioClient.dio;
+    final authApi = AuthApi(dio);
+    final IAuthRepository authRepository = data.AuthRepository(
+      api: authApi,
+      storage: secureStorage,
+    );
+
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(MyApp(authRepository: authRepository));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that the app loads (we expect to see onboarding or login screen)
+    expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

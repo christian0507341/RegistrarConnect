@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/features/home/presentation/pages/home_page.dart';
 import 'package:mobile/features/notifications/presentation/pages/notification_page.dart';
 import 'package:mobile/features/appointment/presentation/pages/calendar_page.dart';
 import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
 import 'package:mobile/features/status/presentation/pages/status_page.dart';
+import 'package:mobile/features/theme/presentation/bloc/theme_bloc.dart';
+import 'package:mobile/features/theme/presentation/bloc/theme_state.dart';
 
 class HomeContainer extends StatefulWidget {
   const HomeContainer({super.key});
@@ -51,7 +54,9 @@ class _HomeContainerState extends State<HomeContainer> {
   Widget build(BuildContext context) {
     _tabs[_selectedIndex] ??= _buildTab(_selectedIndex);
 
-    return Scaffold(
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
         children: List.generate(
@@ -85,6 +90,8 @@ class _HomeContainerState extends State<HomeContainer> {
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

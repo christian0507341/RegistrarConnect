@@ -21,7 +21,10 @@ class StatusRepositoryImpl implements StatusRepository {
       final response = await _dio.get(
         '/api/document-requests/statuses/',
         options: Options(
-          headers: {'Authorization': 'Bearer $accessToken'},
+          headers: {
+            'Authorization': 'Bearer $accessToken',
+            'Content-Type': 'application/json',
+          },
         ),
       );
       return List<Map<String, dynamic>>.from(response.data);

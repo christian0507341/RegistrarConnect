@@ -4,6 +4,8 @@ import 'package:mobile/features/status/presentation/bloc/status_bloc.dart';
 import 'package:mobile/features/status/presentation/bloc/status_event.dart';
 import 'package:mobile/features/status/presentation/bloc/status_state.dart';
 import 'package:mobile/injection_container.dart' as di;
+import 'package:mobile/features/theme/presentation/bloc/theme_bloc.dart';
+import 'package:mobile/features/theme/presentation/bloc/theme_state.dart';
 
 class StatusPage extends StatelessWidget {
   const StatusPage({super.key});
@@ -12,144 +14,299 @@ class StatusPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => di.sl<StatusBloc>()..add(const LoadStatuses()),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Status',
-            style: TextStyle(
-              fontSize: 20.0,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, themeState) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text(
+                'Status',
+                style: TextStyle(
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              backgroundColor: const Color(0xFF2196F3), // Green from main.dart
+              elevation: 2,
+              iconTheme: const IconThemeData(color: Colors.white),
             ),
-          ),
-          backgroundColor: const Color(0xFF2196F3), // Green from main.dart
-          elevation: 2,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: Container(
-          color: Colors.grey[100], // Light background to match modern themes
-          child: RefreshIndicator(
-            onRefresh: () async {
-              context.read<StatusBloc>().add(const LoadStatuses());
-              await Future.delayed(const Duration(seconds: 1));
-            },
-            color: const Color(0xFF2196F3),
-            backgroundColor: Colors.white,
-            child: BlocBuilder<StatusBloc, StatusState>(
-              builder: (context, state) {
-                if (state is StatusLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF2196F3),
-                    ),
-                  );
-                } else if (state is StatusLoaded) {
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16.0),
-                    itemCount: state.statuses.length,
-                    itemBuilder: (context, index) {
-                      final status = state.statuses[index];
-                      final payment = status['payment'] is String
-                          ? status['payment'].toLowerCase() == 'true'
-                          : status['payment'] as bool;
-                      final document = status['document'] is String
-                          ? status['document'].toLowerCase() == 'true'
-                          : status['document'] as bool;
-
-                      return Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        margin: const EdgeInsets.only(bottom: 12.0),
-                        color: Colors.white,
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16.0,
-                            vertical: 8.0,
-                          ),
-                          leading: const Icon(
-                            Icons.description,
-                            color: Color(0xFF2196F3),
-                          ),
-                          title: Text(
-                            status['title'] as String,
-                            style: const TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF2196F3),
-                            ),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
+            body: Container(
+              color: themeState.isDarkMode ? Colors.grey[900] : Colors.grey[100],
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  context.read<StatusBloc>().add(const LoadStatuses());
+                  await Future.delayed(const Duration(seconds: 1));
+                },
+                child: BlocBuilder<StatusBloc, StatusState>(
+                  builder: (context, state) {
+                    if (state is StatusLoading) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    } else if (state is StatusLoaded) {
+                      if (state.statuses.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text(
-                                'Payment: ',
+                              Icon(
+                                Icons.inbox_outlined,
+                                size: 64,
+                                color: themeState.isDarkMode ? Colors.white38 : Colors.grey[400],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No Status Updates',
                                 style: TextStyle(
-                                  fontSize: 14.0,
-                                  color: Colors.black87,
+                                  fontSize: 18.0,
+                                  fontWeight: FontWeight.w600,
+                                  color: themeState.isDarkMode ? Colors.white70 : Colors.grey[700],
                                 ),
                               ),
-                              Checkbox(
-                                value: payment,
-                                onChanged: null,
-                                activeColor: const Color(0xFF2196F3),
-                                checkColor: Colors.white,
-                              ),
-                              const SizedBox(width: 16),
-                              const Text(
-                                'Document: ',
+                              const SizedBox(height: 8),
+                              Text(
+                                'You don\'t have any document requests yet.\nSubmit a request to see status updates here.',
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14.0,
-                                  color: Colors.black87,
+                                  color: themeState.isDarkMode ? Colors.white54 : Colors.grey[500],
                                 ),
-                              ),
-                              Checkbox(
-                                value: document,
-                                onChanged: null,
-                                activeColor: const Color(0xFF2196F3),
-                                checkColor: Colors.white,
                               ),
                             ],
                           ),
+                        );
+                      }
+                      return ListView.builder(
+                        itemCount: state.statuses.length,
+                        itemBuilder: (context, index) {
+                          final status = state.statuses[index];
+                          final isPaymentComplete = status['payment'] == 't' || status['payment'] == true;
+                          final isDocumentReady = status['document'] == 't' || status['document'] == true;
+                          final isCompleted = isPaymentComplete && isDocumentReady;
+                          
+                          return Card(
+                            margin: const EdgeInsets.all(8.0),
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12.0),
+                                gradient: themeState.isDarkMode
+                                    ? LinearGradient(
+                                        colors: [
+                                          Colors.grey[900]!,
+                                          Colors.grey[800]!,
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                    : LinearGradient(
+                                        colors: [
+                                          Colors.white,
+                                          Colors.grey[50]!,
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            status['title'] ?? 'Unknown Document',
+                                            style: TextStyle(
+                                              fontSize: 16.0,
+                                              fontWeight: FontWeight.bold,
+                                              color: themeState.isDarkMode ? Colors.white : Colors.black87,
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12.0,
+                                            vertical: 6.0,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: _getStatusColor(isCompleted),
+                                            borderRadius: BorderRadius.circular(20.0),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: _getStatusColor(isCompleted).withValues(alpha: 0.3),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Text(
+                                            isCompleted ? "Completed" : "In Progress",
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12.0,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12.0),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _buildStatusItem(
+                                            icon: Icons.payment,
+                                            label: "Payment",
+                                            isComplete: isPaymentComplete,
+                                            themeState: themeState,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16.0),
+                                        Expanded(
+                                          child: _buildStatusItem(
+                                            icon: Icons.description,
+                                            label: "Document",
+                                            isComplete: isDocumentReady,
+                                            themeState: themeState,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (isCompleted) ...[
+                                      const SizedBox(height: 12.0),
+                                      Container(
+                                        padding: const EdgeInsets.all(12.0),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(8.0),
+                                          border: Border.all(
+                                            color: Colors.green.withValues(alpha: 0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.check_circle,
+                                              color: Colors.green,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 8.0),
+                                            Expanded(
+                                              child: Text(
+                                                "Your document is ready for pickup!",
+                                                style: TextStyle(
+                                                  color: themeState.isDarkMode ? Colors.green[300] : Colors.green[700],
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    } else if (state is StatusError) {
+                      return Center(
+                        child: Text(
+                          state.message,
+                          style: TextStyle(
+                            color: themeState.isDarkMode ? Colors.red[300] : Colors.red,
+                          ),
                         ),
                       );
-                    },
-                  );
-                } else if (state is StatusError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        state.message,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.w500,
+                    } else {
+                      return Center(
+                        child: Text(
+                          'No data',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            color: themeState.isDarkMode ? Colors.white70 : Colors.black54,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  );
-                } else {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'No data',
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          color: Colors.black54,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  );
-                }
-              },
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Color _getStatusColor(bool isCompleted) {
+    return isCompleted ? Colors.green : Colors.orange;
+  }
+
+  Widget _buildStatusItem({
+    required IconData icon,
+    required String label,
+    required bool isComplete,
+    required ThemeState themeState,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: isComplete 
+            ? Colors.green.withValues(alpha: 0.1)
+            : Colors.grey.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8.0),
+        border: Border.all(
+          color: isComplete 
+              ? Colors.green.withValues(alpha: 0.3)
+              : Colors.grey.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isComplete ? Icons.check_circle : icon,
+            color: isComplete ? Colors.green : Colors.grey[600],
+            size: 20,
+          ),
+          const SizedBox(width: 8.0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12.0,
+                    color: themeState.isDarkMode ? Colors.white70 : Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  isComplete ? "Complete" : "Pending",
+                  style: TextStyle(
+                    fontSize: 14.0,
+                    color: isComplete 
+                        ? Colors.green[700]
+                        : (themeState.isDarkMode ? Colors.white70 : Colors.grey[600]),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }

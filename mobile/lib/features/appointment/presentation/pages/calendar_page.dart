@@ -6,6 +6,8 @@ import '../bloc/appointment_event.dart';
 import '../bloc/appointment_state.dart';
 import '../widgets/appointment_list.dart';
 import 'add_appointment_page.dart';
+import 'package:mobile/features/theme/presentation/bloc/theme_bloc.dart';
+import 'package:mobile/features/theme/presentation/bloc/theme_state.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -35,8 +37,10 @@ class _CalendarPageState extends State<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        return Scaffold(
+          backgroundColor: themeState.isDarkMode ? Colors.grey[900] : Colors.white,
       appBar: AppBar(
         title: const Text(
           "Calendar",
@@ -102,10 +106,12 @@ class _CalendarPageState extends State<CalendarPage> {
                   if (state is AppointmentLoaded) {
                     final appointments = state.appointments[_selectedDay] ?? [];
                     return appointments.isEmpty
-                        ? const Center(
+                        ? Center(
                             child: Text(
                               "No appointments on this day.",
-                              style: TextStyle(color: Colors.black54),
+                              style: TextStyle(
+                                color: themeState.isDarkMode ? Colors.white70 : Colors.black54,
+                              ),
                             ),
                           )
                         : AppointmentList(appointments: appointments);
@@ -123,11 +129,14 @@ class _CalendarPageState extends State<CalendarPage> {
 
       // ➕ Floating Add Appointment button
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: "calendar_add_fab",
         onPressed: _navigateToAddAppointment,
         backgroundColor: Colors.blue,
         icon: const Icon(Icons.add),
         label: const Text("Add"),
       ),
+    );
+      },
     );
   }
 }

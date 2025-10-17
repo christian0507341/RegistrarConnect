@@ -5,6 +5,8 @@ import 'dart:io';
 
 import 'package:mobile/core/services/conversation_services.dart';
 import 'package:mobile/features/chat/domain/entities/chat_message.dart';
+import 'package:mobile/features/theme/presentation/bloc/theme_bloc.dart';
+import 'package:mobile/features/theme/presentation/bloc/theme_state.dart';
 
 import '../bloc/chat_bloc.dart';
 import '../bloc/chat_event.dart';
@@ -17,7 +19,7 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ConversationService _conversationService = ConversationService();
@@ -25,14 +27,56 @@ class _ChatPageState extends State<ChatPage> {
 
   File? _receiptImage;
   bool _showUploadButton = false;
+  late AnimationController _fadeController;
+  late AnimationController _slideController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
+    
+    // Initialize animations
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeInOut,
+    ));
+    
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeOutCubic,
+    ));
+    
     _conversationService.getOrCreate().then((id) {
-      // ChatBloc is provided globally in main.dart
-      context.read<ChatBloc>().add(ChatInit(id));
+      if (mounted) {
+        // ChatBloc is provided globally in main.dart
+        context.read<ChatBloc>().add(ChatInit(id));
+        _fadeController.forward();
+        _slideController.forward();
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    _slideController.dispose();
+    super.dispose();
   }
 
   void _sendMessage() {
@@ -99,40 +143,147 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  String _formatTime(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+    
+    if (difference.inMinutes < 1) {
+      return "Just now";
+    } else if (difference.inMinutes < 60) {
+      return "${difference.inMinutes}m ago";
+    } else if (difference.inHours < 24) {
+      return "${difference.inHours}h ago";
+    } else {
+      return "${timestamp.day}/${timestamp.month}";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFE3F2FD),
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        return Scaffold(
+          backgroundColor: themeState.isDarkMode 
+            ? const Color(0xFF1A1A1A) 
+            : const Color(0xFFE3F2FD),
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // Modern Header with Glassmorphism
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                gradient: themeState.isDarkMode
+                    ? LinearGradient(
+                        colors: [
+                          const Color(0xFF1A1A2E),
+                          const Color(0xFF16213E),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : LinearGradient(
+                        colors: [
+                          const Color(0xFF6366F1),
+                          const Color(0xFF8B5CF6),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                boxShadow: [
+                  BoxShadow(
+                    color: themeState.isDarkMode 
+                        ? Colors.black.withValues(alpha: 0.3)
+                        : const Color(0xFF6366F1).withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
-                  const CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.smart_toy, color: Color(0xFF2196F3)),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    "Registrar Bot",
-                    style: TextStyle(
+                  const SizedBox(width: 16),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.smart_toy_rounded,
                       color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "RegistrarConnect AI",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "Your intelligent assistant",
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.green.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Online",
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -180,20 +331,132 @@ class _ChatPageState extends State<ChatPage> {
 
                           final msg = state.messages[index];
                           final isBot = msg.sender == ChatSender.bot;
-                          return Align(
-                            alignment: isBot
-                                ? Alignment.centerLeft
-                                : Alignment.centerRight,
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: isBot
-                                    ? Colors.blue[100]
-                                    : Colors.green[100],
-                                borderRadius: BorderRadius.circular(12),
+                          return SlideTransition(
+                            position: _slideAnimation,
+                            child: FadeTransition(
+                              opacity: _fadeAnimation,
+                              child: Align(
+                                alignment: isBot
+                                    ? Alignment.centerLeft
+                                    : Alignment.centerRight,
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                                  constraints: BoxConstraints(
+                                    maxWidth: MediaQuery.of(context).size.width * 0.75,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: isBot 
+                                        ? CrossAxisAlignment.start 
+                                        : CrossAxisAlignment.end,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                        decoration: BoxDecoration(
+                                          gradient: isBot
+                                              ? (themeState.isDarkMode
+                                                  ? LinearGradient(
+                                                      colors: [
+                                                        Colors.grey[800]!,
+                                                        Colors.grey[700]!,
+                                                      ],
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment.bottomRight,
+                                                    )
+                                                  : LinearGradient(
+                                                      colors: [
+                                                        Colors.grey[100]!,
+                                                        Colors.grey[50]!,
+                                                      ],
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment.bottomRight,
+                                                    ))
+                                              : (themeState.isDarkMode
+                                                  ? LinearGradient(
+                                                      colors: [
+                                                        const Color(0xFF6366F1),
+                                                        const Color(0xFF8B5CF6),
+                                                      ],
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment.bottomRight,
+                                                    )
+                                                  : LinearGradient(
+                                                      colors: [
+                                                        const Color(0xFF6366F1),
+                                                        const Color(0xFF8B5CF6),
+                                                      ],
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment.bottomRight,
+                                                    )),
+                                          borderRadius: BorderRadius.circular(20),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: isBot
+                                                  ? (themeState.isDarkMode 
+                                                      ? Colors.black.withValues(alpha: 0.3)
+                                                      : Colors.grey.withValues(alpha: 0.2))
+                                                  : const Color(0xFF6366F1).withValues(alpha: 0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            if (isBot) ...[
+                                              Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.all(4),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white.withValues(alpha: 0.2),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                    ),
+                                                    child: const Icon(
+                                                      Icons.smart_toy_rounded,
+                                                      color: Colors.white,
+                                                      size: 16,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    "AI Assistant",
+                                                    style: TextStyle(
+                                                      color: Colors.white.withValues(alpha: 0.9),
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                            ],
+                                            Text(
+                                              msg.text,
+                                              style: TextStyle(
+                                                color: isBot 
+                                                    ? (themeState.isDarkMode ? Colors.white : Colors.black87)
+                                                    : Colors.white,
+                                                fontSize: 15,
+                                                height: 1.4,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _formatTime(msg.timestamp),
+                                        style: TextStyle(
+                                          color: themeState.isDarkMode ? Colors.white38 : Colors.grey[500],
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                              child: Text(msg.text),
                             ),
                           );
                         },
@@ -208,44 +471,126 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
 
-            // Input area
+            // Modern Input Area
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                gradient: themeState.isDarkMode
+                    ? LinearGradient(
+                        colors: [
+                          Colors.grey[900]!,
+                          Colors.grey[800]!,
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      )
+                    : LinearGradient(
+                        colors: [
+                          Colors.white,
+                          Colors.grey[50]!,
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    offset: const Offset(0, -1),
-                    blurRadius: 4,
+                    color: themeState.isDarkMode 
+                        ? Colors.black.withValues(alpha: 0.3)
+                        : Colors.grey.withValues(alpha: 0.2),
+                    offset: const Offset(0, -4),
+                    blurRadius: 20,
                   ),
                 ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _messageController,
-                          decoration: InputDecoration(
-                            hintText: "Ask Anything...",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: themeState.isDarkMode
+                          ? LinearGradient(
+                              colors: [
+                                Colors.grey[800]!,
+                                Colors.grey[700]!,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : LinearGradient(
+                              colors: [
+                                Colors.white,
+                                Colors.grey[50]!,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            filled: true,
-                            fillColor: Colors.white,
-                          ),
-                          onSubmitted: (_) => _sendMessage(),
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color: themeState.isDarkMode
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : Colors.grey.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: themeState.isDarkMode
+                              ? Colors.black.withValues(alpha: 0.3)
+                              : Colors.grey.withValues(alpha: 0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.send, color: Color(0xFF2196F3)),
-                        onPressed: _sendMessage,
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _messageController,
+                            decoration: InputDecoration(
+                              hintText: "Type your message...",
+                              hintStyle: TextStyle(
+                                color: themeState.isDarkMode 
+                                    ? Colors.white.withValues(alpha: 0.5)
+                                    : Colors.grey[500],
+                                fontSize: 15,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 16,
+                              ),
+                            ),
+                            style: TextStyle(
+                              color: themeState.isDarkMode ? Colors.white : Colors.black87,
+                              fontSize: 15,
+                            ),
+                            onSubmitted: (_) => _sendMessage(),
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF6366F1).withValues(alpha: 0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.send_rounded, color: Colors.white),
+                            onPressed: _sendMessage,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   if (_showUploadButton && _receiptImage == null)
                     Padding(
@@ -289,10 +634,12 @@ class _ChatPageState extends State<ChatPage> {
         ),
       ),
     );
+      },
+    );
   }
 }
 
-/// Simple three-dot typing bubble aligned like a bot message.
+/// Modern typing bubble with animated dots
 class _TypingBubble extends StatefulWidget {
   const _TypingBubble();
 
@@ -302,37 +649,113 @@ class _TypingBubble extends StatefulWidget {
 
 class _TypingBubbleState extends State<_TypingBubble>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
+  late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 900),
+    duration: const Duration(milliseconds: 1200),
   )..repeat();
 
   @override
   void dispose() {
-    _c.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.blue[100],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: AnimatedBuilder(
-          animation: _c,
-          builder: (_, __) {
-            final t = (_c.value * 3).floor() % 3; // 0..2
-            final dots = ['.', '..', '...'][t];
-            return Text('typing$dots');
-          },
-        ),
-      ),
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: themeState.isDarkMode
+                  ? LinearGradient(
+                      colors: [
+                        Colors.grey[800]!,
+                        Colors.grey[700]!,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : LinearGradient(
+                      colors: [
+                        Colors.grey[100]!,
+                        Colors.grey[50]!,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: themeState.isDarkMode 
+                      ? Colors.black.withValues(alpha: 0.3)
+                      : Colors.grey.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.smart_toy_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "AI is typing",
+                  style: TextStyle(
+                    color: themeState.isDarkMode 
+                        ? Colors.white.withValues(alpha: 0.7)
+                        : Colors.grey[600],
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(3, (index) {
+                        final delay = index * 0.2;
+                        final animationValue = (_controller.value - delay).clamp(0.0, 1.0);
+                        final scale = (1.0 + 0.3 * (0.5 - (animationValue - 0.5).abs())).clamp(0.7, 1.0);
+                        
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: themeState.isDarkMode 
+                                ? Colors.white.withValues(alpha: 0.6)
+                                : Colors.grey[600],
+                            shape: BoxShape.circle,
+                          ),
+                          transform: Matrix4.identity()..scale(scale),
+                        );
+                      }),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

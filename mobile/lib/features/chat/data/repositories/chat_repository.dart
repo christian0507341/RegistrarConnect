@@ -1,50 +1,40 @@
-import 'package:mobile/features/chat/data/models/chat_dtos.dart';
 import 'package:mobile/features/chat/data/sources/chat_api.dart';
 import 'package:mobile/features/chat/domain/entities/chat_action.dart';
 import 'package:mobile/features/chat/domain/entities/chat_message.dart';
 import 'package:mobile/features/chat/domain/repositories/chat_repository.dart';
 
 class ChatRepository implements IChatRepository {
-  ChatRepository(this._api);
   final ChatApi _api;
 
-  ChatMessage _toEntity(ChatMessageDto dto) => ChatMessage(
-    id: dto.id,
-    conversationId: dto.conversationId,
-    sender: dto.sender == 'bot' ? ChatSender.bot : ChatSender.student,
-    text: dto.text,
-    timestamp: DateTime.parse(dto.timestamp),
-  );
-
-  ChatAction? _actionFrom(Map<String, dynamic>? a) {
-    if (a == null) return null;
-    return ChatAction(
-      type: (a['type'] ?? a['action'] ?? '').toString(),
-      requestId: (a['request_id'] ?? a['requestId']) as String?,
-      payload: a,
-    );
-  }
+  ChatRepository(this._api);
 
   @override
-  Future<(ChatMessage, ChatAction?)> sendMessage({
+  Future<(ChatMessage botReply, ChatAction? action)> sendMessage({
     required String conversationId,
     required String text,
   }) async {
-    final reply = await _api.sendMessage(
+    final replyDto = await _api.sendMessage(
       conversationId: conversationId,
       text: text,
     );
-    return (_toEntity(reply.message), _actionFrom(reply.action));
+
+    final botReply = ChatMessage.fromDto(replyDto.botMessage);
+    
+    ChatAction? action;
+    if (replyDto.action != null) {
+      action = ChatAction(
+        type: replyDto.action!['type'] ?? '',
+        requestId: replyDto.action!['request_id'],
+        payload: replyDto.action!['payload'],
+      );
+    }
+
+    return (botReply, action);
   }
 
   @override
-  Future<List<ChatMessage>> loadHistory({
-    required String conversationId,
-  }) async {
-    final list = await _api.loadHistory(
-      conversationId: conversationId,
-      limit: 30,
-    );
-    return list.map(_toEntity).toList();
+  Future<List<ChatMessage>> loadHistory({required String conversationId}) async {
+    final messageDtos = await _api.loadHistory(conversationId: conversationId);
+    return messageDtos.map((dto) => ChatMessage.fromDto(dto)).toList();
   }
 }

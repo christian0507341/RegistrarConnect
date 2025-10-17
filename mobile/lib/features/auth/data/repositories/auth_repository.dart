@@ -34,10 +34,36 @@ class AuthRepository implements domain.IAuthRepository {
       // Map to domain entity expected by your use case
       return AuthUser(role: res.role, name: res.name, email: res.email);
     } on DioException catch (e) {
-      final serverMsg = e.response?.data is Map<String, dynamic>
-          ? (e.response!.data['detail'] ?? e.message)
-          : e.message;
-      throw Exception(serverMsg ?? 'Login failed');
+      String message = 'Login failed';
+      final data = e.response?.data;
+      if (data is Map<String, dynamic>) {
+        // Common DRF/SimpleJWT error shapes
+        if (data['detail'] is String) {
+          message = data['detail'] as String;
+        } else if (data['non_field_errors'] is List && (data['non_field_errors'] as List).isNotEmpty) {
+          final first = (data['non_field_errors'] as List).first;
+          if (first is String && first.trim().isNotEmpty) message = first;
+        } else {
+          // Fallback: find first string value in payload
+          for (final value in data.values) {
+            if (value is String && value.trim().isNotEmpty) {
+              message = value; break;
+            }
+            if (value is List && value.isNotEmpty && value.first is String) {
+              message = value.first; break;
+            }
+          }
+        }
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+                 e.type == DioExceptionType.receiveTimeout ||
+                 e.type == DioExceptionType.sendTimeout) {
+        message = 'Network timeout. Please try again.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        message = 'Cannot connect to server. Check your internet or server status.';
+      } else if (e.message != null && e.message!.isNotEmpty) {
+        message = e.message!;
+      }
+      throw Exception(message);
     }
   }
 

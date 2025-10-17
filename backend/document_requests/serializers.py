@@ -108,15 +108,41 @@ class StatusUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         old_payment = instance.payment
         old_document = instance.document
+        old_status = instance.status
+        
         instance = super().update(instance, validated_data)
+        
         if old_payment != instance.payment or old_document != instance.document:
+            # Determine new status based on payment and document status
+            new_status = self._determine_status(instance.payment, instance.document)
+            
+            # Update status if it should change
+            if new_status != old_status:
+                instance.status = new_status
+                instance.save(update_fields=['status'])
+            
+            # Create action log
             notes = f"Payment: {instance.payment}, Document: {instance.document}"
+            if new_status != old_status:
+                notes += f" | Status: {old_status} → {new_status}"
+                
             DocumentRequestAction.objects.create(
                 request=instance,
                 actor=self.context['request'].user,
                 action='status_changed',
-                from_status=f"payment: {old_payment}, document: {old_document}",
-                to_status=f"payment: {instance.payment}, document: {instance.document}",
+                from_status=f"payment: {old_payment}, document: {old_document}, status: {old_status}",
+                to_status=f"payment: {instance.payment}, document: {instance.document}, status: {new_status}",
                 notes=notes
             )
         return instance
+    
+    def _determine_status(self, payment_status, document_status):
+        """Determine the overall status based on payment and document status"""
+        if payment_status and document_status:
+            return 'completed'
+        elif payment_status and not document_status:
+            return 'approved'  # Payment received, document processing
+        elif not payment_status and document_status:
+            return 'approved'  # Document ready, payment pending
+        else:
+            return 'pending'  # Neither payment nor document ready

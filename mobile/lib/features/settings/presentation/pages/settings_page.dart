@@ -2,22 +2,55 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:mobile/features/auth/presentation/bloc/auth_event.dart';
+import 'package:mobile/features/auth/presentation/bloc/auth_state.dart';
+import 'package:mobile/features/theme/presentation/bloc/theme_bloc.dart';
+import 'package:mobile/features/theme/presentation/bloc/theme_event.dart';
+import 'package:mobile/features/theme/presentation/bloc/theme_state.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   Future<void> _logout(BuildContext context) async {
-    // Dispatch logout event and wait for state change
-    final authBloc = context.read<AuthBloc>();
-    authBloc.add(const LogoutRequested());
-    await Future.delayed(const Duration(milliseconds: 100)); // Brief delay to ensure state update
-    Navigator.pushReplacementNamed(context, '/login');
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm Logout'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      // Dispatch logout; global AuthBloc listener in main.dart will handle navigation
+      context.read<AuthBloc>().add(const LogoutRequested());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Signing out...')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          Navigator.of(context, rootNavigator: true)
+              .pushNamedAndRemoveUntil('/login', (route) => false);
+        }
+      },
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, themeState) {
+          return Scaffold(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           "Settings",
@@ -65,10 +98,11 @@ class SettingsPage extends StatelessWidget {
             elevation: 2,
             child: SwitchListTile(
               title: const Text("Dark Mode"),
-              value: false,
+              subtitle: Text(themeState.isDarkMode ? "Dark theme enabled" : "Light theme enabled"),
+              value: themeState.isDarkMode,
               activeColor: Colors.blue,
               onChanged: (val) {
-                // Handle dark mode toggle
+                context.read<ThemeBloc>().add(const ToggleTheme());
               },
             ),
           ),
@@ -116,6 +150,9 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+        },
       ),
     );
   }

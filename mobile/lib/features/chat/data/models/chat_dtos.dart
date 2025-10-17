@@ -51,23 +51,23 @@ class ChatMessageDto {
 }
 
 class ChatReplyDto {
-  final ChatMessageDto message;
+  final ChatMessageDto botMessage;
   final Map<String, dynamic>?
   action; // e.g. {type:'upload_receipt', request_id:'...'}
 
-  ChatReplyDto({required this.message, this.action});
+  ChatReplyDto({required this.botMessage, this.action});
 
   factory ChatReplyDto.fromJson(Map<String, dynamic> json) {
     // Accept either {"message": {...}, "action": {...}} or direct message object
     final rawMessage = (json['message'] ?? json) as Map<String, dynamic>;
     return ChatReplyDto(
-      message: ChatMessageDto.fromJson(rawMessage),
+      botMessage: ChatMessageDto.fromJson(rawMessage),
       action: json['action'] as Map<String, dynamic>?,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'message': message.toJson(),
+    'message': botMessage.toJson(),
     'action': action,
   };
 }

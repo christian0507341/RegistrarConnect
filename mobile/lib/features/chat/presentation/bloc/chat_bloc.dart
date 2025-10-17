@@ -2,8 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/core/services/conversation_services.dart';
 import 'package:mobile/features/chat/data/sources/chat_api.dart';
-import 'package:mobile/features/chat/data/repositories/chat_repository.dart'
-    as data_impl;
+import 'package:mobile/features/chat/data/repositories/chat_repository.dart';
 import 'package:mobile/features/chat/domain/usecases/load_history.dart';
 import 'package:mobile/features/chat/domain/usecases/send_message.dart';
 import 'package:mobile/features/chat/domain/entities/chat_message.dart';
@@ -26,7 +25,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   factory ChatBloc() {
     final api = ChatApi();
-    final repo = data_impl.ChatRepository(api);
+    final repo = ChatRepository(api);
     return ChatBloc._(LoadHistory(repo), SendMessage(repo));
   }
 
@@ -36,7 +35,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ? e.conversationId
         : await _generateOrLoadConversationId();
     try {
-      final msgs = await _loadHistory(conversationId: _conversationId);
+      final msgs = await _loadHistory.call(conversationId: _conversationId);
       msgs.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       emit(ChatLoaded(conversationId: _conversationId, messages: msgs));
     } catch (err) {
@@ -48,7 +47,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final current = state;
     if (current is! ChatLoaded) return;
     try {
-      final more = await _loadHistory(conversationId: _conversationId);
+      final more = await _loadHistory.call(conversationId: _conversationId);
       final merged = _mergeUnique(current.messages, more)
         ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
       emit(current.copyWith(messages: merged));

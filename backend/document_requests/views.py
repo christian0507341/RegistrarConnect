@@ -150,9 +150,14 @@ class DocumentRequestStatusUpdateView(generics.UpdateAPIView):
         )
 
 class StatusListView(generics.ListAPIView):
-    queryset = DocumentRequest.objects.all()
     serializer_class = StatusSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, 'role') and user.role == 'faculty':
+            return DocumentRequest.objects.all().select_related('student')
+        return DocumentRequest.objects.filter(student=user).select_related('student')
 
 class StatusUpdateView(generics.UpdateAPIView):
     queryset = DocumentRequest.objects.all()
