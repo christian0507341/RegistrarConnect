@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile/core/theme/theme_bloc.dart';
+import 'package:mobile/core/widgets/animated_gradient_background.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        final isDarkMode = themeState is ThemeLoadedState ? themeState.isDarkMode : false;
+        
+        return Scaffold(
+          body: AnimatedGradientBackground(
+            isDarkMode: isDarkMode,
+            child: Stack(
         children: [
           // 🔵 Decorative circles
           Positioned(
@@ -134,6 +142,9 @@ class OnboardingScreen extends StatelessWidget {
           ),
         ],
       ),
+          ),
+        );
+      },
     );
   }
 

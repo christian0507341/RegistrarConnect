@@ -1,0 +1,63 @@
+{
+  "user_id": "hagu.langit.up@phinmaed.com",
+  "mode": "qa",
+  "status": "draft",
+  "doc_type": null,
+  "semester": null,
+  "school_year": null,
+  "purpose": null,
+  "specify": null,
+  "other_doc_name": null,
+  "sis_confirmed": null,
+  "payment_method": null,
+  "receipt_hashes": [],
+  "expected": null,
+  "same_day": {
+    "enabled": false,
+    "reason": ""
+  },
+  "history": [
+    {
+      "ts": "2025-10-18T03:16:48",
+      "sender": "bot",
+      "text": "Welcome! I can help with registrar document requests. Ask a question or say what you want to request."
+    },
+    {
+      "ts": "2025-10-18T03:28:39",
+      "sender": "bot",
+      "text": "Welcome! I can help with registrar document requests. Ask a question or say what you want to request."
+    },
+    {
+      "ts": "2025-10-18T03:35:56",
+      "sender": "bot",
+      "text": "Welcome! I can help with registrar document requests. Ask a question or say what you want to request."
+    },
+    {
+      "ts": "2025-10-18T03:45:53",
+      "sender": "bot",
+      "text": "Welcome! I can help with registrar document requests. Ask a question or say what you want to request."
+    },
+    {
+      "ts": "2025-10-18T03:46:00",
+      "sender": "user",
+      "text": "hi"
+    },
+    {
+      "ts": "2025-10-18T03:46:00",
+      "sender": "bot",
+      "text": "I’m here for **RegistrarConnect** document requests (OTR, COG, COE, other certifications).\nTry: **“Request COG”** or **“How to get OTR?”**"
+    },
+    {
+      "ts": "2025-10-18T03:46:05",
+      "sender": "user",
+      "text": "cancel"
+    },
+    {
+      "ts": "2025-10-18T03:46:05",
+      "sender": "bot",
+      "text": "Sorry, the request **cannot be cancelled** after payment."
+    }
+  ],
+  "policy_version": "v1.0",
+  "conversation_id": "hagulangitupphinmaedcom_2025-10-18t034553"
+}

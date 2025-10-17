@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
-from backend.accounts.views import EmailTokenObtainPairView
+from backend.accounts.views import EmailTokenObtainPairView, get_me
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -14,6 +14,9 @@ urlpatterns = [
     # JWT (email-only)
     path("api/token/", EmailTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    
+    # User profile endpoint
+    path("api/auth/me/", get_me, name="get_me"),
 
     # Other APIs
     path("api/document-requests/", include("backend.document_requests.urls")),

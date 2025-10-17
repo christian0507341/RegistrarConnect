@@ -9,11 +9,23 @@ from .models import ChatHistory
 from backend.document_requests.models import DocumentRequest
 
 # engine pieces from the CLI module
-from backend.ai.services.train.chatbot_cli import (
-    start_new_session,
-    handle_user_text,
-    push_history,
-)
+try:
+    from backend.ai.services.train.chatbot_cli import (
+        start_new_session,
+        handle_user_text,
+        push_history,
+    )
+except ImportError as e:
+    print(f"Warning: Could not import chatbot CLI functions: {e}")
+    # Fallback functions
+    def start_new_session(user_id):
+        return {"user_id": user_id, "status": "draft"}
+    
+    def handle_user_text(session, text, access_token):
+        return "I'm sorry, the chatbot service is temporarily unavailable."
+    
+    def push_history(session, sender, text):
+        pass
 
 def _extract_bearer_token(request):
     auth = request.META.get("HTTP_AUTHORIZATION", "")
@@ -56,6 +68,10 @@ def chat(request):
 
     access_token = _extract_bearer_token(request)
     now_iso = timezone.now().isoformat()
+    
+    # Ensure we have a valid access token
+    if not access_token:
+        return Response({"detail": "Authentication required"}, status=401)
 
     LOCKED_STATUSES = {"pending", "on_process", "ready_to_claim"}
 
@@ -115,8 +131,13 @@ def chat(request):
                 return Response({"message": bot_msg, "action": action}, status=200)
 
             # Normal engine path
-            push_history(merged_session, "user", text)
-            reply_text = handle_user_text(merged_session, text, access_token)
+            try:
+                push_history(merged_session, "user", text)
+                reply_text = handle_user_text(merged_session, text, access_token)
+            except Exception as e:
+                reply_text = f"⚠️ Error processing your message: {str(e)}"
+                # Log the error for debugging
+                print(f"Chatbot error: {e}")
 
             # Try to link the chat to the most recent relevant DocumentRequest
             if not row.document_request and merged_session.get("doc_type"):

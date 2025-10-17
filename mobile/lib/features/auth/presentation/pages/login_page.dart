@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/core/services/secure_storage.dart';
-import 'package:mobile/core/services/dio_client.dart';
-import 'package:mobile/features/auth/data/sources/auth_api.dart';
-import 'package:mobile/features/auth/data/repositories/auth_repository.dart';
-import 'register_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile/core/theme/theme_bloc.dart';
+import 'package:mobile/core/widgets/animated_gradient_background.dart';
+import 'package:mobile/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:mobile/features/auth/presentation/bloc/auth_event.dart';
+import 'package:mobile/features/auth/presentation/bloc/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -26,53 +27,168 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  void _submit() {
     final email = emailController.text.trim();
     final password = passwordController.text;
+    
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email and password are required')),
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                Icons.warning_outlined,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              const Text('Email and password are required'),
+            ],
+          ),
+          backgroundColor: Colors.orange[600],
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
       );
       return;
     }
 
-    setState(() => _loading = true);
+    // Use AuthBloc to handle login
+    context.read<AuthBloc>().add(LoginRequested(
+      email: email,
+      password: password,
+      role: 'student',
+    ));
+  }
 
-    try {
-      final storage = SecureStorageService();
-      final dio = DioClient(storage).dio;
-      final api = AuthApi(dio);
-      final repo = AuthRepository(api: api, storage: storage);
-
-      await repo.signIn(role: 'student', email: email, password: password);
-
-      if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Login failed: $e')));
-    } finally {
-      if (mounted) setState(() => _loading = false);
+  String _parseErrorMessage(String error) {
+    // Parse different error scenarios and provide user-friendly messages
+    // Prioritize authentication errors over server errors
+    
+    if (error.toLowerCase().contains('invalid credentials') || 
+        error.toLowerCase().contains('wrong password') ||
+        error.toLowerCase().contains('incorrect password') ||
+        error.toLowerCase().contains('unauthorized') ||
+        error.toLowerCase().contains('401')) {
+      return 'Wrong password. Please check your password and try again.';
     }
+    
+    if (error.toLowerCase().contains('user not found') ||
+        error.toLowerCase().contains('email not found') ||
+        error.toLowerCase().contains('invalid email') ||
+        error.toLowerCase().contains('user does not exist')) {
+      return 'Email not found. Please check your email address and try again.';
+    }
+    
+    if (error.toLowerCase().contains('forbidden') ||
+        error.toLowerCase().contains('403')) {
+      return 'Access denied. Please contact support.';
+    }
+    
+    if (error.toLowerCase().contains('network') ||
+        error.toLowerCase().contains('connection') ||
+        error.toLowerCase().contains('timeout')) {
+      return 'Network error. Please check your internet connection and try again.';
+    }
+    
+    // For any other errors (including server errors), show authentication error
+    // This provides better user experience than generic server error messages
+    return 'Wrong email or password. Please check your credentials and try again.';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFB0C4DE), Color(0xFFE6ECF5)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthLoading) {
+          setState(() => _loading = true);
+        } else if (state is AuthAuthenticated) {
+          setState(() => _loading = false);
+          
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle_outline,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Login successful! Welcome back.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green[600],
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-          ),
-          child: Center(
+          );
+          
+          // Navigate to home after a short delay
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+            }
+          });
+        } else if (state is AuthError) {
+          setState(() => _loading = false);
+          
+          // Parse error message to provide user-friendly feedback
+          String errorMessage = _parseErrorMessage(state.message);
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      errorMessage,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.red[600],
+              duration: const Duration(seconds: 4),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          );
+        }
+      },
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, themeState) {
+          final isDarkMode = themeState is ThemeLoadedState ? themeState.isDarkMode : false;
+          
+          return Scaffold(
+          body: AnimatedGradientBackground(
+            isDarkMode: isDarkMode,
+            child: SafeArea(
+              child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -84,28 +200,71 @@ class _LoginPageState extends State<LoginPage> {
                     height: 120,
                   ),
                   const SizedBox(height: 20),
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 32,
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeOutCubic,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isDarkMode
+                              ? [
+                                  const Color(0xFF1E1E1E),
+                                  const Color(0xFF2A2A2A),
+                                ]
+                                : [
+                                    const Color(0xFFF8F9FA),
+                                    const Color(0xFFF0F0F0),
+                                  ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                            spreadRadius: 4,
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                            spreadRadius: 2,
+                          ),
+                        ],
                       ),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 400),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Text(
-                              "Log in",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Welcome Back",
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).primaryColor,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
-                            ),
+                              const SizedBox(height: 8),
+                              Text(
+                                "Sign in to your account",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              const SizedBox(height: 32),
                             const SizedBox(height: 25),
                             TextField(
                               controller: emailController,
@@ -163,7 +322,8 @@ class _LoginPageState extends State<LoginPage> {
                               height: 45,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blueGrey[300],
+                                  backgroundColor: Theme.of(context).primaryColor,
+                                  foregroundColor: Colors.white,
                                 ),
                                 onPressed: _loading ? null : _submit,
                                 child: Text(
@@ -196,20 +356,20 @@ class _LoginPageState extends State<LoginPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text("Don’t Have an Account? "),
+                                const Text("Need help? "),
                                 GestureDetector(
                                   onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => const RegisterPage(),
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text("Contact support: support@registrarconnect.com"),
+                                        duration: Duration(seconds: 3),
                                       ),
                                     );
                                   },
-                                  child: const Text(
-                                    "Register",
+                                  child: Text(
+                                    "Contact Support",
                                     style: TextStyle(
-                                      color: Colors.blue,
+                                      color: Theme.of(context).primaryColor,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -221,11 +381,15 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
+                  ),
                 ],
               ),
             ),
           ),
         ),
+      ),
+        );
+        },
       ),
     );
   }

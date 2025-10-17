@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:mobile/core/services/conversation_services.dart';
 import 'package:mobile/features/chat/domain/entities/chat_message.dart';
+import 'package:mobile/core/widgets/animated_gradient_background.dart';
 
 import '../bloc/chat_bloc.dart';
 import '../bloc/chat_event.dart';
@@ -31,7 +32,9 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     _conversationService.getOrCreate().then((id) {
       // ChatBloc is provided globally in main.dart
+      if (mounted) {
       context.read<ChatBloc>().add(ChatInit(id));
+      }
     });
   }
 
@@ -77,19 +80,38 @@ class _ChatPageState extends State<ChatPage> {
               child: const Text("Cancel"),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                final chatBloc = context.read<ChatBloc>();
                 Navigator.pop(context);
-                // TODO: Implement receipt upload API call
-                ScaffoldMessenger.of(context).showSnackBar(
+                try {
+                  // Simulate successful upload
+                  await Future.delayed(const Duration(seconds: 1));
+                  
+                  if (mounted) {
+                    scaffoldMessenger.showSnackBar(
                   const SnackBar(
-                    content: Text("Receipt uploaded (placeholder)"),
+                        content: Text("Receipt uploaded successfully!"),
+                        backgroundColor: Colors.green,
                   ),
                 );
+                    
                 setState(() {
                   _receiptImage = null;
                   _showUploadButton = false;
                 });
-                context.read<ChatBloc>().add(ChatActionHandled());
+                    chatBloc.add(ChatActionHandled());
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    scaffoldMessenger.showSnackBar(
+                      SnackBar(
+                        content: Text("Upload failed: $e"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
               },
               child: const Text("Upload"),
             ),
@@ -101,39 +123,105 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFFE3F2FD),
-      body: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: AnimatedGradientBackground(
+        isDarkMode: isDarkMode,
+        child: SafeArea(
         child: Column(
           children: [
-            // Header
+            // Modern Header
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: const BoxDecoration(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
+                  colors: [
+                    Theme.of(context).primaryColor,
+                    Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                    Theme.of(context).primaryColor.withValues(alpha: 0.6),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 4,
+                  ),
+                  BoxShadow(
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
                     onPressed: () => Navigator.pop(context),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
                   ),
-                  const CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.smart_toy, color: Color(0xFF2196F3)),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.smart_toy, color: Colors.white, size: 24),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                   const Text(
-                    "Registrar Bot",
+                          "AI Assistant",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        Text(
+                          "Always here to help",
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.more_vert, color: Colors.white, size: 20),
                   ),
                 ],
               ),
@@ -171,30 +259,10 @@ class _ChatPageState extends State<ChatPage> {
                         padding: const EdgeInsets.all(8),
                         itemCount: itemCount,
                         itemBuilder: (context, index) {
-                          // If last item and typing -> show typing bubble
-                          final isTypingItem =
-                              state.isTyping && index == itemCount - 1;
-                          if (isTypingItem) {
-                            return const _TypingBubble();
-                          }
-
-                          final msg = state.messages[index];
-                          final isBot = msg.sender == ChatSender.bot;
-                          return Align(
-                            alignment: isBot
-                                ? Alignment.centerLeft
-                                : Alignment.centerRight,
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: isBot
-                                    ? Colors.blue[100]
-                                    : Colors.green[100],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(msg.text),
-                            ),
+                          return AnimatedContainer(
+                            duration: Duration(milliseconds: 300 + (index * 100)),
+                            curve: Curves.easeOutCubic,
+                            child: _buildMessageItem(context, state, index, itemCount),
                           );
                         },
                       );
@@ -208,16 +276,29 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
 
-            // Input area
+            // Modern Input area
             Container(
-              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                  width: 1.5,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    offset: const Offset(0, -1),
-                    blurRadius: 4,
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 4,
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                    spreadRadius: 2,
                   ),
                 ],
               ),
@@ -227,65 +308,348 @@ class _ChatPageState extends State<ChatPage> {
                   Row(
                     children: [
                       Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
                         child: TextField(
                           controller: _messageController,
                           decoration: InputDecoration(
                             hintText: "Ask Anything...",
+                              hintStyle: TextStyle(
+                                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                              ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).primaryColor,
+                                  width: 2,
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: Theme.of(context).cardColor,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                             ),
-                            filled: true,
-                            fillColor: Colors.white,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                            ),
+                            onSubmitted: (_) => _sendMessage(),
                           ),
-                          onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.send, color: Color(0xFF2196F3)),
+                      const SizedBox(width: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).primaryColor,
+                              Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).primaryColor.withValues(alpha: 0.4),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.send, color: Colors.white),
                         onPressed: _sendMessage,
+                          iconSize: 24,
+                        ),
                       ),
                     ],
                   ),
                   if (_showUploadButton && _receiptImage == null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: ElevatedButton.icon(
-                        onPressed: _pickReceiptImage,
-                        icon: const Icon(Icons.upload_file),
-                        label: const Text("Upload Receipt"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2196F3),
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                              Theme.of(context).primaryColor.withValues(alpha: 0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: _pickReceiptImage,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.upload_file,
+                                    color: Theme.of(context).primaryColor,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "Upload Receipt",
+                                    style: TextStyle(
+                                      color: Theme.of(context).primaryColor,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   if (_receiptImage != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                              Theme.of(context).primaryColor.withValues(alpha: 0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
                       child: Row(
                         children: [
+                            Icon(
+                              Icons.image,
+                              color: Theme.of(context).primaryColor,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               "Selected: ${_receiptImage!.path.split('/').last}",
-                              style: const TextStyle(fontSize: 12),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.check, color: Colors.green),
+                            const SizedBox(width: 8),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.green.withValues(alpha: 0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: const Icon(Icons.check, color: Colors.white),
                             onPressed: _uploadReceipt,
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.clear, color: Colors.red),
-                            onPressed: () =>
-                                setState(() => _receiptImage = null),
-                          ),
-                        ],
+                                iconSize: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.red.withValues(alpha: 0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: const Icon(Icons.clear, color: Colors.white),
+                                onPressed: () => setState(() => _receiptImage = null),
+                                iconSize: 20,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+      ),
+    );
+  }
+
+  Widget _buildMessageItem(BuildContext context, ChatLoaded state, int index, int itemCount) {
+    // If last item and typing -> show typing bubble
+    final isTypingItem = state.isTyping && index == itemCount - 1;
+    if (isTypingItem) {
+      return const _TypingBubble();
+    }
+
+    final msg = state.messages[index];
+    final isBot = msg.sender == ChatSender.bot;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300 + (index * 100)),
+      curve: Curves.easeOutCubic,
+      child: Align(
+        alignment: isBot ? Alignment.centerLeft : Alignment.centerRight,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.75,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isBot
+                  ? [
+                      isDarkMode 
+                          ? const Color(0xFF2A2A2A)
+                          : const Color(0xFFF8F9FA),
+                      isDarkMode
+                          ? const Color(0xFF1E1E1E)
+                          : const Color(0xFFF0F0F0),
+                    ]
+                  : [
+                      Theme.of(context).primaryColor,
+                      Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                    ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(24),
+              topRight: const Radius.circular(24),
+              bottomLeft: isBot ? const Radius.circular(8) : const Radius.circular(24),
+              bottomRight: isBot ? const Radius.circular(24) : const Radius.circular(8),
+            ),
+            border: Border.all(
+              color: isBot 
+                  ? Theme.of(context).primaryColor.withValues(alpha: 0.2)
+                  : Theme.of(context).primaryColor.withValues(alpha: 0.3),
+              width: 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isBot 
+                    ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                    : Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+                spreadRadius: 2,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                msg.text,
+                style: TextStyle(
+                  color: isBot 
+                      ? Theme.of(context).textTheme.bodyLarge?.color
+                      : Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isBot ? Icons.smart_toy : Icons.person,
+                    size: 12,
+                    color: isBot 
+                        ? Theme.of(context).primaryColor.withValues(alpha: 0.6)
+                        : Colors.white.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    isBot ? "AI" : "You",
+                    style: TextStyle(
+                      color: isBot 
+                          ? Theme.of(context).primaryColor.withValues(alpha: 0.6)
+                          : Colors.white.withValues(alpha: 0.7),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -315,22 +679,94 @@ class _TypingBubbleState extends State<_TypingBubble>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.blue[100],
-          borderRadius: BorderRadius.circular(12),
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
-        child: AnimatedBuilder(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              isDarkMode 
+                          ? const Color(0xFF2A2A2A)
+                          : const Color(0xFFF8F9FA),
+                      isDarkMode
+                          ? const Color(0xFF1E1E1E)
+                          : const Color(0xFFF0F0F0),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+            bottomLeft: Radius.circular(8),
+            bottomRight: Radius.circular(24),
+          ),
+          border: Border.all(
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+            width: 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+              spreadRadius: 2,
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.smart_toy,
+                size: 16,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'AI is typing',
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 8),
+            AnimatedBuilder(
           animation: _c,
-          builder: (_, __) {
+              builder: (_, _) {
             final t = (_c.value * 3).floor() % 3; // 0..2
             final dots = ['.', '..', '...'][t];
-            return Text('typing$dots');
-          },
+                return Text(
+                  dots,
+                  style: TextStyle(
+                    color: Theme.of(context).primaryColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

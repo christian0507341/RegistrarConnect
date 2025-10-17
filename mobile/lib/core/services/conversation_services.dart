@@ -21,6 +21,6 @@ class ConversationService {
     final rand = Random();
     final r = rand.nextInt(0x7fffffff);
     final ts = DateTime.now().millisecondsSinceEpoch;
-    return 'm-$ts-$r';
+    return 'conv-$ts-$r';
   }
 }

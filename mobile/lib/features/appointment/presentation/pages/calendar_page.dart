@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:mobile/core/theme/theme_bloc.dart';
 import '../bloc/appointment_bloc.dart';
 import '../bloc/appointment_event.dart';
 import '../bloc/appointment_state.dart';
@@ -25,17 +26,19 @@ class _CalendarPageState extends State<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          "Calendar",
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        final isDarkMode = themeState is ThemeLoadedState ? themeState.isDarkMode : false;
+        
+        return Scaffold(
+          backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
+          appBar: AppBar(
+            title: const Text(
+              "Calendar",
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            elevation: 0,
+          ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -122,6 +125,8 @@ class _CalendarPageState extends State<CalendarPage> {
           ],
         ),
       ),
+        );
+      },
     );
   }
 }

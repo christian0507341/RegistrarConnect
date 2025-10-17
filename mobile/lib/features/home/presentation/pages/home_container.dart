@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile/core/theme/theme_bloc.dart';
+import 'package:mobile/core/widgets/animated_gradient_background.dart';
 import 'package:mobile/features/home/presentation/pages/home_page.dart';
 import 'package:mobile/features/notifications/presentation/pages/notification_page.dart';
 import 'package:mobile/features/appointment/presentation/pages/calendar_page.dart';
@@ -53,23 +56,71 @@ class _HomeContainerState extends State<HomeContainer> {
 
   @override
   Widget build(BuildContext context) {
-    // Make sure the currently selected tab is created
-    _tabs[_selectedIndex] ??= _buildTab(_selectedIndex);
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        final isDarkMode = themeState is ThemeLoadedState ? themeState.isDarkMode : false;
+        
+        // Make sure the currently selected tab is created
+        _tabs[_selectedIndex] ??= _buildTab(_selectedIndex);
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: List.generate(
-          _tabs.length,
-          (i) => _tabs[i] ?? const SizedBox.shrink(),
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF2196F3),
-        unselectedItemColor: Colors.grey,
-        onTap: _onItemTapped,
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: AnimatedGradientBackground(
+            isDarkMode: isDarkMode,
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: List.generate(
+                _tabs.length,
+                (i) => _tabs[i] ?? const SizedBox.shrink(),
+              ),
+            ),
+          ),
+          bottomNavigationBar: Container(
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isDarkMode
+                    ? [
+                        const Color(0xFF1A1A1A),
+                        const Color(0xFF2D2D2D),
+                      ]
+                    : [
+                        const Color(0xFFF8F9FA),
+                        const Color(0xFFF0F0F0),
+                      ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                  spreadRadius: 4,
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                currentIndex: _selectedIndex,
+                selectedItemColor: Theme.of(context).primaryColor,
+                unselectedItemColor: isDarkMode ? Colors.grey[400] : Colors.grey,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
@@ -89,7 +140,11 @@ class _HomeContainerState extends State<HomeContainer> {
             label: "Settings",
           ),
         ],
-      ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile/core/theme/theme_bloc.dart';
 
 class ApprovedRequestsPage extends StatelessWidget {
   const ApprovedRequestsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Replace with BlocBuilder if you already fetch approved requests
-    final approvedRequests = [
-      {"title": "Transcript of Records", "date": "Sept 15, 2025"},
-      {"title": "Good Moral Certificate", "date": "Sept 10, 2025"},
-    ];
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        final isDarkMode = themeState is ThemeLoadedState ? themeState.isDarkMode : false;
+        
+        // TODO: Replace with BlocBuilder if you already fetch approved requests
+        final approvedRequests = [
+          {"title": "Transcript of Records", "date": "Sept 15, 2025"},
+          {"title": "Good Moral Certificate", "date": "Sept 10, 2025"},
+        ];
 
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text("Approved Requests"),
-        backgroundColor: const Color(0xFF2196F3), // ✅ Green theme
-        elevation: 0,
-      ),
+        return Scaffold(
+          backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.grey[100],
+          appBar: AppBar(
+            title: const Text("Approved Requests"),
+            elevation: 0,
+          ),
       body: approvedRequests.isEmpty
           ? const Center(
               child: Text(
@@ -50,6 +55,8 @@ class ApprovedRequestsPage extends StatelessWidget {
                 );
               },
             ),
+        );
+      },
     );
   }
 }

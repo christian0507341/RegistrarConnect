@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile/core/theme/theme_bloc.dart';
 import '../bloc/notification_bloc.dart';
 import '../bloc/notification_event.dart';
 import '../bloc/notification_state.dart';
@@ -13,17 +14,19 @@ class NotificationPage extends StatelessWidget {
     final notificationBloc = BlocProvider.of<NotificationBloc>(context);
     notificationBloc.add(LoadNotifications());
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          "Notifications",
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        final isDarkMode = themeState is ThemeLoadedState ? themeState.isDarkMode : false;
+        
+        return Scaffold(
+          backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
+          appBar: AppBar(
+            title: const Text(
+              "Notifications",
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            elevation: 0,
+          ),
       body: BlocBuilder<NotificationBloc, NotificationState>(
         bloc: notificationBloc,
         builder: (context, state) {
@@ -44,7 +47,7 @@ class NotificationPage extends StatelessWidget {
             return ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: notifications.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final n = notifications[index];
                 return Card(
@@ -72,6 +75,8 @@ class NotificationPage extends StatelessWidget {
           }
         },
       ),
+        );
+      },
     );
   }
 }

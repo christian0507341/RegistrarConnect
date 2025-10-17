@@ -38,8 +38,16 @@ import 'core/widgets/global_fab_wrapper.dart';
 // ✅ Unify network client
 import 'core/services/dio_client.dart';
 
-void main() {
+// Theme
+import 'core/theme/theme_bloc.dart';
+import 'core/theme/theme_service.dart';
+import 'core/theme/app_themes.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
   final secureStorage = SecureStorageService();
+  final themeService = ThemeService();
 
   final dioClient = DioClient(secureStorage);
   final Dio dio = dioClient.dio;
@@ -50,12 +58,24 @@ void main() {
     storage: secureStorage,
   );
 
-  runApp(MyApp(authRepository: authRepository));
+  runApp(MyApp(
+    authRepository: authRepository, 
+    dioClient: dioClient,
+    themeService: themeService,
+  ));
 }
 
 class MyApp extends StatelessWidget {
   final IAuthRepository authRepository;
-  const MyApp({super.key, required this.authRepository});
+  final DioClient dioClient;
+  final ThemeService themeService;
+  
+  const MyApp({
+    super.key, 
+    required this.authRepository, 
+    required this.dioClient,
+    required this.themeService,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +84,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<AuthBloc>(create: (_) => AuthBloc(repo: authRepository)),
         BlocProvider<AppointmentBloc>(
           create: (_) =>
-              AppointmentBloc(repository: AppointmentRepositoryImpl()),
+              AppointmentBloc(repository: AppointmentRepositoryImpl(dioClient)),
         ),
         BlocProvider<HomeBloc>(
           create: (_) => HomeBloc(repository: ActivityRepositoryImpl()),
@@ -74,72 +94,61 @@ class MyApp extends StatelessWidget {
               NotificationBloc(repository: NotificationRepositoryImpl()),
         ),
         BlocProvider<ChatBloc>(create: (_) => ChatBloc()),
-      ],
-      child: MaterialApp(
-        title: 'RegistrarConnect',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF2E7D32),
-            brightness: Brightness.light,
-          ),
-          scaffoldBackgroundColor: Colors.grey[100],
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFF2E7D32),
-            foregroundColor: Colors.white,
-            elevation: 0,
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2E7D32),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
+        BlocProvider<ThemeBloc>(
+          create: (_) => ThemeBloc(themeService: themeService)..loadTheme(),
         ),
-        debugShowCheckedModeBanner: false,
-        initialRoute: '/',
-        onGenerateRoute: (settings) {
-          late Widget page;
-          bool showFab = true;
+      ],
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, themeState) {
+          final isDarkMode = themeState is ThemeLoadedState ? themeState.isDarkMode : false;
+          
+          return MaterialApp(
+            title: 'RegistrarConnect',
+            theme: AppThemes.lightTheme,
+            darkTheme: AppThemes.darkTheme,
+            themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            debugShowCheckedModeBanner: false,
+            initialRoute: '/',
+            onGenerateRoute: (settings) {
+              late Widget page;
+              bool showFab = true;
 
-          switch (settings.name) {
-            case '/':
-              page = const OnboardingScreen();
-              showFab = false;
-              break;
-            case '/login':
-              page = const LoginPage();
-              showFab = false;
-              break;
-            case '/register':
-              page = const RegisterPage();
-              showFab = false;
-              break;
-            case '/home':
-              page = const HomeContainer();
-              showFab =
-                  false; // 🔧 Turn off global FAB; HomePage has its own FAB
-              break;
-            case '/settings':
-              page = const SettingsPage();
-              break;
-            case '/chat':
-              page = const ChatPage();
-              showFab = false;
-              break;
-            default:
-              page = const Scaffold(
-                body: Center(child: Text("Page not found")),
+              switch (settings.name) {
+                case '/':
+                  page = const OnboardingScreen();
+                  showFab = false;
+                  break;
+                case '/login':
+                  page = const LoginPage();
+                  showFab = false;
+                  break;
+                case '/register':
+                  page = const RegisterPage();
+                  showFab = false;
+                  break;
+                case '/home':
+                  page = const HomeContainer();
+                  showFab =
+                      false; // 🔧 Turn off global FAB; HomePage has its own FAB
+                  break;
+                case '/settings':
+                  page = const SettingsPage();
+                  break;
+                case '/chat':
+                  page = const ChatPage();
+                  showFab = false;
+                  break;
+                default:
+                  page = const Scaffold(
+                    body: Center(child: Text("Page not found")),
+                  );
+              }
+
+              return MaterialPageRoute(
+                builder: (_) => GlobalFabWrapper(showFab: showFab, child: page),
+                settings: settings,
               );
-          }
-
-          return MaterialPageRoute(
-            builder: (_) => GlobalFabWrapper(showFab: showFab, child: page),
-            settings: settings,
+            },
           );
         },
       ),

@@ -20,7 +20,7 @@ class Endpoints {
   // e.g. '/api/ai/chat/messages/'
 
   // Other
-  static const String receipts = '/api/receipts/';
+  static const String receipts = '/api/document-requests/';  // Receipt upload is part of document requests
   static const String documentRequests = '/api/document-requests/';
   static const String appointments = '/api/appointments/';
 }

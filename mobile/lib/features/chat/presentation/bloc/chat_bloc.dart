@@ -101,8 +101,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ),
       );
     } catch (err) {
-      // Turn off typing if error
-      emit(ChatError(_handleError(err)));
+      // Turn off typing if error and show error message
+      final errorMessage = _handleError(err);
+      final withError = [...withUser, _createErrorMessage(errorMessage)];
+      emit(ChatLoaded(
+        conversationId: _conversationId,
+        messages: withError,
+        isTyping: false,
+        action: null,
+      ));
     }
   }
 
@@ -189,16 +196,38 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     );
   }
 
+  ChatMessage _createErrorMessage(String errorText) {
+    return ChatMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      conversationId: _conversationId,
+      sender: ChatSender.bot,
+      text: "❌ $errorText",
+      timestamp: DateTime.now(),
+    );
+  }
+
   Future<String> _generateOrLoadConversationId() async {
     return await _conversationService.getOrCreate();
   }
 
   String _handleError(dynamic err) {
     if (err is Exception) {
-      return err.toString().contains('401')
-          ? 'Authentication failed. Please log in again.'
-          : 'Failed to send message: ${err.toString()}';
+      final errorStr = err.toString();
+      if (errorStr.contains('401') || errorStr.contains('Unauthorized')) {
+        return 'Authentication failed. Please log in again.';
+      } else if (errorStr.contains('403') || errorStr.contains('Forbidden')) {
+        return 'Access denied. Please check your permissions.';
+      } else if (errorStr.contains('404') || errorStr.contains('Not Found')) {
+        return 'Chat service not found. Please try again later.';
+      } else if (errorStr.contains('500') || errorStr.contains('Internal Server Error')) {
+        return 'Server error. Please try again later.';
+      } else if (errorStr.contains('timeout') || errorStr.contains('TimeoutException')) {
+        return 'Request timed out. Please check your connection and try again.';
+      } else if (errorStr.contains('SocketException') || errorStr.contains('Network')) {
+        return 'Network error. Please check your internet connection.';
+      }
+      return 'Failed to send message: ${err.toString()}';
     }
-    return 'An unexpected error occurred.';
+    return 'An unexpected error occurred. Please try again.';
   }
 }

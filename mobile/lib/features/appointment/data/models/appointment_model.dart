@@ -2,20 +2,13 @@ import '../../domain/entities/appointment.dart';
 
 class AppointmentModel extends Appointment {
   AppointmentModel({
-    required int id,
-    required DateTime schedule,
-    required String purpose,
-    required String status,
-    required String documentType,
-    required String facultyName,
-  }) : super(
-         id: id,
-         schedule: schedule,
-         purpose: purpose,
-         status: status,
-         documentType: documentType,
-         facultyName: facultyName,
-       );
+    required super.id,
+    required super.schedule,
+    required super.purpose,
+    required super.status,
+    required super.documentType,
+    required super.facultyName,
+  });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
     return AppointmentModel(

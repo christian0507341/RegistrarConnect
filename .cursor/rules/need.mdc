@@ -1,0 +1,8 @@
+# To run this, ensure you have your virtual environment (venv) already activated in PowerShell (Windows 11).
+
+# Example PowerShell usage (with venv active):
+# python your_script.py
+description:
+globs:
+alwaysApply: true
+---
