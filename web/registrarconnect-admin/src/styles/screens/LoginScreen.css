@@ -1,80 +1,141 @@
-/* src/styles/screens/LoginScreen.css */
-
 .login-page {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: #f0f2f5;
-  font-family: Arial, sans-serif;
+  background: url("/images/login-bg.jpg") no-repeat center center;
+  background-size: cover;
+  position: relative;
+  font-family: "Inter", sans-serif;
+  padding: 20px;
+}
+
+/* Overlay for better readability */
+.login-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 0;
 }
 
 .login-card {
   background: #fff;
-  padding: 40px 30px;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  padding: 2rem 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   width: 100%;
   max-width: 400px;
+  animation: fadeIn 0.5s ease-in-out;
+  z-index: 1; /* ensures it's above overlay */
+  position: relative;
 }
 
 .login-title {
   text-align: center;
-  margin-bottom: 30px;
-  color: #333;
+  margin-bottom: 1.8rem;
+  color: #111827;
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
+/* keep other CSS from before (inputs, buttons, role-options, etc.) */
+
+
 .login-error {
-  color: red;
-  font-size: 14px;
-  margin-bottom: 15px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
   text-align: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
 }
 
 .form-group label {
   display: block;
   font-weight: 600;
-  margin-bottom: 8px;
-  color: #555;
+  margin-bottom: 6px;
+  color: #374151;
+  font-size: 0.9rem;
 }
 
 .form-group input[type="email"],
 .form-group input[type="password"] {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ccc;
+  border: 1.5px solid #d1d5db;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .role-options {
   display: flex;
-  gap: 20px;
-  margin-top: 5px;
+  gap: 10px;
 }
 
 .role-options label {
-  font-weight: normal;
-  font-size: 14px;
+  flex: 1;
+  text-align: center;
+  padding: 8px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.role-options input {
+  display: none;
+}
+
+.role-options input:checked + span {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
 }
 
 .login-button {
   width: 100%;
-  padding: 12px 0;
-  background: #007bff;
+  padding: 12px;
+  background: #2563eb;
   color: white;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.2s, transform 0.1s;
 }
 
 .login-button:hover {
-  background: #0056b3;
+  background: #1e40af;
+}
+
+.login-button:active {
+  transform: scale(0.98);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

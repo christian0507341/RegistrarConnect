@@ -97,7 +97,7 @@ export default function AdminLogin({ setIsAuthenticated }: AdminLoginProps) {
                 checked={role === "faculty"}
                 onChange={() => setRole("faculty")}
               />
-              Faculty
+              <span>Faculty</span>
             </label>
             <label>
               <input
@@ -106,10 +106,11 @@ export default function AdminLogin({ setIsAuthenticated }: AdminLoginProps) {
                 checked={role === "admin"}
                 onChange={() => setRole("admin")}
               />
-              Admin
+              <span>Admin</span>
             </label>
           </div>
         </div>
+
 
         <button type="submit" className="login-button">
           Login

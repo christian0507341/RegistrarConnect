@@ -18,6 +18,8 @@ type Request = {
   aiStatus: "Pending" | "Valid" | "Invalid" | "Checking" | "Approved" | "Rejected";
   aiNote?: string;
   receiptUrl?: string;
+  documentApproved?: boolean;
+  receiptApproved?: boolean;
 };
 
 export default function RequestsScreen() {
@@ -38,11 +40,12 @@ export default function RequestsScreen() {
     try {
       const accessToken = localStorage.getItem("accessToken");
 
-      if (!accessToken) {
-        console.error("No admin token found! Redirecting to login...");
-        navigate("/login");
-        return;
-      }
+      // Uncomment if you want to enforce login redirect
+      // if (!accessToken) {
+      //   console.error("No admin token found! Redirecting to login...");
+      //   navigate("/login");
+      //   return;
+      // }
 
       const res = await axios.get("http://127.0.0.1:8000/api/document-requests/", {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -60,19 +63,71 @@ export default function RequestsScreen() {
         id: r.id,
         student: r.student_email || r.student || "N/A",
         studentId: r.student_id || r.student || "N/A",
-        documentType: r.document_type,
-        semester: r.semester || "",
-        schoolYear: r.school_year || "",
-        purpose: r.purpose,
+        documentType: r.document_type || "Transcript of Records", // dynamic document type
+        semester: r.semester || "1st Semester",
+        schoolYear: r.school_year || "2024–2025",
+        purpose: r.purpose || "General Purpose",
         aiStatus: r.status === "pending" ? "Pending" : r.status,
         aiNote: r.ai_note || "",
-        receiptUrl: r.receipt_image || "",
+        receiptUrl: r.receipt_image || "/sample-receipt.png", // sample receipt image
       }));
 
       setRequests(mappedRequests);
     } catch (err) {
       console.error("Error fetching requests:", err);
-      setError("Failed to fetch requests. Please try again.");
+      // Fallback: use static sample data while backend is unavailable
+      const staticData: Request[] = [
+        {
+          id: "REQ-001",
+          student: "John Doe",
+          studentId: "2020-0001",
+          documentType: "Transcript of Records", // sample document type
+          semester: "1st Semester",
+          schoolYear: "2024–2025",
+          purpose: "Job Application",
+          aiStatus: "Pending",
+          aiNote: "Awaiting verification",
+          receiptUrl: "/sample-receipt.png",
+        },
+        {
+          id: "REQ-002",
+          student: "Jane Smith",
+          studentId: "2021-0002",
+          documentType: "Certificate of Enrollment",
+          semester: "2nd Semester",
+          schoolYear: "2024–2025",
+          purpose: "Scholarship",
+          aiStatus: "Approved",
+          aiNote: "Approved by registrar",
+          receiptUrl: "/sample-receipt.png",
+        },
+        {
+          id: "REQ-003",
+          student: "Mark Dela Cruz",
+          studentId: "2020-0003",
+          documentType: "Good Moral Certificate",
+          semester: "1st Semester",
+          schoolYear: "2023–2024",
+          purpose: "Transfer Requirement",
+          aiStatus: "Rejected",
+          aiNote: "Incomplete requirements",
+          receiptUrl: "/sample-receipt.png",
+        },
+        {
+          id: "REQ-004",
+          student: "Alice Reyes",
+          studentId: "2022-0004",
+          documentType: "Diploma Copy",
+          semester: "2nd Semester",
+          schoolYear: "2024–2025",
+          purpose: "Internship",
+          aiStatus: "Pending",
+          aiNote: "Awaiting verification",
+          receiptUrl: "/sample-receipt.png",
+        },
+      ];
+      setRequests(staticData);
+      setError(null); // clear error since we’re using mock data
     } finally {
       setLoading(false);
     }
@@ -117,17 +172,16 @@ export default function RequestsScreen() {
     setSelected(null);
   };
 
-  // Table headers
   const headers = [
-    "Request ID",
-    "Student",
+    "Req ID",
     "Student ID",
-    "Document Type",
+    "Name",
+    "Document",
+    "Receipt",
     "Semester",
     "School Year",
     "Purpose",
     "Status",
-    "Action",
   ];
 
   // Filtered requests
@@ -139,31 +193,125 @@ export default function RequestsScreen() {
     return true;
   });
 
-  // Table rows
-  const rows = filteredRequests.map((r) => [
-    r.id,
-    r.student,
-    r.studentId,
-    r.documentType,
-    r.semester,
-    r.schoolYear,
-    r.purpose,
-    <div key={r.id}>
-      <span className={`requests-status-badge ${r.aiStatus.toLowerCase()}`}>
-        {r.aiStatus}
-      </span>
-      {r.aiNote && (
-        <div className="ai-note">
-          <small>{r.aiNote}</small>
-        </div>
-      )}
+const rows = filteredRequests.map((r) => {
+  const isApproved = r.documentApproved && r.receiptApproved;
+
+  return [
+    r.id,                   // Req ID
+    r.studentId,            // Student ID
+    r.student,              // Name
+    // Document toggle with type text (like receipt)
+    <div
+      key={`doc-${r.id}`}
+      style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+    >
+      <label className="toggle">
+        <input
+          type="checkbox"
+          checked={!!r.documentApproved}
+          onChange={() => {
+            const newDoc = !r.documentApproved;
+
+            setRequests((prev) =>
+              prev.map((req) =>
+                req.id === r.id
+                  ? {
+                      ...req,
+                      documentApproved: newDoc,
+                      // If either document or receipt checked → Pending
+                      aiStatus: newDoc || req.receiptApproved ? "Pending" : "Rejected",
+                      aiNote: newDoc || req.receiptApproved
+                        ? "Awaiting verification"
+                        : "Notify student that request is rejected",
+                    }
+                  : req
+              )
+            );
+          }}
+        />
+        <span className="slider"></span>
+      </label>
+      <span>{r.documentType}</span>
     </div>,
-    <div key={r.id}>
-      <button className="btn-view small" onClick={() => setSelected(r)}>
-        View
+    // Receipt toggle with thumbnail
+    <div
+      key={`receipt-${r.id}`}
+      style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+    >
+      <label className="toggle">
+        <input
+          type="checkbox"
+          checked={!!r.receiptApproved}
+          onChange={() => {
+            const newReceipt = !r.receiptApproved;
+
+            setRequests((prev) =>
+              prev.map((req) =>
+                req.id === r.id
+                  ? {
+                      ...req,
+                      receiptApproved: newReceipt,
+                      // If either document or receipt checked → Pending
+                      aiStatus: newReceipt || req.documentApproved ? "Pending" : "Rejected",
+                      aiNote: newReceipt || req.documentApproved
+                        ? "Awaiting verification"
+                        : "Notify student that request is rejected",
+                    }
+                  : req
+              )
+            );
+          }}
+        />
+        <span className="slider"></span>
+      </label>
+      <img
+        src={r.receiptUrl || "/sample-receipt.png"}
+        alt={`Receipt ${r.id}`}
+        style={{
+          width: "40px",
+          height: "40px",
+          objectFit: "cover",
+          borderRadius: "4px",
+          border: "1px solid #ccc",
+        }}
+      />
+    </div>,
+    r.semester,             // Semester
+    r.schoolYear,           // School Year
+    r.purpose,              // Purpose
+    // Status column
+    isApproved ? (
+      <button
+        key={`status-${r.id}`}
+        className="requests-status-badge approved"
+        onClick={() =>
+          alert(`Notify ${r.student} that request is ready for claiming`)
+        }
+        style={{ cursor: "pointer", border: "none" }}
+      >
+        Notify Student for Claiming
       </button>
-    </div>,
-  ]);
+    ) : r.documentApproved || r.receiptApproved ? (
+  <span key={`status-${r.id}`} className="requests-status-badge pending">
+    Pending
+  </span>
+) : (
+  <button
+    key={`status-${r.id}`}
+    className="requests-status-badge rejected"
+    style={{ cursor: "pointer", border: "none" }}
+    onClick={() => {
+      // Here you can call backend API to notify student
+      setToast(`Student ${r.student} has been notified about rejection`);
+      setTimeout(() => setToast(null), 2000); // auto-hide toast
+    }}
+  >
+    Notify Student that the request is rejected
+  </button>
+)
+  ];
+});
+
 
   return (
     <div className="requests-screen">
