@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/features/home/presentation/pages/home_page.dart';
 import 'package:mobile/features/notifications/presentation/pages/notification_page.dart';
+import 'package:mobile/features/appointment/presentation/pages/calendar_page.dart';
 import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
 import 'package:mobile/features/status/presentation/pages/status_page.dart';
-import 'package:mobile/features/status/presentation/pages/claim_calendar_page.dart';
 import 'package:mobile/features/theme/presentation/bloc/theme_bloc.dart';
 import 'package:mobile/features/theme/presentation/bloc/theme_state.dart';
 
@@ -38,9 +38,9 @@ class _HomeContainerState extends State<HomeContainer> {
       case 0:
         return const HomePage();
       case 1:
-        return const StatusPage();
+        return const CalendarPage();
       case 2:
-        return const ClaimCalendarPage();
+        return const StatusPage();
       case 3:
         return const NotificationPage();
       case 4:
@@ -73,12 +73,12 @@ class _HomeContainerState extends State<HomeContainer> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle),
-            label: "Status",
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: "Calendar",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.check_circle),
+            label: "Status",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications),

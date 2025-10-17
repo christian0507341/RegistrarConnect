@@ -76,16 +76,16 @@ class DocumentRequestCancelSerializer(serializers.ModelSerializer):
         fields = ["status"]
 
     def update(self, instance, validated_data):
-        if instance.status != DocumentRequest.Status.PENDING:
+        if instance.status != 'pending':
             raise serializers.ValidationError("Only pending requests can be cancelled.")
-        instance.status = DocumentRequest.Status.CANCELLED
+        instance.status = 'cancelled'
         instance.save()
         DocumentRequestAction.objects.create(
             request=instance,
             actor=self.context['request'].user,
             action='status_changed',
-            from_status=DocumentRequest.Status.PENDING,
-            to_status=DocumentRequest.Status.CANCELLED,
+            from_status='pending',
+            to_status='cancelled',
             notes='Cancelled via chatbot'
         )
         return instance
@@ -94,17 +94,10 @@ class StatusSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source='document_type')
     payment = serializers.BooleanField()
     document = serializers.BooleanField()
-    status = serializers.CharField()
-    appointment_date = serializers.SerializerMethodField()
 
     class Meta:
         model = DocumentRequest
-        fields = ['title', 'payment', 'document', 'status', 'appointment_date']
-    
-    def get_appointment_date(self, obj):
-        # For now, return a static date or empty string
-        # Later this can be connected to actual appointment system
-        return None  # or return a static date like "2024-01-15"
+        fields = ['title', 'payment', 'document']
 
 class StatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -146,10 +139,10 @@ class StatusUpdateSerializer(serializers.ModelSerializer):
     def _determine_status(self, payment_status, document_status):
         """Determine the overall status based on payment and document status"""
         if payment_status and document_status:
-            return DocumentRequest.Status.COMPLETED
+            return 'completed'
         elif payment_status and not document_status:
-            return DocumentRequest.Status.APPROVED  # Payment received, document processing
+            return 'approved'  # Payment received, document processing
         elif not payment_status and document_status:
-            return DocumentRequest.Status.APPROVED  # Document ready, payment pending
+            return 'approved'  # Document ready, payment pending
         else:
-            return DocumentRequest.Status.PENDING  # Neither payment nor document ready
+            return 'pending'  # Neither payment nor document ready

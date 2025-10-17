@@ -22,8 +22,11 @@ import 'features/home/presentation/bloc/home_bloc.dart';
 import 'features/home/data/repositories/activity_repository_impl.dart';
 import 'features/notifications/presentation/bloc/notification_bloc.dart';
 import 'features/notifications/domain/repositories/notification_repository.dart';
-import 'features/notifications/presentation/pages/notification_page.dart';
 
+// Appointment
+import 'features/appointment/presentation/bloc/appointment_bloc.dart';
+import 'features/appointment/data/repositories/appointment_repository_impl.dart';
+import 'features/appointment/presentation/pages/add_appointment_page.dart';
 
 // Chat
 import 'features/chat/presentation/pages/chat_page.dart';
@@ -73,6 +76,9 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<AuthBloc>(
           create: (_) => AuthBloc(repo: authRepository)..add(const CheckSession()),
+        ),
+        BlocProvider<AppointmentBloc>(
+          create: (_) => AppointmentBloc(repository: AppointmentRepositoryImpl()),
         ),
         BlocProvider<HomeBloc>(
           create: (_) => HomeBloc(repository: ActivityRepositoryImpl()),
@@ -131,6 +137,9 @@ class MyApp extends StatelessWidget {
                   page = const HomeContainer();
                   showFab = false;
                   break;
+                case '/add_appointment':
+                  page = AddAppointmentPage(selectedDate: DateTime.now());
+                  break;
                 case '/settings':
                   page = const SettingsPage();
                   break;
@@ -140,9 +149,6 @@ class MyApp extends StatelessWidget {
                   break;
                 case '/status':
                   page = const StatusPage();
-                  break;
-                case '/notifications':
-                  page = const NotificationPage();
                   break;
                 default:
                   page = const Scaffold(

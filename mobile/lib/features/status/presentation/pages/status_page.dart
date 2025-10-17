@@ -29,26 +29,6 @@ class StatusPage extends StatelessWidget {
               backgroundColor: const Color(0xFF2196F3), // Green from main.dart
               elevation: 2,
               iconTheme: const IconThemeData(color: Colors.white),
-              actions: [
-                Container(
-                  margin: const EdgeInsets.only(right: 16),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-                    onPressed: () {
-                      context.read<StatusBloc>().add(const LoadStatuses());
-                    },
-                    tooltip: "Refresh Status",
-                  ),
-                ),
-              ],
             ),
             body: Container(
               color: themeState.isDarkMode ? Colors.grey[900] : Colors.grey[100],
@@ -103,8 +83,6 @@ class StatusPage extends StatelessWidget {
                           final isPaymentComplete = status['payment'] == 't' || status['payment'] == true;
                           final isDocumentReady = status['document'] == 't' || status['document'] == true;
                           final isCompleted = isPaymentComplete && isDocumentReady;
-                          final requestStatus = status['status'] ?? 'pending';
-                          final appointmentDate = status['appointment_date'];
                           
                           return Card(
                             margin: const EdgeInsets.all(8.0),
@@ -157,18 +135,18 @@ class StatusPage extends StatelessWidget {
                                             vertical: 6.0,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: _getStatusColor(requestStatus),
+                                            color: _getStatusColor(isCompleted),
                                             borderRadius: BorderRadius.circular(20.0),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: _getStatusColor(requestStatus).withValues(alpha: 0.3),
+                                                color: _getStatusColor(isCompleted).withValues(alpha: 0.3),
                                                 blurRadius: 4,
                                                 offset: const Offset(0, 2),
                                               ),
                                             ],
                                           ),
                                           child: Text(
-                                            _getStatusText(requestStatus),
+                                            isCompleted ? "Completed" : "In Progress",
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 12.0,
@@ -178,32 +156,29 @@ class StatusPage extends StatelessWidget {
                                         ),
                                       ],
                                     ),
-                                    // Only show payment and document status if request is approved or beyond
-                                    if (requestStatus.toLowerCase() != 'pending') ...[
-                                      const SizedBox(height: 12.0),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: _buildStatusItem(
-                                              icon: Icons.payment,
-                                              label: "Payment",
-                                              isComplete: isPaymentComplete,
-                                              themeState: themeState,
-                                            ),
+                                    const SizedBox(height: 12.0),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _buildStatusItem(
+                                            icon: Icons.payment,
+                                            label: "Payment",
+                                            isComplete: isPaymentComplete,
+                                            themeState: themeState,
                                           ),
-                                          const SizedBox(width: 16.0),
-                                          Expanded(
-                                            child: _buildStatusItem(
-                                              icon: Icons.description,
-                                              label: "Document",
-                                              isComplete: isDocumentReady,
-                                              themeState: themeState,
-                                            ),
+                                        ),
+                                        const SizedBox(width: 16.0),
+                                        Expanded(
+                                          child: _buildStatusItem(
+                                            icon: Icons.description,
+                                            label: "Document",
+                                            isComplete: isDocumentReady,
+                                            themeState: themeState,
                                           ),
-                                        ],
-                                      ),
-                                    ],
-                                    if (requestStatus.toLowerCase() == 'completed') ...[
+                                        ),
+                                      ],
+                                    ),
+                                    if (isCompleted) ...[
                                       const SizedBox(height: 12.0),
                                       Container(
                                         padding: const EdgeInsets.all(12.0),
@@ -225,7 +200,7 @@ class StatusPage extends StatelessWidget {
                                             const SizedBox(width: 8.0),
                                             Expanded(
                                               child: Text(
-                                                _getClaimMessage(appointmentDate),
+                                                "Your document is ready for pickup!",
                                                 style: TextStyle(
                                                   color: themeState.isDarkMode ? Colors.green[300] : Colors.green[700],
                                                   fontWeight: FontWeight.w500,
@@ -274,54 +249,8 @@ class StatusPage extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return Colors.orange;
-      case 'approved':
-        return Colors.blue;
-      case 'completed':
-        return Colors.green;
-      case 'rejected':
-        return Colors.red;
-      case 'cancelled':
-        return Colors.grey;
-      default:
-        return Colors.orange;
-    }
-  }
-
-  String _getStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'Pending';
-      case 'approved':
-        return 'Approved';
-      case 'completed':
-        return 'Completed';
-      case 'rejected':
-        return 'Rejected';
-      case 'cancelled':
-        return 'Cancelled';
-      default:
-        return 'Pending';
-    }
-  }
-
-  String _getClaimMessage(dynamic appointmentDate) {
-    if (appointmentDate != null) {
-      try {
-        final date = DateTime.parse(appointmentDate);
-        final formattedDate = "${date.day}/${date.month}/${date.year}";
-        return "Ready To be Claim on $formattedDate";
-      } catch (e) {
-        // If parsing fails, show static message
-        return "Ready To be Claim on TBD";
-      }
-    } else {
-      // For now, show static message since appointment feature is not fully implemented
-      return "Ready To be Claim on TBD";
-    }
+  Color _getStatusColor(bool isCompleted) {
+    return isCompleted ? Colors.green : Colors.orange;
   }
 
   Widget _buildStatusItem({

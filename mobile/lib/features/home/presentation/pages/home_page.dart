@@ -8,10 +8,6 @@ import 'package:mobile/features/theme/presentation/bloc/theme_bloc.dart';
 import 'package:mobile/features/theme/presentation/bloc/theme_state.dart';
 import 'package:mobile/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:mobile/features/auth/presentation/bloc/auth_state.dart';
-import 'package:mobile/features/status/presentation/bloc/status_bloc.dart';
-import 'package:mobile/features/status/presentation/bloc/status_event.dart';
-import 'package:mobile/features/status/presentation/bloc/status_state.dart';
-import 'package:mobile/injection_container.dart' as di;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,7 +18,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final HomeBloc _homeBloc;
-  late final StatusBloc _statusBloc;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -31,9 +26,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _homeBloc = BlocProvider.of<HomeBloc>(context);
-    _statusBloc = di.sl<StatusBloc>();
     _homeBloc.add(LoadActivities()); // fire once
-    _statusBloc.add(const LoadStatuses()); // load status data
     
     // Initialize animations
     _animationController = AnimationController(
@@ -182,19 +175,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           children: [
                             _IconButton(
                               icon: Icons.qr_code_scanner_rounded,
-                              onPressed: () {
-                                // Navigate to notifications for now
-                                Navigator.pushNamed(context, '/notifications');
-                              },
+                              onPressed: () {},
                               themeState: themeState,
                             ),
                             const SizedBox(width: 12),
                             _IconButton(
                               icon: Icons.notifications_rounded,
-                              onPressed: () {
-                                // Navigate to notifications page
-                                Navigator.pushNamed(context, '/notifications');
-                              },
+                              onPressed: () {},
                               themeState: themeState,
                             ),
                           ],
@@ -205,56 +192,38 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   const SizedBox(height: 32),
 
                   // Modern Status Cards
-                  BlocBuilder<StatusBloc, StatusState>(
-                    bloc: _statusBloc,
-                    builder: (context, statusState) {
-                      int pendingCount = 0;
-                      String nextAppointment = "TBD";
-                      
-                      if (statusState is StatusLoaded) {
-                        pendingCount = statusState.statuses.where((status) {
-                          final requestStatus = status['status'] ?? 'pending';
-                          return requestStatus.toLowerCase() == 'pending';
-                        }).length;
-                        
-                        // Find next appointment (for now, show static)
-                        nextAppointment = "TBD";
-                      }
-                      
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: _ModernStatusCard(
-                              title: "Pending Requests",
-                              value: pendingCount.toString(),
-                              subtitle: "Awaiting approval",
-                              icon: Icons.pending_actions_rounded,
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              themeState: themeState,
-                            ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ModernStatusCard(
+                          title: "Pending Requests",
+                          value: "3",
+                          subtitle: "Awaiting approval",
+                          icon: Icons.pending_actions_rounded,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _ModernStatusCard(
-                              title: "Next Appointment",
-                              value: nextAppointment,
-                              subtitle: "Check calendar",
-                              icon: Icons.calendar_today_rounded,
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF10B981), Color(0xFF059669)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              themeState: themeState,
-                            ),
+                          themeState: themeState,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _ModernStatusCard(
+                          title: "Next Appointment",
+                          value: "Sept 17",
+                          subtitle: "2:30 PM",
+                          icon: Icons.calendar_today_rounded,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF10B981), Color(0xFF059669)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                        ],
-                      );
-                    },
+                          themeState: themeState,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 32),
 
@@ -276,10 +245,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           icon: Icons.description_rounded,
                           color: const Color(0xFF3B82F6),
                           themeState: themeState,
-                          onTap: () {
-                            // Navigate to status page to see document requests
-                            Navigator.pushNamed(context, '/status');
-                          },
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -289,13 +254,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           icon: Icons.school_rounded,
                           color: const Color(0xFF8B5CF6),
                           themeState: themeState,
-                          onTap: () {
-                            // Navigate to chat to request transcript
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const ChatPage()),
-                            );
-                          },
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -305,13 +263,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           icon: Icons.workspace_premium_rounded,
                           color: const Color(0xFF10B981),
                           themeState: themeState,
-                          onTap: () {
-                            // Navigate to chat to request certificate
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const ChatPage()),
-                            );
-                          },
                         ),
                       ),
                     ],
@@ -637,74 +588,69 @@ class _QuickActionCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final ThemeState themeState;
-  final VoidCallback? onTap;
 
   const _QuickActionCard({
     required this.title,
     required this.icon,
     required this.color,
     required this.themeState,
-    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: themeState.isDarkMode
-              ? LinearGradient(
-                  colors: [
-                    Colors.white.withValues(alpha:0.05),
-                    Colors.white.withValues(alpha:0.02),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : LinearGradient(
-                  colors: [
-                    Colors.white.withValues(alpha:0.9),
-                    Colors.white.withValues(alpha:0.7),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: themeState.isDarkMode
-                ? Colors.white.withValues(alpha:0.1)
-                : Colors.white.withValues(alpha:0.3),
-            width: 1,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: themeState.isDarkMode
+            ? LinearGradient(
+                colors: [
+                  Colors.white.withValues(alpha:0.05),
+                  Colors.white.withValues(alpha:0.02),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : LinearGradient(
+                colors: [
+                  Colors.white.withValues(alpha:0.9),
+                  Colors.white.withValues(alpha:0.7),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: themeState.isDarkMode
+              ? Colors.white.withValues(alpha:0.1)
+              : Colors.white.withValues(alpha:0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha:0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 24,
+            ),
           ),
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha:0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 24,
-              ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: themeState.isDarkMode ? Colors.white70 : Colors.grey[600],
             ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: themeState.isDarkMode ? Colors.white70 : Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

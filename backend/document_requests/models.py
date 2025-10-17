@@ -24,10 +24,8 @@ class DocumentRequestAction(models.Model):
 class DocumentRequest(models.Model):
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'
-        APPROVED = 'approved', 'Approved'
-        REJECTED = 'rejected', 'Rejected'
-        COMPLETED = 'completed', 'Completed'
         CANCELLED = 'cancelled', 'Cancelled'
+        PROCESSED = 'processed', 'Processed'
 
     DOCUMENT_TYPES = [
         ('transcript', 'Transcript of Records'),
@@ -39,7 +37,13 @@ class DocumentRequest(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="document_requests")
     document_type = models.CharField(max_length=50, choices=DOCUMENT_TYPES)
     purpose = models.TextField()
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ], default='pending')
     requested_at = models.DateTimeField(auto_now_add=True)
     processed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
