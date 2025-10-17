@@ -61,7 +61,7 @@ def update_status_on_payment_document_change(sender, instance, created, **kwargs
                 )
                 
                 # Send special completion notification
-                if new_status == 'completed':
+                if new_status == DocumentRequest.Status.COMPLETED:
                     StatusNotificationService.send_completion_notification(instance)
                     
             except Exception as e:
@@ -73,10 +73,10 @@ def determine_status(payment_status, document_status):
     Determine the overall status based on payment and document status
     """
     if payment_status and document_status:
-        return 'completed'
+        return DocumentRequest.Status.COMPLETED
     elif payment_status and not document_status:
-        return 'approved'  # Payment received, document processing
+        return DocumentRequest.Status.APPROVED  # Payment received, document processing
     elif not payment_status and document_status:
-        return 'approved'  # Document ready, payment pending
+        return DocumentRequest.Status.APPROVED  # Document ready, payment pending
     else:
-        return 'pending'  # Neither payment nor document ready
+        return DocumentRequest.Status.PENDING  # Neither payment nor document ready
