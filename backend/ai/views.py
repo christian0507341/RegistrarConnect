@@ -19,7 +19,22 @@ except ImportError as e:
     print(f"Warning: Could not import chatbot CLI functions: {e}")
     # Fallback functions
     def start_new_session(user_id):
-        return {"user_id": user_id, "status": "draft"}
+        return {
+            "user_id": user_id, 
+            "status": "draft", 
+            "mode": "qa",
+            "expected": None,
+            "history": [],
+            "doc_type": None,
+            "semester": None,
+            "school_year": None,
+            "purpose": None,
+            "specify": None,
+            "other_doc_name": None,
+            "sis_confirmed": None,
+            "payment_method": None,
+            "receipt_hashes": []
+        }
     
     def handle_user_text(session, text, access_token):
         return "I'm sorry, the chatbot service is temporarily unavailable."
@@ -85,14 +100,21 @@ def chat(request):
             },
         )
 
+        # Get inbound session data
+        inbound_session = data.get("session") or {}
+        
         # For new conversations, start fresh
         if _created:
-            merged_session = inbound_session
+            # Start with a fresh session, then merge any inbound data
+            merged_session = start_new_session(str(request.user.id))
+            merged_session.update(inbound_session)
             history = data.get("history", [])
         else:
             # Merge inbound data for existing conversations
             merged_session = dict(getattr(row, "session", {}) or {})
-            inbound_session = data.get("session") or {}
+            # Ensure existing session has required keys
+            if "mode" not in merged_session:
+                merged_session.update(start_new_session(str(request.user.id)))
             merged_session.update(inbound_session)
             history = (row.history or []) + (data.get("history") or [])
 
