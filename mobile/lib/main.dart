@@ -28,6 +28,7 @@ import 'features/appointment/data/repositories/appointment_repository_impl.dart'
 
 // Chat
 import 'features/chat/presentation/pages/chat_page.dart';
+import 'features/chat/presentation/pages/chat_history_page.dart';
 import 'features/chat/presentation/bloc/chat_bloc.dart';
 
 // Settings
@@ -141,6 +142,10 @@ class MyApp extends StatelessWidget {
                   break;
                 case '/chat':
                   page = const ChatPage();
+                  showFab = false;
+                  break;
+                case '/chat-history':
+                  page = const ChatHistoryPage();
                   showFab = false;
                   break;
                 default:

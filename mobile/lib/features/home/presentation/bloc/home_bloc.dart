@@ -16,5 +16,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         emit(HomeError(e.toString()));
       }
     });
+
+    on<LoadHomeData>((event, emit) async {
+      emit(HomeLoading());
+      try {
+        final homeData = await repository.getHomeData();
+        emit(HomeDataLoaded(homeData));
+      } catch (e) {
+        emit(HomeError(e.toString()));
+      }
+    });
   }
 }

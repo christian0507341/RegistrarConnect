@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/core/theme/theme_bloc.dart';
 import 'package:mobile/core/widgets/animated_gradient_background.dart';
-import 'package:mobile/features/home/presentation/pages/home_page.dart';
+import 'package:mobile/features/home/presentation/pages/enhanced_home_page.dart';
 import 'package:mobile/features/notifications/presentation/pages/notification_page.dart';
 import 'package:mobile/features/appointment/presentation/pages/calendar_page.dart';
 import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
@@ -26,7 +26,7 @@ class _HomeContainerState extends State<HomeContainer> {
   void initState() {
     super.initState();
     // Eager-create the first tab only
-    _tabs[0] = const HomePage();
+    _tabs[0] = const EnhancedHomePage();
   }
 
   void _onItemTapped(int index) {
@@ -37,10 +37,15 @@ class _HomeContainerState extends State<HomeContainer> {
     });
   }
 
+  // Public method to switch tabs from child widgets
+  void switchToTab(int index) {
+    _onItemTapped(index);
+  }
+
   Widget _buildTab(int index) {
     switch (index) {
       case 0:
-        return const HomePage();
+        return const EnhancedHomePage();
       case 1:
         return const CalendarPage();
       case 2:

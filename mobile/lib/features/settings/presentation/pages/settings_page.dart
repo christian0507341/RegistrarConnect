@@ -164,6 +164,10 @@ class SettingsPage extends StatelessWidget {
           _buildNotificationSettingsSection(context, isDarkMode),
           const SizedBox(height: 12),
 
+          // 💬 Chat History Section
+          _buildChatHistorySection(context, isDarkMode),
+          const SizedBox(height: 12),
+
           // 🌙 Dark Mode toggle
           Card(
             shape: RoundedRectangleBorder(
@@ -504,6 +508,49 @@ class SettingsPage extends StatelessWidget {
           onChanged: onChanged,
           activeColor: Theme.of(context).primaryColor,
         ),
+      ),
+    );
+  }
+
+  Widget _buildChatHistorySection(BuildContext context, bool isDarkMode) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      elevation: 12,
+      shadowColor: Theme.of(context).primaryColor.withValues(alpha: 0.4),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).primaryColor,
+                Theme.of(context).primaryColor.withValues(alpha: 0.7),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.chat_bubble_outline,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+        title: const Text(
+          "Chat History",
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: const Text(
+          "View and manage your AI conversations",
+          style: TextStyle(fontSize: 12),
+        ),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () {
+          Navigator.pushNamed(context, '/chat-history');
+        },
       ),
     );
   }

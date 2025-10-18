@@ -223,14 +223,17 @@ def doc_from_text(text: str) -> Optional[str]:
 
 def provide_howto(doc_type: str) -> str:
     base = {
-        "OTR":  "For **OTR (Transcript)**: I’ll need your **purpose** (no semester/SY needed). You’ll confirm, then pay, then it goes to faculty for approval. Release is next working day after approval.",
-        "COG":  "For **COG (Certificate of Grades)**: I’ll need **semester (1/2)**, **school year** (e.g., 2025-2026), and **purpose**. You confirm, then pay, then it goes to faculty. Release next working day after approval.",
-        "COE":  "For **COE (Certificate of Enrollment)**: I’ll need **semester (1/2)**, **school year**, and **purpose**. During confirmation, I’ll ask if your **SIS details** are up to date. After that, payment → faculty approval → release next working day.",
-        "OTHERS":"For **other certificates**: please tell me the **document name** and your **purpose**. Then confirm → payment → faculty approval → release.",
+        "OTR":  "📋 **OTR (Official Transcript of Records)**\n\nI'll help you request your transcript! Here's what I need:\n• **Purpose** of your request (e.g., Scholarship, Visa, Employment)\n• No semester or school year required for transcripts\n\n**Process:** Confirm → Payment → Faculty Review → Ready for pickup next working day! 🎓",
+        
+        "COG":  "📊 **COG (Certificate of Grades)**\n\nLet's get your grade certificate! I'll need:\n• **Semester** (1 or 2)\n• **School Year** (e.g., 2025-2026)\n• **Purpose** of your request\n\n**Process:** Confirm → Payment → Faculty Review → Ready for pickup next working day! 📈",
+        
+        "COE":  "📜 **COE (Certificate of Enrollment)**\n\nI'll help you with your enrollment certificate! Here's what I need:\n• **Semester** (1 or 2)\n• **School Year** (e.g., 2025-2026)\n• **Purpose** of your request\n• **SIS Details** confirmation (I'll ask during the process)\n\n**Process:** Confirm → Payment → Faculty Review → Ready for pickup next working day! 🎯",
+        
+        "OTHERS": "📄 **Other Certificate**\n\nI can help you request other certificates! Please provide:\n• **Document Name** (specific certificate you need)\n• **Purpose** of your request\n\n**Process:** Confirm → Payment → Faculty Review → Ready for pickup next working day! ✨",
     }
     extra = ""
     if SAME_DAY_ENABLED:
-        extra = "\n" + sameday_line({"same_day": {"enabled": True, "reason": SAME_DAY_REASON}})
+        extra = "\n\n⚡ **Same-day processing available!** " + SAME_DAY_REASON
     return base.get(doc_type, base["OTHERS"]) + extra
 
 def summarize_request(session: Dict) -> str:
@@ -238,12 +241,18 @@ def summarize_request(session: Dict) -> str:
     sem = session.get("semester")
     sy  = session.get("school_year")
     purpose = session.get("purpose")
-    parts = [doc]
-    if doc in {"COG", "COE"}:
-        parts.append(f"Sem {sem}" if sem else "Sem ?")
-        parts.append(f"SY {sy}" if sy else "SY ?")
-    parts.append(f"Purpose: {purpose or '?'}")
-    return ", ".join([p for p in parts if p])
+    other_doc_name = session.get("other_doc_name")
+    
+    if doc == "OTR":
+        return f"📋 **OTR (Official Transcript of Records)**\n🎯 **Purpose:** {purpose or 'Not specified'}"
+    elif doc == "COG":
+        return f"📊 **COG (Certificate of Grades)**\n📅 **Semester {sem or '?'}, School Year {sy or '?'}**\n🎯 **Purpose:** {purpose or 'Not specified'}"
+    elif doc == "COE":
+        return f"📜 **COE (Certificate of Enrollment)**\n📅 **Semester {sem or '?'}, School Year {sy or '?'}**\n🎯 **Purpose:** {purpose or 'Not specified'}"
+    elif doc == "OTHERS":
+        return f"📄 **{other_doc_name or 'Other Certificate'}**\n🎯 **Purpose:** {purpose or 'Not specified'}"
+    else:
+        return f"📄 **{doc}**\n🎯 **Purpose:** {purpose or 'Not specified'}"
 
 def push_history(session: Dict, sender: str, text: str):
     session.setdefault("history", []).append({"ts": now_iso(), "sender": sender, "text": text})
@@ -317,22 +326,25 @@ def next_missing_slot(session: Dict) -> Optional[str]:
 
 def ask_for(slot: str, session: Dict) -> str:
     if slot == "doc_type":
-        return "Which document do you need — OTR (Transcript), COG (Certificate of Grades), COE (Certificate of Enrollment), or Others?"
+        return "🎯 **Which document do you need?**\n\n• **OTR** - Official Transcript of Records\n• **COG** - Certificate of Grades\n• **COE** - Certificate of Enrollment\n• **Others** - Other certificates\n\nJust type the document name or abbreviation!"
     if slot == "semester":
-        return "Which semester is this for? (1 or 2)"
+        return "📅 **Which semester is this for?**\n\nPlease choose:\n• **1** - First Semester\n• **2** - Second Semester"
     if slot == "school_year":
-        return "What is the school year? e.g., 2025-2026 (you can also type 25/26 or 2526)"
+        return "🎓 **What's the school year?**\n\nPlease provide the school year (e.g., 2025-2026)\n\n💡 *You can also type: 25/26 or 2526*"
     if slot == "purpose":
-        return "What’s the **purpose** of this request? (e.g., Scholarship, Visa, PRC)"
+        return "🎯 **What's the purpose of this request?**\n\nPlease tell me why you need this document:\n• Scholarship application\n• Visa requirements\n• Employment\n• PRC application\n• Other (please specify)"
     if slot == "sis_confirm":
-        return "Before we proceed: **Are your SIS personal details up to date?** (Yes/No)"
+        return "✅ **Before we proceed:**\n\n**Are your SIS personal details up to date?**\n\nThis includes your name, address, and contact information. Please confirm: **Yes** or **No**"
     if slot == "specify":
         return "Please **specify** the exact document you need (e.g., Good Moral, Honorable Dismissal, Clearance)."
     return "Please provide the missing information."
 
 def nonrefundable_notice() -> str:
-    return ("Note: once paid, your request **cannot be cancelled** and is **non-refundable**.\n"
-            "How would you like to pay — **Personal (Finance)** or **Online (GCash)**?")
+    return ("⚠️ **Important:** Once paid, your request **cannot be cancelled** and is **non-refundable**.\n\n"
+            "💳 **Payment Options:**\n"
+            "• **Personal (Finance)** - Pay at the Finance Office\n"
+            "• **Online (GCash)** - Pay via GCash\n\n"
+            "How would you like to pay?")
 
 def sameday_line(session: Dict) -> str:
     sd = session.get("same_day", {})
@@ -466,8 +478,13 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
     if text_lower in {"help", "/help"}:
         save_to_db(session, access_token)
         return (
-            "Commands: help · status · history · cancel (only in Confirming) · reset\n"
-            "Or just type your question or request."
+            "🆘 **Available Commands:**\n\n"
+            "• **help** - Show this help message\n"
+            "• **status** - Check your request status\n"
+            "• **history** - View conversation history\n"
+            "• **cancel** - Cancel current request (only during confirmation)\n"
+            "• **reset** - Start over with a new request\n\n"
+            "💡 **Or just ask me anything!** I can help with document requests, questions, and more."
         )
 
     if text_lower in {"status", "/status"}:
@@ -476,12 +493,12 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         except Exception as e:
             return f"⚠️ Could not fetch your requests: {e}"
         if not reqs:
-            return "You have no recent requests in the system."
+            return "📭 **No recent requests found.**\n\nYou haven't submitted any document requests yet. Would you like to start a new request?"
         latest = reqs[0]
         doc_type = latest.get("doc_type") or latest.get("document_type") or "Unknown"
         status = latest.get("status") or "Unknown"
         save_to_db(session, access_token)
-        return f"📄 Latest request: **{doc_type}** | Status: **{status}**"
+        return f"📄 **Latest Request:**\n\n**Document:** {doc_type}\n**Status:** {status}\n\n💡 *Use 'help' for more commands*"
 
     if text_lower in {"history", "/history"}:
         n = min(len(session.get("history", [])), 5)
@@ -570,7 +587,7 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
                 save_to_db(session, access_token)
                 return ask_for(slot, session)
             session["status"] = "confirming"; session["expected"] = "confirm"
-            msg = f"Please review your request: **{summarize_request(session)}**."
+            msg = f"✅ **Please review your request:**\n\n{summarize_request(session)}\n\n"
             if session["doc_type"] == "COE" and session.get("sis_confirmed") not in {True, False}:
                 msg += "\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)"
                 session["expected"] = "sis_confirm"
@@ -593,7 +610,7 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
                 save_to_db(session, access_token)
                 return ask_for(slot, session)
             session["status"] = "confirming"; session["expected"] = "confirm"
-            msg = f"Please review your request: **{summarize_request(session)}**."
+            msg = f"✅ **Please review your request:**\n\n{summarize_request(session)}\n\n"
             if session["doc_type"] == "COE" and session.get("sis_confirmed") not in {True, False}:
                 msg += "\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)"
                 session["expected"] = "sis_confirm"
@@ -614,7 +631,7 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             save_to_db(session, access_token)
             return ask_for(slot, session)
         session["status"] = "confirming"; session["expected"] = "confirm"
-        msg = f"Please review your request: **{summarize_request(session)}**."
+        msg = f"✅ **Please review your request:**\n\n{summarize_request(session)}\n\n"
         if session["doc_type"] == "COE" and session.get("sis_confirmed") not in {True, False}:
             msg += "\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)"
             session["expected"] = "sis_confirm"
@@ -649,7 +666,7 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             save_to_db(session, access_token)
             return ask_for(slot, session)
         session["status"] = "confirming"; session["expected"] = "confirm"
-        msg = f"Please review your request: **{summarize_request(session)}**."
+        msg = f"✅ **Please review your request:**\n\n{summarize_request(session)}\n\n"
         if session.get("doc_type") == "COE" and session.get("sis_confirmed") not in {True, False}:
             msg += "\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)"
             session["expected"] = "sis_confirm"
@@ -671,8 +688,9 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
                 return "Oh, it looks like you missed the purpose for your request. Please provide it (e.g., Scholarship, Visa, PRC)."
             session["status"] = "awaiting_payment"
             session["expected"] = "payment_method"
-            msg = ("Thanks! Your request is confirmed: "
-                   f"**{summarize_request(session)}**\n" + nonrefundable_notice())
+            msg = ("🎉 **Excellent! Your request is confirmed:**\n\n"
+                   f"{summarize_request(session)}\n\n"
+                   "💰 **Payment Information:**\n" + nonrefundable_notice())
             if session.get("same_day", {}).get("enabled"):
                 msg += "\n" + sameday_line(session)
             save_to_db(session, access_token)
@@ -821,7 +839,7 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             save_to_db(session, access_token)
             return ask_for(slot, session)
         session["status"] = "confirming"; session["expected"] = "confirm"
-        msg = f"Please review your request: **{summarize_request(session)}**."
+        msg = f"✅ **Please review your request:**\n\n{summarize_request(session)}\n\n"
         if session.get("doc_type") == "COE" and session.get("sis_confirmed") not in {True, False}:
             msg += "\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)"
             session["expected"] = "sis_confirm"
@@ -883,8 +901,17 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         return init_or_fill_from_text(session, text, access_token)
 
     save_to_db(session, access_token)
-    return ("I can help with registrar document requests (OTR, COG, COE, others). "
-            "Ask a question like “How to request COG?” or say “COG” / “Request my OTR”.")
+    return ("👋 **Hello! I'm your AI Assistant for document requests.**\n\n"
+            "I can help you with:\n"
+            "• **OTR** (Official Transcript of Records)\n"
+            "• **COG** (Certificate of Grades)\n"
+            "• **COE** (Certificate of Enrollment)\n"
+            "• **Other certificates**\n\n"
+            "💡 **Try saying:**\n"
+            "• \"I need my transcript\"\n"
+            "• \"Request COG\"\n"
+            "• \"How to get COE?\"\n\n"
+            "What can I help you with today?")
 
 def init_or_fill_from_text(session: Dict, text: str, access_token: str) -> str:
     if session.get("doc_type"):
@@ -903,7 +930,7 @@ def init_or_fill_from_text(session: Dict, text: str, access_token: str) -> str:
             save_to_db(session, access_token)
             return ask_for(slot, session)
         session["status"] = "confirming"; session["expected"] = "confirm"
-        msg = f"Please review your request: **{summarize_request(session)}**."
+        msg = f"✅ **Please review your request:**\n\n{summarize_request(session)}\n\n"
         if session["doc_type"] == "COE" and session.get("sis_confirmed") not in {True, False}:
             msg += ("\nBefore we proceed: **Are your SIS personal details up to date?** (Yes/No)\n"
                     "If everything looks good, you can also type **confirm** to proceed.")

@@ -144,9 +144,13 @@ def chat(request):
                 }
                 
                 locked_notice = (
-                    f"This conversation is **locked** to your submitted **{row.document_request.document_type}** request. "
-                    f"Status: **{status_messages.get(row.document_request.status, row.document_request.status)}**. "
-                    "To request another document, please start a **new conversation** in the app."
+                    f"🔒 **This conversation is locked** to your submitted **{row.document_request.document_type}** request.\n\n"
+                    f"📊 **Current Status:** {status_messages.get(row.document_request.status, row.document_request.status)}\n\n"
+                    f"💡 **To request another document:**\n"
+                    f"• Tap the **'+' button** in the chat header\n"
+                    f"• Or go to **Settings → Chat History** to start fresh\n"
+                    f"• Or use the **'New Conversation'** option in the menu\n\n"
+                    f"🎯 This ensures each document request is tracked separately!"
                 )
                 
                 bot_msg = {
