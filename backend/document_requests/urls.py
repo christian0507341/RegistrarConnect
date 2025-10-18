@@ -11,6 +11,7 @@ from .views import (
     upload_receipt,  # NEW
     student_transaction_status,  # NEW
     student_notifications,  # NEW
+    view_receipt,  # NEW
 )
 
 urlpatterns = [
@@ -37,4 +38,6 @@ urlpatterns = [
     
     # NEW: student notifications (mobile)
     path('student/notifications/', student_notifications, name='student-notifications'),
+    # NEW: faculty receipt view
+    path('<int:pk>/receipt/', view_receipt, name='document-request-view-receipt'),
 ]

@@ -73,7 +73,7 @@ def chat(request):
     if not access_token:
         return Response({"detail": "Authentication required"}, status=401)
 
-    LOCKED_STATUSES = {"pending", "on_process", "ready_to_claim"}
+    LOCKED_STATUSES = {"pending", "on_process", "ready_to_claim", "rejected"}
 
     with transaction.atomic():
         row, _created = ChatHistory.objects.select_for_update().get_or_create(
@@ -85,12 +85,16 @@ def chat(request):
             },
         )
 
-        # Merge inbound data
-        merged_session = dict(getattr(row, "session", {}) or {})
-        inbound_session = data.get("session") or {}
-        merged_session.update(inbound_session)
-
-        history = (row.history or []) + (data.get("history") or [])
+        # For new conversations, start fresh
+        if _created:
+            merged_session = inbound_session
+            history = data.get("history", [])
+        else:
+            # Merge inbound data for existing conversations
+            merged_session = dict(getattr(row, "session", {}) or {})
+            inbound_session = data.get("session") or {}
+            merged_session.update(inbound_session)
+            history = (row.history or []) + (data.get("history") or [])
 
         # Status preference: payload -> session -> row -> draft
         status_val = data.get("status") or merged_session.get("status") or row.status or "draft"
@@ -108,11 +112,21 @@ def chat(request):
                     "text": text,
                     "timestamp": now_iso,
                 }
+                
+                # Provide more specific message based on status
+                status_messages = {
+                    "pending": "under faculty review for payment approval",
+                    "on_process": "approved and being processed",
+                    "ready_to_claim": "ready for you to claim",
+                    "rejected": "rejected"
+                }
+                
                 locked_notice = (
-                    "This conversation is **locked** to a submitted request "
-                    f"(**{row.document_request.document_type}**, status **{row.document_request.status}**). "
-                    "To request another document, please start a **new request** in the app."
+                    f"This conversation is **locked** to your submitted **{row.document_request.document_type}** request. "
+                    f"Status: **{status_messages.get(row.document_request.status, row.document_request.status)}**. "
+                    "To request another document, please start a **new conversation** in the app."
                 )
+                
                 bot_msg = {
                     "id": str(uuid4()),
                     "conversation_id": conv_id,

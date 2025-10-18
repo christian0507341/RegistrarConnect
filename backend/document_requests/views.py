@@ -106,14 +106,22 @@ def create_document_request(request):
             prev = instance.status
             instance.status = "awaiting_payment"
             instance.save(update_fields=["status"])
-            DocumentRequestAction.objects.create(
+            # Check if action already exists to prevent duplicates
+            existing_action = DocumentRequestAction.objects.filter(
                 request=instance,
-                actor=request.user,
                 action="payment_method_set",
                 from_status=prev,
-                to_status="awaiting_payment",
-                notes=f"Payment method: {payment_method}",
-            )
+                to_status="awaiting_payment"
+            ).first()
+            if not existing_action:
+                DocumentRequestAction.objects.create(
+                    request=instance,
+                    actor=request.user,
+                    action="payment_method_set",
+                    from_status=prev,
+                    to_status="awaiting_payment",
+                    notes=f"Payment method set to {payment_method}",
+                )
 
         # 2) receipt reference -> pending (from draft/awaiting_payment)
         if receipt_reference and instance.status in ["draft", "awaiting_payment"]:
@@ -121,25 +129,41 @@ def create_document_request(request):
             instance.status = "pending"
             instance.receipt_reference = receipt_reference
             instance.save(update_fields=["status", "receipt_reference"])
-            DocumentRequestAction.objects.create(
+            # Check if action already exists to prevent duplicates
+            existing_action = DocumentRequestAction.objects.filter(
                 request=instance,
-                actor=request.user,
                 action="receipt_submitted",
                 from_status=prev,
-                to_status="pending",
-                notes=f"Receipt reference: {receipt_reference}",
-            )
+                to_status="pending"
+            ).first()
+            if not existing_action:
+                DocumentRequestAction.objects.create(
+                    request=instance,
+                    actor=request.user,
+                    action="receipt_submitted",
+                    from_status=prev,
+                    to_status="pending",
+                    notes=f"Receipt submitted with reference: {receipt_reference}",
+                )
 
         # 3) initial creation (no payment/no receipt)
         if not payment_method and not receipt_reference and existing is None:
-            DocumentRequestAction.objects.create(
+            # Check if action already exists to prevent duplicates
+            existing_action = DocumentRequestAction.objects.filter(
                 request=instance,
-                actor=request.user,
                 action="created",
                 from_status=None,
-                to_status="draft",
-                notes=instance.notes or "",
-            )
+                to_status="draft"
+            ).first()
+            if not existing_action:
+                DocumentRequestAction.objects.create(
+                    request=instance,
+                    actor=request.user,
+                    action="created",
+                    from_status=None,
+                    to_status="draft",
+                    notes="Document request created",
+                )
 
         # ---- Link ChatHistory ----
         conv_id = request.data.get("conversation_id")
@@ -203,19 +227,34 @@ def upload_receipt(request, pk):
     with transaction.atomic():
         prev = doc.status
         serializer.save()
-        if prev in ("draft", "awaiting_payment") and doc.status == "pending":
-            DocumentRequestAction.objects.create(
+        
+        # Move to pending if not yet submitted
+        if doc.status in ["draft", "awaiting_payment"]:
+            doc.status = "pending"
+            doc.save(update_fields=["status"])
+            
+            # Log action with from/to (check for duplicates)
+            existing_action = DocumentRequestAction.objects.filter(
                 request=doc,
-                actor=request.user,
                 action="receipt_uploaded",
                 from_status=prev,
-                to_status="pending",
-                notes="Receipt image uploaded",
-            )
-        ch = doc.chat_history.first()
-        if ch and ch.status != doc.status:
-            ch.status = doc.status
-            ch.save(update_fields=["status", "updated_at"])
+                to_status="pending"
+            ).first()
+            if not existing_action:
+                DocumentRequestAction.objects.create(
+                    request=doc,
+                    actor=request.user,
+                    action="receipt_uploaded",
+                    from_status=prev,
+                    to_status="pending",
+                    notes="Receipt image uploaded",
+                )
+            
+            # Sync linked ChatHistory
+            ch = doc.chat_history.first()
+            if ch:
+                ch.status = "pending"
+                ch.save(update_fields=["status", "updated_at"])
 
     return Response({"id": doc.id, "status": doc.status}, status=200)
 
@@ -282,22 +321,79 @@ class DocumentRequestStatusUpdateView(generics.UpdateAPIView):
     def perform_update(self, serializer):
         with transaction.atomic():
             instance = self.get_object()
-            old_status = instance.status
+            old_status = instance.status  # Capture BEFORE any changes
+            
             payment = self.request.data.get('payment', False)
             document = self.request.data.get('document', False)
             schedule = self.request.data.get('schedule')
-
-            updated = serializer.save(processed_by_id=self.request.user)
+            notes = self.request.data.get('notes', '')
+            
+            # Determine new status based on checkbox logic
+            new_status = old_status  # default: no change
+            
+            if payment and document:
+                # Both checked: document is ready to claim
+                new_status = 'ready_to_claim'
+            elif payment and not document:
+                # Only payment approved: processing document
+                new_status = 'on_process'
+            elif old_status == 'pending' and not payment:
+                # Faculty can keep it pending or reject
+                new_status = self.request.data.get('status', 'pending')
+            
+            # Update instance
+            instance.status = new_status
+            instance.processed_by_id = self.request.user
+            instance.save(update_fields=['status', 'processed_by_id'])
+            
+            # Create action log with proper from/to
             action = DocumentRequestAction.objects.create(
-                request=updated,
+                request=instance,
                 actor=self.request.user,
                 action='status_changed',
                 from_status=old_status,
-                to_status=updated.status,
-                notes=self.request.data.get('notes', ''),
+                to_status=new_status,
+                notes=notes,
                 payment=payment,
                 document=document
             )
+            
+            # Sync ChatHistory status
+            chat = instance.chat_history.first()
+            if chat:
+                chat.status = new_status
+                chat.save(update_fields=["status", "updated_at"])
+            
+            # Handle appointment scheduling when ready_to_claim
+            if new_status == 'ready_to_claim' and schedule:
+                conflict = Appointment.objects.filter(
+                    faculty=self.request.user,
+                    schedule=schedule,
+                    status='scheduled'
+                ).exists()
+                if conflict:
+                    raise ValidationError("This schedule is already taken.")
+                Appointment.objects.create(
+                    student=instance.student_id,
+                    faculty=self.request.user,
+                    document_request=instance,
+                    purpose=f"Claim {instance.document_type}",
+                    schedule=schedule,
+                    status='scheduled'
+                )
+                AppointmentAction.objects.create(
+                    appointment=Appointment.objects.get(document_request=instance),
+                    actor=self.request.user,
+                    action='scheduled',
+                    to_status='scheduled',
+                    notes=f"Scheduled for {schedule}"
+                )
+            
+            return Response({
+                "status": new_status,
+                "from_status": old_status,
+                "to_status": new_status
+            })
 
             if payment and not document:
                 updated.status = 'on_process'
@@ -555,3 +651,22 @@ def _getNotificationColor(action_type):
         'updated': 'blue',
     }
     return color_map.get(action_type, 'blue')
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsFaculty])
+def view_receipt(request, pk):
+    """
+    Faculty endpoint to view receipt details for a document request.
+    """
+    try:
+        doc = DocumentRequest.objects.get(pk=pk)
+        return Response({
+            "receipt_image": doc.receipt_image.url if doc.receipt_image else None,
+            "receipt_reference": doc.receipt_reference,
+            "payment_method": doc.payment_method,
+            "status": doc.status,
+            "document_type": doc.document_type,
+            "student_name": doc.student_id.get_full_name() if hasattr(doc.student_id, 'get_full_name') else str(doc.student_id)
+        })
+    except DocumentRequest.DoesNotExist:
+        return Response({"error": "Document request not found"}, status=404)

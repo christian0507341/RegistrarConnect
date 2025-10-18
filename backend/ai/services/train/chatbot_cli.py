@@ -289,6 +289,8 @@ def reset_request_fields(session: Dict):
     session["status"] = "draft"
     session["expected"] = None
     session["mode"] = "qa"
+    # Clear history when starting new request to avoid inheriting previous conversations
+    session["history"] = []
 
 def next_missing_slot(session: Dict) -> Optional[str]:
     doc = session.get("doc_type")
@@ -442,9 +444,10 @@ def log_message(session, sender, text):
 
 def save_to_db(session, access_token):
     headers = {"Authorization": f"Bearer {access_token}"}
-    # Reuse existing conversation_id or generate a new one for the first save
-    conversation_id = session.get("conversation_id", slugify(f"{session['user_id']}_{now_iso()}"))
-    if "conversation_id" not in session:
+    # Use the conversation_id from session (which may have been rotated)
+    conversation_id = session.get("conversation_id")
+    if not conversation_id:
+        conversation_id = slugify(f"{session['user_id']}_{now_iso()}")
         session["conversation_id"] = conversation_id
     
     data = {
@@ -504,6 +507,8 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         session["expected"] = "doc_type"
         # NEW: rotate conversation id when starting a new request
         session["conversation_id"] = slugify(f"{session['user_id']}_{now_iso()}")
+        # Clear history to ensure fresh start
+        session["history"] = []
         save_to_db(session, access_token)
         return "Starting a new request. What document do you need — **OTR**, **COG**, **COE**, or **Others**?"
 
@@ -791,6 +796,8 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             session["expected"] = "doc_type"
             # NEW: rotate conversation id when starting another request
             session["conversation_id"] = slugify(f"{session['user_id']}_{now_iso()}")
+            # Clear history to ensure fresh start
+            session["history"] = []
             save_to_db(session, access_token)
             return "Great. What document do you need — **OTR**, **COG**, **COE**, or **Others**?"
         if is_no(text):
@@ -831,6 +838,10 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             return provide_howto(how_doc)
         shortcut_doc = doc_from_text(text)
         if shortcut_doc:
+            # Rotate conversation ID when starting a new document request
+            session["conversation_id"] = slugify(f"{session['user_id']}_{now_iso()}")
+            # Clear history to ensure fresh start
+            session["history"] = []
             session["mode"] = "request"
             session["doc_type"] = shortcut_doc
             label = {"OTR": "Official Transcript of Records (OTR)", "COG": "Certificate of Grades (COG)", "COE": "Certificate of Enrollment (COE)", "OTHERS": "Other certificate"}[shortcut_doc]
@@ -929,6 +940,10 @@ def init_or_fill_from_text(session: Dict, text: str, access_token: str) -> str:
         save_to_db(session, access_token)
         return ask_for("doc_type", session)
 
+    # Rotate conversation ID when starting a new document request
+    session["conversation_id"] = slugify(f"{session['user_id']}_{now_iso()}")
+    # Clear history to ensure fresh start
+    session["history"] = []
     session["doc_type"] = doc_type
     if doc_type in {"COG", "COE"} and sem in (1, 2):
         session["semester"] = sem

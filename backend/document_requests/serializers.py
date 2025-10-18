@@ -168,36 +168,7 @@ class ReceiptUploadSerializer(serializers.ModelSerializer):
         fields = ["receipt_image"]
 
     def update(self, instance, validated_data):
-        from .models import DocumentRequestAction
-        request = self.context.get("request")
-        user = getattr(request, "user", None)
-
-        old_status = instance.status
+        # Just update the receipt image, status transition handled in view
         instance.receipt_image = validated_data["receipt_image"]
-
-        # Move to pending if not yet submitted
-        if instance.status in ["draft", "awaiting_payment"]:
-            instance.status = "pending"
-
-        instance.save(update_fields=["receipt_image", "status"])
-
-        # Log action with from/to
-        DocumentRequestAction.objects.create(
-            request=instance,
-            actor=user,
-            action="receipt_uploaded",
-            from_status=old_status,
-            to_status=instance.status,
-            notes="Receipt image uploaded",
-        )
-
-        # Sync linked ChatHistory if any
-        ch = getattr(instance, "chat_history", None)
-        if ch:
-            try:
-                ch.status = instance.status
-                ch.save(update_fields=["status", "updated_at"])
-            except Exception:
-                pass
-
+        instance.save(update_fields=["receipt_image"])
         return instance
