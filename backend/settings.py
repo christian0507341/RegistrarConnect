@@ -35,7 +35,8 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = [
     '10.0.2.2',  # Android emulator
     '127.0.0.1', 'localhost',  # Local development
-    '192.168.1.7', '192.168.100.122',  # Your specific IPs
+    '192.168.1.7', '192.168.100.122', 
+    '172.20.10.3' # Your specific IPs
 ]
 
 # For development, allow all hosts (remove this in production)
@@ -206,6 +207,27 @@ DEFAULT_FROM_EMAIL = 'noreply@registrarconnect.com'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+# Allow all origins in development
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
 
 # ------- NEW: media (for receipt uploads) -------

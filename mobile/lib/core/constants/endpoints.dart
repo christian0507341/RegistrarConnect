@@ -5,7 +5,7 @@ class Endpoints {
   static final String baseUrl = kIsWeb
       ? 'http://localhost:8000'
       : Platform.isAndroid
-      ? 'http://192.168.100.122:8000'  // Your computer's IP for physical device
+      ? 'http://172.20.10.3:8000'  // Your computer's IP for physical device
       : 'http://127.0.0.1:8000';
 
   // Auth

@@ -172,3 +172,15 @@ class ReceiptUploadSerializer(serializers.ModelSerializer):
         instance.receipt_image = validated_data["receipt_image"]
         instance.save(update_fields=["receipt_image"])
         return instance
+
+    def validate_receipt_image(self, value):
+        # Validate file size (max 5MB)
+        if value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError("File size cannot exceed 5MB")
+        
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/png', 'image/jpg']
+        if value.content_type not in allowed_types:
+            raise serializers.ValidationError("Only JPEG and PNG images are allowed")
+        
+        return value

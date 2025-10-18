@@ -10,10 +10,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='chathistory',
-            name='user_id',
-            field=models.CharField(db_index=True, max_length=255, default='1'),
-            preserve_default=False,
-        ),
     ]

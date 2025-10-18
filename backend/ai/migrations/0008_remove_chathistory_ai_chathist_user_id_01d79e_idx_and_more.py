@@ -20,11 +20,10 @@ class Migration(migrations.Migration):
             name='chathistory',
             unique_together=set(),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='chathistory',
             name='user_id',
-            field=models.CharField(db_index=True, default=1, max_length=255),
-            preserve_default=False,
+            field=models.CharField(db_index=True, max_length=255),
         ),
         migrations.AlterField(
             model_name='chathistory',
@@ -50,9 +49,5 @@ class Migration(migrations.Migration):
             model_name='chathistory',
             name='status',
             field=models.CharField(default='draft', max_length=50),
-        ),
-        migrations.RemoveField(
-            model_name='chathistory',
-            name='user',
         ),
     ]

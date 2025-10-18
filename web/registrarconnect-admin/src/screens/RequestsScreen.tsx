@@ -47,7 +47,7 @@ export default function RequestsScreen() {
       //   return;
       // }
 
-      const res = await axios.get("http://127.0.0.1:8000/api/document-requests/", {
+      const res = await axios.get("http://172.20.10.3:8000/api/document-requests/", {
         headers: { Authorization: `Bearer ${accessToken}` },
         params: status ? { status } : {},
       });

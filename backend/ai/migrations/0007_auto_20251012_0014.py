@@ -1,7 +1,13 @@
 from django.db import migrations
 
 def migrate_ai_chat_history_to_chat_history(apps, schema_editor):
-    AIChatHistory = apps.get_model('document_requests', 'AIChatHistory')
+    # Check if AIChatHistory model exists (it was deleted in document_requests.0012)
+    try:
+        AIChatHistory = apps.get_model('document_requests', 'AIChatHistory')
+    except LookupError:
+        # AIChatHistory model doesn't exist, skip migration
+        return
+    
     ChatHistory = apps.get_model('ai', 'ChatHistory')
     for ai_chat in AIChatHistory.objects.all():
         chat, created = ChatHistory.objects.get_or_create(
@@ -23,7 +29,12 @@ def migrate_ai_chat_history_to_chat_history(apps, schema_editor):
 
 def reverse_migrate(apps, schema_editor):
     # Optional: Restore AIChatHistory if needed (reverse migration)
-    AIChatHistory = apps.get_model('document_requests', 'AIChatHistory')
+    try:
+        AIChatHistory = apps.get_model('document_requests', 'AIChatHistory')
+    except LookupError:
+        # AIChatHistory model doesn't exist, skip reverse migration
+        return
+    
     ChatHistory = apps.get_model('ai', 'ChatHistory')
     for chat in ChatHistory.objects.all():
         AIChatHistory.objects.update_or_create(
@@ -42,7 +53,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('ai', '0006_chathistory_document_request_and_more'),
-        ('document_requests', '0011_documentrequestaction_document_and_more'),
+        ('document_requests', '0012_delete_aichathistory'),
     ]
 
     operations = [
