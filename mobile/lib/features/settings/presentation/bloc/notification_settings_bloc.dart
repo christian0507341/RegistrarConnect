@@ -258,3 +258,4 @@ class NotificationSettingsBloc extends Bloc<NotificationSettingsEvent, Notificat
     }
   }
 }
+

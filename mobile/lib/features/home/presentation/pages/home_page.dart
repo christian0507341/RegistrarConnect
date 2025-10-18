@@ -43,34 +43,37 @@ class _HomePageState extends State<HomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween, // <-- fixed
                 children: [
                   Row(
-                    children: const [
+                    children: [
                       CircleAvatar(
                         radius: 22,
-                        backgroundColor: Colors.white,
-                        child: Icon(Icons.home, color: Colors.green),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        child: Icon(
+                          Icons.home, 
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Text(
                         "Hello, Patrick",
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ],
                   ),
                   Row(
-                    children: const [
+                    children: [
                       Icon(
                         Icons.qr_code_scanner,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         size: 26,
                       ),
-                      SizedBox(width: 16),
+                      const SizedBox(width: 16),
                       Icon(
                         Icons.notifications_none,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         size: 26,
                       ),
                     ],
@@ -103,12 +106,12 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 30),
 
               // Recently Opened
-              const Text(
+              Text(
                 "RECENTLY OPENED",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
-                  color: Colors.black54,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 10),
@@ -126,24 +129,35 @@ class _HomePageState extends State<HomePage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: Theme.of(context).colorScheme.surfaceContainer,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Recent Activity",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
-                    const Divider(),
+                    Divider(
+                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                    ),
                     ...state.activities.map(
                       (a) => Padding(
                         padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Text(a.title),
+                        child: Text(
+                          a.title,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -152,7 +166,14 @@ class _HomePageState extends State<HomePage> {
             ],
           );
         } else if (state is HomeError) {
-          body = Center(child: Text(state.message));
+          body = Center(
+            child: Text(
+              state.message,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          );
         } else {
           body = const SizedBox.shrink();
         }
@@ -228,22 +249,32 @@ class _StatusCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 14, 
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 20, 
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 8),
           if (buttonLabel != null)
             ElevatedButton(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF2196F3),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 elevation: 0,
-                side: const BorderSide(color: Colors.blue),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 6,
@@ -264,24 +295,28 @@ class _RecentDocCard extends StatelessWidget {
       child: Container(
         height: 90,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: const [
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+          ),
+          boxShadow: [
             BoxShadow(
-              color: Colors.black12,
-              blurRadius: 4,
-              offset: Offset(0, 2),
+              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: const Center(
+        child: Center(
           child: Icon(
             Icons.description_outlined,
             size: 40,
-            color: Colors.black54,
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ),
     );
   }
 }
+
