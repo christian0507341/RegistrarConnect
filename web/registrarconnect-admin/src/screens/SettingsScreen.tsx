@@ -339,7 +339,7 @@ export default function SettingsScreen() {
                       <span className="toggle-slider"></span>
                     </div>
                   </div>
-                </label>
+          </label>
 
                 <label className="setting-item">
                   <div className="setting-content">
@@ -384,7 +384,7 @@ export default function SettingsScreen() {
                       <span className="toggle-slider"></span>
                     </div>
                   </div>
-                </label>
+          </label>
 
                 <label className="setting-item">
                   <div className="setting-content">
@@ -401,7 +401,7 @@ export default function SettingsScreen() {
                       <span className="toggle-slider"></span>
                     </div>
                   </div>
-                </label>
+          </label>
 
                 <label className="setting-item">
                   <div className="setting-content">
@@ -423,7 +423,7 @@ export default function SettingsScreen() {
             </div>
           )}
         </div>
-      </div>
+          </div>
     </div>
   );
 }

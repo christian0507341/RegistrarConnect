@@ -10,14 +10,14 @@ import AppointmentSettingsScreen from "./screens/AppointmentSettingsScreen";
 import ReportsScreen from "./screens/ReportsScreen";
 import NotificationsScreen from "./screens/NotificationsScreen";
 import SettingsScreen from "./screens/SettingsScreen";
-import AdminLogin from "./screens/AdminLogin";
-
 // Student imports
 import StudentLayout from "./layouts/StudentLayout";
-import StudentLogin from "./screens/StudentLogin";
 import StudentDashboard from "./screens/StudentDashboard";
 import StudentRequestsScreen from "./screens/StudentRequestsScreen";
 import StudentProfileScreen from "./screens/StudentProfileScreen";
+
+// Unified Login
+import UnifiedLogin from "./screens/UnifiedLogin";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -56,16 +56,15 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        {/* Public: Admin Login Page */}
+        {/* Public: Unified Login Page */}
         <Route
           path="/login"
-          element={<AdminLogin setIsAuthenticated={setIsAuthenticated} />}
-        />
-
-        {/* Public: Student Login Page */}
-        <Route
-          path="/student/login"
-          element={<StudentLogin setIsAuthenticated={setIsStudentAuthenticated} />}
+          element={
+            <UnifiedLogin 
+              setIsAuthenticated={setIsAuthenticated} 
+              setIsStudentAuthenticated={setIsStudentAuthenticated} 
+            />
+          }
         />
 
         {/* Protected Admin Routes */}
@@ -97,6 +96,7 @@ export default function App() {
 
         {/* Default redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/student/login" element={<Navigate to="/login" replace />} />
         <Route path="/*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

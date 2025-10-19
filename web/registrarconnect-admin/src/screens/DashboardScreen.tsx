@@ -261,7 +261,7 @@ export default function DashboardScreen() {
             <div className="badge-icon">✨</div>
             <span>Personalized for you</span>
           </div>
-        </div>
+          </div>
         <div className="dashboard-actions">
           <button className="action-btn primary interactive">
             <Bell size={16} />
@@ -273,7 +273,7 @@ export default function DashboardScreen() {
             <span>Export Data</span>
             <div className="btn-ripple"></div>
           </button>
-        </div>
+          </div>
       </div>
 
              {/* Stats Grid */}
