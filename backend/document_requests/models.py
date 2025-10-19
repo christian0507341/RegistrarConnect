@@ -40,6 +40,7 @@ class DocumentRequest(models.Model):
         REJECTED = 'rejected', 'Rejected'
         READY_TO_CLAIM = 'ready_to_claim', 'Ready to Claim'
         ON_PROCESS = 'on_process', 'On Process'
+        CLAIMED = 'claimed', 'Claimed'
 
     DOCUMENT_TYPES = [
         ('OTR', 'Official Transcript of Records'),

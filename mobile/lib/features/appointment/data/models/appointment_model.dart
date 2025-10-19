@@ -11,16 +11,26 @@ class AppointmentModel extends Appointment {
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
-    return AppointmentModel(
-      id: json['id'],
-      schedule: DateTime.parse(json['schedule']),
-      purpose: json['purpose'],
-      status: json['status'],
-      documentType: json['document_request']['document_type'] ?? 'Unknown',
-      facultyName: json['faculty'] != null
-          ? '${json['faculty']['first_name']} ${json['faculty']['last_name']}'
-          : 'Unassigned',
-    );
+    try {
+      return AppointmentModel(
+        id: json['id'] ?? 0,
+        schedule: DateTime.parse(json['schedule'] ?? DateTime.now().toIso8601String()),
+        purpose: json['purpose'] ?? 'General Purpose',
+        status: json['status'] ?? 'pending',
+        documentType: json['document_type'] ?? 'Unknown',
+        facultyName: json['faculty_name'] ?? 'Unassigned',
+      );
+    } catch (e) {
+      // Fallback values if parsing fails
+      return AppointmentModel(
+        id: 0,
+        schedule: DateTime.now(),
+        purpose: 'General Purpose',
+        status: 'pending',
+        documentType: 'Unknown',
+        facultyName: 'Unassigned',
+      );
+    }
   }
 
   Map<String, dynamic> toJson() => {

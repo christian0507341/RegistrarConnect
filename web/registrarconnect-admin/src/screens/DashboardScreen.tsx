@@ -245,20 +245,33 @@ export default function DashboardScreen() {
 
   return (
     <div className="dashboard-screen">
-      {/* Welcome Section */}
+      {/* Minimalist Welcome Section */}
       <div className="dashboard-header">
         <div className="welcome-section">
-          <h1 className="dashboard-title">Welcome back, Admin!</h1>
-          <p className="dashboard-subtitle">Here's what's happening with your requests today.</p>
+          <div className="welcome-content">
+            <h1 className="dashboard-title">
+              <span className="title-gradient">Welcome back,</span>
+              <span className="title-name">Admin</span>
+            </h1>
+            <p className="dashboard-subtitle">
+              Your personalized dashboard with real-time insights
+            </p>
+          </div>
+          <div className="personalization-badge">
+            <div className="badge-icon">✨</div>
+            <span>Personalized for you</span>
+          </div>
         </div>
         <div className="dashboard-actions">
-          <button className="action-btn primary">
+          <button className="action-btn primary interactive">
             <Bell size={16} />
-            Send Notifications
+            <span>Send Notifications</span>
+            <div className="btn-ripple"></div>
           </button>
-          <button className="action-btn secondary">
+          <button className="action-btn secondary interactive">
             <Download size={16} />
-            Export Data
+            <span>Export Data</span>
+            <div className="btn-ripple"></div>
           </button>
         </div>
       </div>
@@ -337,29 +350,29 @@ export default function DashboardScreen() {
       {/* Charts Section */}
       <div className="charts-section">
         <div className="chart-container">
-          <Card
-            title={
+        <Card
+          title={
               <div className="chart-header">
                 <div className="chart-title">
                   <TrendingUp size={20} />
                   <span>Request Trends</span>
                 </div>
-                <select
-                  value={trendType}
-                  onChange={(e) => setTrendType(e.target.value as "weekly" | "monthly" | "yearly")}
+              <select
+                value={trendType}
+                onChange={(e) => setTrendType(e.target.value as "weekly" | "monthly" | "yearly")}
                   className="trend-selector"
-                >
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
-              </div>
-            }
+              >
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+          }
             className="chart-card"
-          >
+        >
             <div className="chart-content">
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={data}>
+              <LineChart data={data}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis 
                     dataKey="name" 
@@ -394,10 +407,10 @@ export default function DashboardScreen() {
                     strokeDasharray="5 5"
                     dot={{ fill: '#10b981', strokeWidth: 2, r: 3 }}
                   />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
         </div>
 
         <div className="chart-container">
@@ -484,8 +497,8 @@ export default function DashboardScreen() {
                   </div>
                 );
               })}
-            </div>
-          </Card>
+          </div>
+        </Card>
         </div>
 
         <div className="quick-actions">

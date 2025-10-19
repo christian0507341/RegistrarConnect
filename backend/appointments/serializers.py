@@ -1,57 +1,65 @@
 from rest_framework import serializers
-from .models import Appointment, AppointmentAction
-from backend.document_requests.models import DocumentRequest
-from django.utils import timezone
+from .models import Appointment, AppointmentAction, AppointmentSettings
 
 class AppointmentActionSerializer(serializers.ModelSerializer):
-    actor_email = serializers.EmailField(source='actor.email', read_only=True)
-
     class Meta:
         model = AppointmentAction
-        fields = ('id', 'action', 'from_status', 'to_status', 'notes', 'actor', 'actor_email', 'created_at')
-        read_only_fields = ('id', 'actor', 'actor_email', 'created_at')
+        fields = '__all__'
+        read_only_fields = ['created_at']
 
 class AppointmentSerializer(serializers.ModelSerializer):
     actions = AppointmentActionSerializer(many=True, read_only=True)
-    document_request_id = serializers.PrimaryKeyRelatedField(
-        queryset=DocumentRequest.objects.all(),
-        source='document_request',
-        required=False
-    )
-
+    student_name = serializers.SerializerMethodField()
+    faculty_name = serializers.SerializerMethodField()
+    document_type = serializers.SerializerMethodField()
+    
     class Meta:
         model = Appointment
         fields = '__all__'
-        read_only_fields = ['student', 'status', 'created_at', 'actions']
+        read_only_fields = ['created_at']
+    
+    def get_student_name(self, obj):
+        return f"{obj.student.first_name} {obj.student.last_name}".strip() or obj.student.email
+    
+    def get_faculty_name(self, obj):
+        if obj.faculty:
+            return f"{obj.faculty.first_name} {obj.faculty.last_name}".strip() or obj.faculty.email
+        return "Not assigned"
+    
+    def get_document_type(self, obj):
+        if obj.document_request:
+            return obj.document_request.document_type
+        return "N/A"
 
-    def validate(self, attrs):
-        schedule = attrs.get('schedule') or getattr(self.instance, 'schedule', None)
-        if schedule and schedule <= timezone.now():
-            raise serializers.ValidationError({"schedule": "Schedule must be in the future."})
-        if 'document_request' in attrs and Appointment.objects.filter(
-            document_request=attrs['document_request'],
-            status='scheduled'
-        ).exclude(pk=getattr(self.instance, 'pk', None)).exists():
-            raise serializers.ValidationError({"document_request": "An active appointment already exists for this request."})
-        return attrs
-
-class AppointmentStatusSerializer(serializers.ModelSerializer):
-    notes = serializers.CharField(write_only=True, required=False, allow_blank=True)
-    schedule = serializers.DateTimeField(required=False, allow_null=True)
-
+class AppointmentSettingsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Appointment
-        fields = ("status", "faculty", "notes", "schedule")
-
-    def validate(self, attrs):
-        appt = self.instance
-        new_status = attrs.get("status", appt.status)
-        new_faculty = attrs.get("faculty") or appt.faculty
-        new_schedule = attrs.get("schedule") or appt.schedule
-
-        if new_status == "scheduled":
-            if not new_faculty:
-                raise serializers.ValidationError("Faculty must be assigned when scheduling.")
-            if not new_schedule:
-                raise serializers.ValidationError("Schedule is required when scheduling.")
-        return attrs
+        model = AppointmentSettings
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
+    
+    def validate_max_appointments_per_day(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Maximum appointments per day must be greater than 0")
+        if value > 1000:
+            raise serializers.ValidationError("Maximum appointments per day cannot exceed 1000")
+        return value
+    
+    def validate_appointment_start_hour(self, value):
+        if not 0 <= value <= 23:
+            raise serializers.ValidationError("Start hour must be between 0 and 23")
+        return value
+    
+    def validate_appointment_end_hour(self, value):
+        if not 0 <= value <= 23:
+            raise serializers.ValidationError("End hour must be between 0 and 23")
+        return value
+    
+    def validate(self, data):
+        start_hour = data.get('appointment_start_hour')
+        end_hour = data.get('appointment_end_hour')
+        
+        if start_hour is not None and end_hour is not None:
+            if start_hour >= end_hour:
+                raise serializers.ValidationError("End hour must be after start hour")
+        
+        return data

@@ -114,6 +114,16 @@ class _StatusPageState extends State<StatusPage> {
     ));
   }
 
+  void _triggerClaimedNotification(String documentType, int requestId, String studentName) {
+    // Trigger claimed notification through NotificationBloc
+    final notificationBloc = BlocProvider.of<NotificationBloc>(context);
+    notificationBloc.add(ShowClaimedNotification(
+      documentType: documentType,
+      requestId: requestId,
+      studentName: studentName,
+    ));
+  }
+
   Future<void> _loadTransactions({bool silent = false}) async {
     if (!silent) {
       setState(() {
@@ -219,6 +229,17 @@ class _StatusPageState extends State<StatusPage> {
                   newTransaction['id'],
                 );
               }
+              
+              // Check for claimed status changes
+              final oldStatus = oldTransaction['current_status'] ?? oldTransaction['status'];
+              final newStatus = newTransaction['current_status'] ?? newTransaction['status'];
+              if (oldStatus != newStatus && newStatus == 'claimed') {
+                _triggerClaimedNotification(
+                  newTransaction['document_type'],
+                  newTransaction['id'],
+                  newTransaction['student_name'] ?? 'Student',
+                );
+              }
             }
             
             // Show general update notification
@@ -311,6 +332,8 @@ class _StatusPageState extends State<StatusPage> {
     // Check for rejected status first (both in current_status and main status)
     if (effectiveStatus == 'rejected' || status == 'rejected') {
       return '❌ REJECTED - You can request another document';
+    } else if (effectiveStatus == 'claimed' || status == 'claimed') {
+      return '🎉 CLAIMED - Document successfully received';
     } else if (effectiveStatus == 'cancelled' || status == 'cancelled') {
       return 'Cancelled';
     } else if (effectiveStatus == 'ready_to_claim' && paymentApproved && documentApproved) {
@@ -346,6 +369,8 @@ class _StatusPageState extends State<StatusPage> {
     // Check for rejected status first (both in current_status and main status)
     if (effectiveStatus == 'rejected' || status == 'rejected') {
       return Colors.red[600] ?? Colors.red;
+    } else if (effectiveStatus == 'claimed' || status == 'claimed') {
+      return Colors.purple[600] ?? Colors.purple;
     } else if (effectiveStatus == 'cancelled' || status == 'cancelled') {
       return Colors.grey;
     } else if (effectiveStatus == 'ready_to_claim') {
@@ -374,6 +399,8 @@ class _StatusPageState extends State<StatusPage> {
     // Check for rejected status first (both in current_status and main status)
     if (effectiveStatus == 'rejected' || status == 'rejected') {
       return Icons.cancel;
+    } else if (effectiveStatus == 'claimed' || status == 'claimed') {
+      return Icons.celebration;
     } else if (effectiveStatus == 'cancelled' || status == 'cancelled') {
       return Icons.cancel_outlined;
     } else if (effectiveStatus == 'ready_to_claim') {
@@ -399,65 +426,130 @@ class _StatusPageState extends State<StatusPage> {
         return Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            title: const Text(
-              "Transaction Status",
-              style: TextStyle(fontWeight: FontWeight.w600),
+            title: Text(
+              "📋 Document Requests",
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 24,
+                letterSpacing: 0.5,
+                color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
+              ),
             ),
             elevation: 0,
             backgroundColor: Colors.transparent,
-            foregroundColor: Theme.of(context).primaryColor,
+            foregroundColor: isDarkMode ? Colors.white : Colors.grey[800],
+            centerTitle: true,
             actions: [
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: _loadTransactions,
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFE5E7EB),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.refresh, size: 20),
+                  onPressed: _loadTransactions,
+                  tooltip: 'Refresh',
+                ),
               ),
             ],
           ),
           body: AnimatedGradientBackground(
             isDarkMode: isDarkMode,
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(),
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isDarkMode ? Colors.white : Colors.blue[600]!,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Loading your requests...',
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   )
                 : _errorMessage != null
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              size: 64,
-                              color: Colors.red.withValues(alpha: 0.7),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              "Failed to load transactions",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                                color: Theme.of(context).textTheme.bodyLarge?.color,
+                        child: Container(
+                          margin: const EdgeInsets.all(24),
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: isDarkMode ? Colors.grey[800] : Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _errorMessage!,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Theme.of(context).textTheme.bodyMedium?.color,
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.error_outline,
+                                  size: 48,
+                                  color: Colors.red[600],
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton.icon(
-                              onPressed: () => _loadTransactions(),
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Retry'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).primaryColor,
-                                foregroundColor: Colors.white,
+                              const SizedBox(height: 20),
+                              Text(
+                                "Unable to Load Requests",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDarkMode ? Colors.white : Colors.grey[800],
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              Text(
+                                _errorMessage!,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton.icon(
+                                onPressed: () => _loadTransactions(),
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Retry'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).primaryColor,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       )
                     : _transactions.isEmpty
@@ -504,6 +596,34 @@ class _StatusPageState extends State<StatusPage> {
                             onRefresh: () => _loadTransactions(),
                             child: Column(
                               children: [
+                                // Show claimed requests banner if any
+                                if (_transactions.any((t) => 
+                                    t['current_status'] == 'claimed' || t['status'] == 'claimed'))
+                                  Container(
+                                    margin: const EdgeInsets.all(16),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.purple[50],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.purple[200] ?? Colors.purple),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.celebration, color: Colors.purple[600], size: 20),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Congratulations! Some documents have been successfully claimed.',
+                                            style: TextStyle(
+                                              color: Colors.purple[700],
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 // Show rejected requests banner if any
                                 if (_transactions.any((t) => 
                                     t['current_status'] == 'rejected' || t['status'] == 'rejected'))
@@ -547,6 +667,10 @@ class _StatusPageState extends State<StatusPage> {
                             final isRejected = (transaction['current_status'] == 'rejected' || 
                                                transaction['status'] == 'rejected');
                             
+                            // Check if this is a claimed request
+                            final isClaimed = (transaction['current_status'] == 'claimed' || 
+                                              transaction['status'] == 'claimed');
+                            
                             return Container(
                               margin: const EdgeInsets.only(bottom: 16),
                               decoration: BoxDecoration(
@@ -559,34 +683,47 @@ class _StatusPageState extends State<StatusPage> {
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                       )
-                                    : LinearGradient(
-                                        colors: isDarkMode
-                                            ? [
-                                                const Color(0xFF1E1E1E),
-                                                const Color(0xFF2A2A2A),
-                                              ]
-                                            : [
-                                                Colors.white,
-                                                const Color(0xFFF8F9FA),
-                                              ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
+                                    : isClaimed
+                                        ? LinearGradient(
+                                            colors: [
+                                              Colors.purple[50] ?? Colors.purple.withValues(alpha: 0.1),
+                                              Colors.purple[100] ?? Colors.purple.withValues(alpha: 0.2),
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          )
+                                        : LinearGradient(
+                                            colors: isDarkMode
+                                                ? [
+                                                    const Color(0xFF1E1E1E),
+                                                    const Color(0xFF2A2A2A),
+                                                  ]
+                                                : [
+                                                    Colors.white,
+                                                    const Color(0xFFF8F9FA),
+                                                  ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: isRejected 
                                       ? Colors.red[300] ?? Colors.red
-                                      : statusColor.withValues(alpha: 0.3),
+                                      : isClaimed
+                                          ? Colors.purple[300] ?? Colors.purple
+                                          : statusColor.withValues(alpha: 0.3),
                                   width: isRejected ? 2.0 : 1.5,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: isRejected 
                                         ? Colors.red.withValues(alpha: 0.2)
-                                        : statusColor.withValues(alpha: 0.1),
-                                    blurRadius: isRejected ? 16 : 12,
+                                        : isClaimed
+                                            ? Colors.purple.withValues(alpha: 0.2)
+                                            : statusColor.withValues(alpha: 0.1),
+                                    blurRadius: isRejected ? 16 : isClaimed ? 16 : 12,
                                     offset: const Offset(0, 4),
-                                    spreadRadius: isRejected ? 3 : 2,
+                                    spreadRadius: isRejected ? 3 : isClaimed ? 3 : 2,
                                   ),
                                   BoxShadow(
                                     color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),

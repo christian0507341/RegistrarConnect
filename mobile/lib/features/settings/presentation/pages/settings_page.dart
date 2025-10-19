@@ -139,11 +139,30 @@ class SettingsPage extends StatelessWidget {
           
           return Scaffold(
           appBar: AppBar(
-            title: const Text(
-              "Settings",
-              style: TextStyle(fontWeight: FontWeight.w600),
+            title: Text(
+              "⚙️ Settings",
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 24,
+                letterSpacing: 0.5,
+                color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
+              ),
             ),
             elevation: 0,
+            backgroundColor: Colors.transparent,
+            foregroundColor: isDarkMode ? Colors.white : Colors.grey[800],
+            centerTitle: true,
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDarkMode 
+                    ? [const Color(0xFF1a1a1a), const Color(0xFF2d2d2d)]
+                    : [Colors.white, Colors.grey[50]!],
+                ),
+              ),
+            ),
           ),
           body: AnimatedGradientBackground(
             isDarkMode: isDarkMode,

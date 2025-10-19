@@ -11,12 +11,27 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   @override
   Future<List<Appointment>> getAppointments() async {
     try {
-      final response = await dioClient.dio.get('/appointments/');
-      final List<dynamic> data = response.data;
-      return data
-          .map((json) => AppointmentModel.fromJson(json).toEntity())
-          .toList();
+      final response = await dioClient.dio.get('/api/appointments/student/');
+      final Map<String, dynamic> responseData = response.data;
+      final List<dynamic> data = responseData['appointments'] ?? [];
+      
+      final List<Appointment> appointments = [];
+      for (var json in data) {
+        try {
+          if (json is Map<String, dynamic>) {
+            appointments.add(AppointmentModel.fromJson(json).toEntity());
+          } else {
+            print('Warning: Skipping invalid appointment data: $json');
+          }
+        } catch (e) {
+          print('Error parsing appointment: $e, data: $json');
+          // Continue with other appointments
+        }
+      }
+      
+      return appointments;
     } catch (e) {
+      print('Failed to fetch appointments: $e');
       throw Exception('Failed to fetch appointments: $e');
     }
   }

@@ -16,6 +16,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from backend.appointments.models import Appointment, AppointmentAction
+from backend.appointments.services import AutomaticAppointmentService
 from backend.ai.models import ChatHistory
 import logging
 
@@ -373,6 +374,10 @@ class DocumentRequestStatusUpdateView(generics.UpdateAPIView):
             schedule = self.request.data.get('schedule')
             notes = self.request.data.get('notes', '')
             
+            # Debug logging
+            logger.info(f"Document request {instance.id} update - payment: {payment}, document: {document}, schedule: {schedule}")
+            logger.info(f"Request data: {self.request.data}")
+            
             # Determine new status - prioritize explicit status field, then checkbox logic
             explicit_status = self.request.data.get('status')
             if explicit_status:
@@ -442,30 +447,52 @@ class DocumentRequestStatusUpdateView(generics.UpdateAPIView):
                 chat.status = new_status
                 chat.save(update_fields=["status", "updated_at"])
             
-            # Handle appointment scheduling when ready_to_claim
-            if new_status == 'ready_to_claim' and schedule:
-                conflict = Appointment.objects.filter(
-                    faculty=self.request.user,
-                    schedule=schedule,
-                    status='scheduled'
-                ).exists()
-                if conflict:
-                    raise ValidationError("This schedule is already taken.")
-                Appointment.objects.create(
-                    student=instance.student_id,
-                    faculty=self.request.user,
+            # Handle appointment scheduling when both payment and document are approved
+            # Check if both payment and document are true (regardless of status change)
+            logger.info(f"Checking appointment scheduling - payment: {payment}, document: {document}")
+            if payment and document:
+                logger.info(f"Both payment and document approved for request {instance.id}, checking for existing appointment")
+                # Check if appointment already exists for this request
+                existing_appointment = Appointment.objects.filter(
                     document_request=instance,
-                    purpose=f"Claim {instance.document_type}",
-                    schedule=schedule,
                     status='scheduled'
-                )
-                AppointmentAction.objects.create(
-                    appointment=Appointment.objects.get(document_request=instance),
-                    actor=self.request.user,
-                    action='scheduled',
-                    to_status='scheduled',
-                    notes=f"Scheduled for {schedule}"
-                )
+                ).first()
+                
+                if not existing_appointment:
+                    if schedule:
+                        # Manual scheduling by faculty
+                        conflict = Appointment.objects.filter(
+                            faculty=self.request.user,
+                            schedule=schedule,
+                            status='scheduled'
+                        ).exists()
+                        if conflict:
+                            raise ValidationError("This schedule is already taken.")
+                        Appointment.objects.create(
+                            student=instance.student_id,
+                            faculty=self.request.user,
+                            document_request=instance,
+                            purpose=f"Claim {instance.document_type}",
+                            schedule=schedule,
+                            status='scheduled'
+                        )
+                        AppointmentAction.objects.create(
+                            appointment=Appointment.objects.get(document_request=instance),
+                            actor=self.request.user,
+                            action='scheduled',
+                            to_status='scheduled',
+                            notes=f"Scheduled for {schedule}"
+                        )
+                    else:
+                        # Automatic scheduling when both payment and document are approved
+                        try:
+                            AutomaticAppointmentService.schedule_appointment_for_ready_request(instance)
+                            logger.info(f"Automatically scheduled appointment for request {instance.id}")
+                        except Exception as e:
+                            logger.error(f"Failed to automatically schedule appointment for request {instance.id}: {str(e)}")
+                            # Don't raise the error, just log it - the request is still ready to claim
+                else:
+                    logger.info(f"Appointment already exists for request {instance.id}")
             
             return Response({
                 "status": new_status,

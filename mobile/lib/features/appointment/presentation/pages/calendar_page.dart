@@ -24,6 +24,95 @@ class _CalendarPageState extends State<CalendarPage> {
     context.read<AppointmentBloc>().add(LoadAppointments());
   }
 
+  Widget _buildEventMarkers(List<dynamic> events) {
+    if (events.isEmpty) return const SizedBox.shrink();
+    
+    // Group events by status
+    final claimedEvents = events.where((e) => e.status == 'claimed').length;
+    final scheduledEvents = events.where((e) => e.status == 'scheduled').length;
+    final otherEvents = events.where((e) => e.status != 'claimed' && e.status != 'scheduled').length;
+    
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (claimedEvents > 0)
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Colors.purple,
+              shape: BoxShape.circle,
+            ),
+          ),
+        if (claimedEvents > 0 && (scheduledEvents > 0 || otherEvents > 0))
+          const SizedBox(width: 2),
+        if (scheduledEvents > 0)
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+            ),
+          ),
+        if (scheduledEvents > 0 && otherEvents > 0)
+          const SizedBox(width: 2),
+        if (otherEvents > 0)
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Colors.orange,
+              shape: BoxShape.circle,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeBloc, ThemeState>(
@@ -31,51 +120,115 @@ class _CalendarPageState extends State<CalendarPage> {
         final isDarkMode = themeState is ThemeLoadedState ? themeState.isDarkMode : false;
         
         return Scaffold(
-          backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
+          backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.grey[50],
           appBar: AppBar(
-            title: const Text(
-              "Calendar",
-              style: TextStyle(fontWeight: FontWeight.w600),
+            title: Text(
+              "📅 Appointments",
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 24,
+                letterSpacing: 0.5,
+                color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
+              ),
             ),
             elevation: 0,
+            backgroundColor: Colors.transparent,
+            foregroundColor: isDarkMode ? Colors.white : Colors.grey[800],
+            centerTitle: true,
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDarkMode 
+                    ? [const Color(0xFF1a1a1a), const Color(0xFF2d2d2d)]
+                    : [Colors.white, Colors.grey[50]!],
+                ),
+              ),
+            ),
           ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: TableCalendar(
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2030, 12, 31),
-                focusedDay: _focusedDay,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                },
-                calendarStyle: CalendarStyle(
-                  todayDecoration: BoxDecoration(
-                    color: Colors.blue.shade100,
-                    shape: BoxShape.circle,
-                  ),
-                  selectedDecoration: const BoxDecoration(
-                    color: Colors.blue,
-                    shape: BoxShape.circle,
-                  ),
-                  weekendTextStyle: const TextStyle(color: Colors.redAccent),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDarkMode 
+                    ? [const Color(0xFF2d2d2d), const Color(0xFF1a1a1a)]
+                    : [Colors.white, const Color(0xFFF8FAFC)],
                 ),
+                border: Border.all(
+                  color: const Color(0xFFE2E8F0),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+              child: BlocBuilder<AppointmentBloc, AppointmentState>(
+                builder: (context, state) {
+                  return TableCalendar(
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.utc(2030, 12, 31),
+                    focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    eventLoader: (day) {
+                      if (state is AppointmentLoaded) {
+                        return state.appointments
+                            .where((appt) => isSameDay(appt.schedule, day))
+                            .toList();
+                      }
+                      return [];
+                    },
+                    calendarStyle: CalendarStyle(
+                      todayDecoration: BoxDecoration(
+                        color: Colors.blue.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      selectedDecoration: const BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      weekendTextStyle: const TextStyle(color: Colors.redAccent),
+                      markersMaxCount: 3,
+                      markerDecoration: BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    calendarBuilders: CalendarBuilders(
+                      markerBuilder: (context, day, events) {
+                        if (events.isEmpty) return null;
+                        
+                        return Positioned(
+                          bottom: 1,
+                          child: _buildEventMarkers(events),
+                        );
+                      },
+                    ),
                 headerStyle: HeaderStyle(
                   formatButtonVisible: false,
                   titleCentered: true,
-                  titleTextStyle: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                  titleTextStyle: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
                   ),
                   leftChevronIcon: const Icon(
                     Icons.chevron_left,
@@ -86,6 +239,43 @@ class _CalendarPageState extends State<CalendarPage> {
                     color: Colors.blue,
                   ),
                 ),
+                  );
+                },
+              ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Calendar Legend
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDarkMode 
+                    ? [const Color(0xFF2d2d2d), const Color(0xFF1a1a1a)]
+                    : [Colors.white, Colors.grey[50]!],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDarkMode ? Colors.grey[700]! : Colors.grey[200]!,
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildLegendItem(Colors.purple, 'Claimed'),
+                  _buildLegendItem(Colors.green, 'Scheduled'),
+                  _buildLegendItem(Colors.orange, 'Other'),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -97,10 +287,33 @@ class _CalendarPageState extends State<CalendarPage> {
                         .where((appt) => isSameDay(appt.schedule, _selectedDay))
                         .toList();
                     return appointments.isEmpty
-                        ? const Center(
-                            child: Text(
-                              "No appointments on this day.",
-                              style: TextStyle(color: Colors.black54),
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.event_available,
+                                  size: 64,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  "No appointments on this day",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  "Select a different date to view appointments",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[500],
+                                  ),
+                                ),
+                              ],
                             ),
                           )
                         : AppointmentList(appointments: appointments);

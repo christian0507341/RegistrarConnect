@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, X, Check, CheckCheck, Trash2, AlertCircle, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { Bell, X, Check, CheckCheck, Trash2, AlertCircle, CheckCircle, AlertTriangle, Info, Sparkles, Clock, Star } from 'lucide-react';
 import { notificationService, type Notification } from '../services/notificationService';
 import '../styles/components/NotificationCenter.css';
 
@@ -11,6 +11,7 @@ export default function NotificationCenter({ className = '' }: NotificationCente
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [personalizedGreeting, setPersonalizedGreeting] = useState('');
 
   useEffect(() => {
     // Subscribe to notification changes
@@ -22,6 +23,11 @@ export default function NotificationCenter({ className = '' }: NotificationCente
     // Initial load
     setNotifications(notificationService.getAll());
     setUnreadCount(notificationService.getUnreadCount());
+
+    // Set personalized greeting
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    setPersonalizedGreeting(greeting);
 
     return unsubscribe;
   }, []);
@@ -41,6 +47,18 @@ export default function NotificationCenter({ className = '' }: NotificationCente
     }
   };
 
+  const getPersonalizedMessage = (notification: Notification) => {
+    const timeAgo = formatTimestamp(notification.timestamp);
+    const priority = notification.type === 'error' ? 'high' : notification.type === 'warning' ? 'medium' : 'low';
+    
+    return {
+      ...notification,
+      personalizedMessage: `${notification.message} • ${timeAgo}`,
+      priority,
+      isPersonalized: true
+    };
+  };
+
   const formatTimestamp = (timestamp: Date) => {
     const now = new Date();
     const diff = now.getTime() - timestamp.getTime();
@@ -54,121 +72,171 @@ export default function NotificationCenter({ className = '' }: NotificationCente
     return `${days}d ago`;
   };
 
-  const handleMarkAsRead = (id: string) => {
+  const markAsRead = (id: string) => {
     notificationService.markAsRead(id);
   };
 
-  const handleRemove = (id: string) => {
-    notificationService.remove(id);
-  };
-
-  const handleMarkAllAsRead = () => {
+  const markAllAsRead = () => {
     notificationService.markAllAsRead();
   };
 
-  const handleClearAll = () => {
-    notificationService.clear();
+  const clearAll = () => {
+    notificationService.clearAll();
+  };
+
+  const removeNotification = (id: string) => {
+    notificationService.remove(id);
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'priority-high';
+      case 'medium':
+        return 'priority-medium';
+      default:
+        return 'priority-low';
+    }
   };
 
   return (
     <div className={`notification-center ${className}`}>
       <button
-        className="notification-bell"
+        className="notification-bell interactive"
         onClick={() => setIsOpen(!isOpen)}
-        title="Notifications"
+        aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
       >
         <Bell size={20} />
         {unreadCount > 0 && (
-          <span className="notification-badge">{unreadCount}</span>
+          <span className="notification-badge">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
         )}
+        <div className="bell-ripple"></div>
       </button>
 
       {isOpen && (
         <div className="notification-dropdown">
-          <div className="notification-header">
-            <h3>Notifications</h3>
-            <div className="notification-actions">
-              {notifications.length > 0 && (
-                <>
-                  <button
-                    onClick={handleMarkAllAsRead}
-                    className="action-btn"
-                    title="Mark all as read"
-                  >
-                    <CheckCheck size={16} />
-                  </button>
-                  <button
-                    onClick={handleClearAll}
-                    className="action-btn"
-                    title="Clear all"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </>
-              )}
-              <button
-                onClick={() => setIsOpen(false)}
-                className="action-btn"
-                title="Close"
-              >
-                <X size={16} />
-              </button>
+          <div className="dropdown-header">
+            <div className="header-content">
+              <div className="greeting-section">
+                <h3 className="greeting-title">
+                  <Sparkles size={16} />
+                  {personalizedGreeting}, Admin!
+                </h3>
+                <p className="greeting-subtitle">Your personalized notifications</p>
+              </div>
+              <div className="header-actions">
+                <button
+                  className="action-btn clear-all"
+                  onClick={clearAll}
+                  title="Clear all notifications"
+                >
+                  <Trash2 size={14} />
+                </button>
+                <button
+                  className="action-btn mark-all"
+                  onClick={markAllAsRead}
+                  title="Mark all as read"
+                >
+                  <CheckCheck size={14} />
+                </button>
+                <button
+                  className="action-btn close"
+                  onClick={() => setIsOpen(false)}
+                  title="Close notifications"
+                >
+                  <X size={14} />
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="notification-list">
+          <div className="notifications-list">
             {notifications.length === 0 ? (
-              <div className="notification-empty">
-                <Bell size={32} />
-                <p>No notifications</p>
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <Bell size={32} />
+                </div>
+                <h4>No notifications yet</h4>
+                <p>You'll see personalized updates here</p>
               </div>
             ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`notification-item ${notification.read ? 'read' : 'unread'}`}
-                  onClick={() => handleMarkAsRead(notification.id)}
-                >
-                  <div className="notification-content">
-                    <div className="notification-icon-wrapper">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="notification-text">
-                      <h4 className="notification-title">{notification.title}</h4>
-                      <p className="notification-message">{notification.message}</p>
-                      <span className="notification-time">
-                        {formatTimestamp(notification.timestamp)}
-                      </span>
+              notifications.map((notification) => {
+                const personalized = getPersonalizedMessage(notification);
+                return (
+                  <div
+                    key={notification.id}
+                    className={`notification-item ${!notification.read ? 'unread' : ''} ${getPriorityColor(personalized.priority)}`}
+                  >
+                    <div className="notification-content">
+                      <div className="notification-header">
+                        <div className="notification-icon-wrapper">
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                        <div className="notification-meta">
+                          <div className="notification-title">
+                            {notification.title}
+                            {personalized.isPersonalized && (
+                              <Star size={12} className="personalized-indicator" />
+                            )}
+                          </div>
+                          <div className="notification-time">
+                            <Clock size={12} />
+                            {formatTimestamp(notification.timestamp)}
+                          </div>
+                        </div>
+                        <div className="notification-actions">
+                          {!notification.read && (
+                            <button
+                              className="mark-read-btn"
+                              onClick={() => markAsRead(notification.id)}
+                              title="Mark as read"
+                            >
+                              <Check size={12} />
+                            </button>
+                          )}
+                          <button
+                            className="remove-btn"
+                            onClick={() => removeNotification(notification.id)}
+                            title="Remove notification"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="notification-message">
+                        {personalized.personalizedMessage}
+                      </div>
+                      {personalized.priority === 'high' && (
+                        <div className="priority-indicator">
+                          <span className="priority-text">High Priority</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="notification-actions-item">
-                    {!notification.read && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMarkAsRead(notification.id);
-                        }}
-                        className="mark-read-btn"
-                        title="Mark as read"
-                      >
-                        <Check size={14} />
-                      </button>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemove(notification.id);
-                      }}
-                      className="remove-btn"
-                      title="Remove"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
+
+          {notifications.length > 0 && (
+            <div className="dropdown-footer">
+              <div className="footer-stats">
+                <span className="stats-text">
+                  {unreadCount} unread • {notifications.length} total
+                </span>
+              </div>
+              <div className="footer-actions">
+                <button className="footer-btn">
+                  View All
+                </button>
+                <button className="footer-btn primary">
+                  Settings
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -1,7 +1,8 @@
 import { NavLink } from "react-router-dom";
+import { useState } from "react";
 import { 
   LayoutDashboard, FileText, Calendar, 
-  BarChart2, Bell, Settings
+  BarChart2, Bell, Settings, ChevronDown, ChevronRight
 } from "lucide-react";
 import "../styles/components/Sidebar.css";
 
@@ -10,6 +11,8 @@ type Props = {
 };
 
 export default function Sidebar({ onLogout }: Props) {
+  const [appointmentsExpanded, setAppointmentsExpanded] = useState(false);
+
   return (
     <aside className="sidebar">
       {/* Brand / Logo */}
@@ -31,9 +34,26 @@ export default function Sidebar({ onLogout }: Props) {
         <NavLink to="/requests" className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}>
           <FileText size={18} /> <span>Requests</span>
         </NavLink>
-        <NavLink to="/appointments" className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}>
-          <Calendar size={18} /> <span>Appointments</span>
-        </NavLink>
+        <div className="nav-group">
+          <button 
+            className="nav-item nav-toggle"
+            onClick={() => setAppointmentsExpanded(!appointmentsExpanded)}
+          >
+            <Calendar size={18} /> 
+            <span>Appointments</span>
+            {appointmentsExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          </button>
+          {appointmentsExpanded && (
+            <div className="nav-submenu">
+              <NavLink to="/appointments" className={({ isActive }) => (isActive ? "nav-subitem active" : "nav-subitem")}>
+                <span>View Appointments</span>
+              </NavLink>
+              <NavLink to="/appointments/settings" className={({ isActive }) => (isActive ? "nav-subitem active" : "nav-subitem")}>
+                <span>Settings</span>
+              </NavLink>
+            </div>
+          )}
+        </div>
         <NavLink to="/reports" className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}>
           <BarChart2 size={18} /> <span>Reports</span>
         </NavLink>

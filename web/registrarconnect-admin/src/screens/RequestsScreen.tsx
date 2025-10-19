@@ -29,7 +29,7 @@ type Request = {
   semester: string;
   schoolYear: string;
   purpose: string;
-  aiStatus: "Pending" | "Valid" | "Invalid" | "Checking" | "Approved" | "Rejected";
+  aiStatus: "Pending" | "Valid" | "Invalid" | "Checking" | "Approved" | "Rejected" | "Claimed";
   aiNote?: string;
   receiptUrl?: string;
   documentApproved?: boolean;
@@ -46,7 +46,7 @@ export default function RequestsScreen() {
 
   const [requests, setRequests] = useState<Request[]>([]);
   const [selected, setSelected] = useState<Request | null>(null);
-  const [filter, setFilter] = useState<"All" | "Pending" | "Approved" | "Rejected">("All");
+  const [filter, setFilter] = useState<"All" | "Pending" | "Approved" | "Rejected" | "Claimed">("All");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -59,13 +59,16 @@ export default function RequestsScreen() {
     setError(null);
 
     try {
-      // Uncomment if you want to enforce login redirect
-      // const accessToken = localStorage.getItem("accessToken");
-      // if (!accessToken) {
-      //   console.error("No admin token found! Redirecting to login...");
-      //   navigate("/login");
-      //   return;
-      // }
+      // Check authentication
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) {
+        console.error("No admin token found! Redirecting to login...");
+        setError("Not authenticated. Please log in.");
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+        return;
+      }
 
       const res = await apiService.getDocumentRequests(status ? { status } : {});
 
@@ -113,6 +116,7 @@ export default function RequestsScreen() {
             case 'ready_to_claim': return 'Approved';
             case 'cancelled': return 'Rejected';
             case 'rejected': return 'Rejected';
+            case 'claimed': return 'Claimed';
             default: return 'Pending';
           }
         };
@@ -125,7 +129,7 @@ export default function RequestsScreen() {
           semester: request.semester || "N/A",
           schoolYear: request.school_year || "N/A",
           purpose: request.purpose || "General Purpose",
-          aiStatus: getStatusDisplay(request.current_status || request.status) as "Pending" | "Valid" | "Invalid" | "Checking" | "Approved" | "Rejected",
+          aiStatus: getStatusDisplay(request.current_status || request.status) as "Pending" | "Valid" | "Invalid" | "Checking" | "Approved" | "Rejected" | "Claimed",
           aiNote: `Requested on ${new Date(request.requested_at).toLocaleDateString()}`,
           receiptUrl: request.receipt_image || "/sample-receipt.png",
           // Use action-based status from backend
@@ -141,8 +145,20 @@ export default function RequestsScreen() {
 
       setRequests(mappedRequests);
       setHasLocalChanges(false); // Clear local changes flag when data is refreshed
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching requests:", err);
+      
+      // Handle authentication errors
+      if (err.response?.status === 401) {
+        setError("Authentication failed. Please log in again.");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+        return;
+      }
+      
       // Fallback: use static sample data while backend is unavailable
       const staticData: Request[] = [
         {
@@ -203,6 +219,16 @@ export default function RequestsScreen() {
 
   // Fetch on mount and when filter changes
   useEffect(() => {
+    // Check authentication before fetching
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      setError("Not authenticated. Please log in.");
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+      return;
+    }
+    
     fetchRequests(filter === "All" ? undefined : filter.toLowerCase());
   }, [filter]);
 
@@ -210,6 +236,39 @@ export default function RequestsScreen() {
   useEffect(() => {
     notificationService.requestPermission();
   }, []);
+
+  // Listen for appointment claimed events
+  useEffect(() => {
+    const handleAppointmentClaimed = (event: CustomEvent) => {
+      console.log('Appointment claimed, refreshing requests:', event.detail);
+      
+      // Show notification
+      notificationService.add({
+        title: 'Document Request Updated',
+        message: `Document request for ${event.detail.studentName} has been marked as claimed`,
+        type: 'success'
+      });
+      
+      // Force refresh requests to show updated status with a small delay
+      console.log('Forcing refresh of requests after appointment claimed');
+      setLoading(true);
+      
+      // Add small delay to ensure backend has processed the update
+      setTimeout(() => {
+        fetchRequests(filter === "All" ? undefined : filter.toLowerCase());
+      }, 500);
+      
+      // Show toast notification
+      setToast(`Document request for ${event.detail.studentName} marked as claimed`);
+      setTimeout(() => setToast(null), 3000);
+    };
+
+    window.addEventListener('appointmentClaimed', handleAppointmentClaimed as EventListener);
+    
+    return () => {
+      window.removeEventListener('appointmentClaimed', handleAppointmentClaimed as EventListener);
+    };
+  }, [filter]);
 
   // Escape key navigation
   useEffect(() => {
@@ -309,6 +368,7 @@ export default function RequestsScreen() {
     if (filter === "Pending") return r.aiStatus === "Pending" || r.aiStatus === "Checking";
     if (filter === "Approved") return r.aiStatus === "Valid" || r.aiStatus === "Approved";
     if (filter === "Rejected") return r.aiStatus === "Invalid" || r.aiStatus === "Rejected";
+    if (filter === "Claimed") return r.aiStatus === "Claimed";
     return true;
   });
 
@@ -331,7 +391,7 @@ const rows = filteredRequests.map((r) => {
           disabled={updatingStatus === r.id || r.aiStatus === "Rejected"}
           onChange={async () => {
             const newDoc = !r.documentApproved;
-            
+
             try {
               setUpdatingStatus(r.id);
               
@@ -347,21 +407,21 @@ const rows = filteredRequests.map((r) => {
               });
 
               // Update local state
-              setRequests((prev) =>
-                prev.map((req) =>
-                  req.id === r.id
-                    ? {
-                        ...req,
-                        documentApproved: newDoc,
+            setRequests((prev) =>
+              prev.map((req) =>
+                req.id === r.id
+                  ? {
+                      ...req,
+                      documentApproved: newDoc,
                         // Update status based on both approvals
                         aiStatus: bothApproved ? "Approved" : (newDoc || (req.receiptApproved || req.payment_approved) ? "Pending" : "Rejected"),
                         aiNote: bothApproved 
                           ? "Ready to claim" 
                           : (newDoc || (req.receiptApproved || req.payment_approved) ? "Awaiting verification" : "Notify student that request is rejected"),
-                      }
-                    : req
-                )
-              );
+                    }
+                  : req
+              )
+            );
 
               // Show success message and notification
               if (bothApproved) {
@@ -426,7 +486,7 @@ const rows = filteredRequests.map((r) => {
           disabled={updatingStatus === r.id || r.aiStatus === "Rejected"}
           onChange={async () => {
             const newReceipt = !r.receiptApproved;
-            
+
             try {
               setUpdatingStatus(r.id);
               
@@ -442,21 +502,21 @@ const rows = filteredRequests.map((r) => {
               });
 
               // Update local state
-              setRequests((prev) =>
-                prev.map((req) =>
-                  req.id === r.id
-                    ? {
-                        ...req,
-                        receiptApproved: newReceipt,
+            setRequests((prev) =>
+              prev.map((req) =>
+                req.id === r.id
+                  ? {
+                      ...req,
+                      receiptApproved: newReceipt,
                         // Update status based on both approvals
                         aiStatus: bothApproved ? "Approved" : (newReceipt || (req.documentApproved || req.document_approved) ? "Pending" : "Rejected"),
                         aiNote: bothApproved 
                           ? "Ready to claim" 
                           : (newReceipt || (req.documentApproved || req.document_approved) ? "Awaiting verification" : "Notify student that request is rejected"),
-                      }
-                    : req
-                )
-              );
+                    }
+                  : req
+              )
+            );
 
               // Show success message and notification
               if (bothApproved) {
@@ -562,6 +622,11 @@ const rows = filteredRequests.map((r) => {
       >
         Notify Student for Claiming
       </button>
+    ) : r.aiStatus === "Claimed" ? (
+      <span key={`status-${r.id}`} className="requests-status-badge claimed">
+        <CheckCircle2 size={14} />
+        Claimed
+      </span>
     ) : r.documentApproved || r.receiptApproved ? (
   <span key={`status-${r.id}`} className="requests-status-badge pending">
     Pending
@@ -632,8 +697,27 @@ const rows = filteredRequests.map((r) => {
       <div className="requests-header">
         <div className="header-content">
           <div className="header-title">
-            <h1 className="page-title">Document Requests</h1>
-            <p className="page-subtitle">Manage and review student document requests</p>
+            <div className="title-wrapper">
+              <h1 className="page-title">
+                <span className="title-icon">📋</span>
+                Document Requests
+              </h1>
+              <p className="page-subtitle">Manage and review student document requests</p>
+            </div>
+            <div className="header-stats">
+              <div className="stat-item">
+                <span className="stat-number">{requests.length}</span>
+                <span className="stat-label">Total</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-number">{requests.filter(r => r.aiStatus === "Pending" || r.aiStatus === "Checking").length}</span>
+                <span className="stat-label">Pending</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-number">{requests.filter(r => r.aiStatus === "Approved").length}</span>
+                <span className="stat-label">Approved</span>
+              </div>
+            </div>
           </div>
           <div className="header-actions">
             <button 
@@ -643,6 +727,17 @@ const rows = filteredRequests.map((r) => {
             >
               <CheckCircle2 size={16} />
               Bulk Approve ({requests.filter(r => r.aiStatus === "Pending" || r.aiStatus === "Checking").length})
+            </button>
+            <button 
+              className="action-btn secondary"
+              onClick={() => {
+                setLoading(true);
+                fetchRequests(filter === "All" ? undefined : filter.toLowerCase());
+              }}
+              disabled={loading}
+            >
+              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+              Refresh
             </button>
             <button className="action-btn secondary">
               <Download size={16} />
@@ -737,11 +832,11 @@ const rows = filteredRequests.map((r) => {
           </div>
           
           <div className="filter-tabs">
-            {["All", "Pending", "Approved", "Rejected"].map((f) => (
+            {["All", "Pending", "Approved", "Rejected", "Claimed"].map((f) => (
               <button
                 key={f}
                 className={`filter-tab ${filter === f ? "active" : ""}`}
-                onClick={() => setFilter(f as "All" | "Pending" | "Approved" | "Rejected")}
+                onClick={() => setFilter(f as "All" | "Pending" | "Approved" | "Rejected" | "Claimed")}
               >
                 {f}
                 {f !== "All" && (
@@ -749,6 +844,7 @@ const rows = filteredRequests.map((r) => {
                     {f === "Pending" && requests.filter(r => r.aiStatus === "Pending").length}
                     {f === "Approved" && requests.filter(r => r.aiStatus === "Approved").length}
                     {f === "Rejected" && requests.filter(r => r.aiStatus === "Rejected").length}
+                    {f === "Claimed" && requests.filter(r => r.aiStatus === "Claimed").length}
                   </span>
                 )}
               </button>

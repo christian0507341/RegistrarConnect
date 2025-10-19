@@ -71,3 +71,15 @@ class ShowCustomNotification extends NotificationEvent {
     this.payload,
   });
 }
+
+class ShowClaimedNotification extends NotificationEvent {
+  final String documentType;
+  final int requestId;
+  final String studentName;
+  
+  ShowClaimedNotification({
+    required this.documentType,
+    required this.requestId,
+    required this.studentName,
+  });
+}

@@ -1,15 +1,18 @@
-/* Modern Topbar Styles */
+/* Minimalist Innovative Topbar */
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px 32px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.8);
   position: relative;
   z-index: 10;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .topbar::before {
@@ -19,14 +22,15 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3), transparent);
 }
 
 .topbar-title {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #0f172a;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -44,20 +48,24 @@
   gap: 16px;
 }
 
-/* Modern Search Bar */
+/* Minimalist Interactive Search Bar */
 .search {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: #f8fafc;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.6);
   padding: 12px 16px;
-  border-radius: 16px;
-  width: 360px;
-  max-width: 45%;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
+  border-radius: 12px;
+  width: 320px;
+  max-width: 40%;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
 }
 
 .search::before {
@@ -72,9 +80,11 @@
 }
 
 .search:focus-within {
-  background: white;
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #6366f1;
+  box-shadow: 
+    0 0 0 3px rgba(99, 102, 241, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.08);
   transform: translateY(-1px);
 }
 
@@ -97,36 +107,42 @@
   outline: none;
   background: transparent;
   width: 100%;
-  font-size: 0.95rem;
-  color: #1e293b;
-  font-weight: 500;
+  font-size: 0.9rem;
+  color: #0f172a;
+  font-weight: 600;
 }
 
 .search input::placeholder {
-  color: #94a3b8;
-  font-weight: 400;
+  color: #64748b;
+  font-weight: 500;
 }
 
-/* Modern Icon Buttons */
+/* Minimalist Interactive Icon Buttons */
 .icon-btn {
   position: relative;
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   padding: 12px;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(12px);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.8);
 }
 
 .icon-btn:hover {
-  background: #f1f5f9;
-  color: #374151;
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(99, 102, 241, 0.2);
 }
 
 .icon-btn:active {
@@ -154,39 +170,47 @@
   50% { transform: scale(1.1); }
 }
 
-/* Modern Profile Section */
+/* Minimalist Interactive Profile Section */
 .profile {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
-  border-radius: 16px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
 }
 
 .profile:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: rgba(99, 102, 241, 0.1);
+  border-color: #6366f1;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(99, 102, 241, 0.2);
 }
 
 .avatar {
   width: 40px;
   height: 40px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 1rem;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  transition: all 0.3s ease;
+  box-shadow: 
+    0 3px 8px rgba(99, 102, 241, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .profile:hover .avatar {
@@ -195,9 +219,9 @@
 }
 
 .profile-name {
-  font-size: 0.95rem;
-  color: #374151;
-  font-weight: 600;
+  font-size: 0.9rem;
+  color: #0f172a;
+  font-weight: 700;
   margin: 0;
 }
 

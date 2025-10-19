@@ -94,5 +94,14 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         payload: event.payload,
       );
     });
+
+    // Handle claimed notification
+    on<ShowClaimedNotification>((event, emit) async {
+      await _notificationManager.showClaimedNotification(
+        documentType: event.documentType,
+        requestId: event.requestId,
+        studentName: event.studentName,
+      );
+    });
   }
 }

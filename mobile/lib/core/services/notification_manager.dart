@@ -247,6 +247,27 @@ class NotificationManager {
     // Navigate to notification details
   }
 
+  // Show notification for claimed document
+  Future<void> showClaimedNotification({
+    required String documentType,
+    required int requestId,
+    required String studentName,
+  }) async {
+    // Check if document status notifications are enabled
+    final isEnabled = await _settingsService.isDocumentStatusEnabled();
+    if (!isEnabled) return;
+
+    final title = '🎉 Document Claimed!';
+    final body = 'Your $documentType has been successfully claimed. Thank you!';
+
+    await _localNotificationService.showNotification(
+      id: requestId + 10000, // Offset to avoid conflicts
+      title: title,
+      body: body,
+      payload: 'claimed_${requestId}_${documentType}_${studentName}',
+    );
+  }
+
   void _navigateToHome() {
     // Navigate to home page
   }
