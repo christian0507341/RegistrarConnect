@@ -64,13 +64,148 @@ export default function SettingsScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
+  const updatePreference = (path: string, value: any) => {
+    console.log('updatePreference called:', { path, value });
+    setPreferences(prev => {
+      const newPrefs = { ...prev };
+      const keys = path.split('.');
+      let current = newPrefs;
+      
+      for (let i = 0; i < keys.length - 1; i++) {
+        current = current[keys[i]];
+      }
+      
+      current[keys[keys.length - 1]] = value;
+      
+      // Apply theme immediately when changed
+      if (path === 'theme') {
+        console.log('Applying theme:', value);
+        applyTheme(value);
+      }
+      
+      // Handle notification permission requests
+      if (path === 'notifications.push' && value === true) {
+        console.log('Requesting notification permission');
+        requestNotificationPermission();
+      }
+      
+      // Handle dashboard layout changes
+      if (path === 'personalization.dashboardLayout') {
+        console.log('Applying dashboard layout:', value);
+        applyDashboardLayout(value);
+      }
+      
+      return newPrefs;
+    });
+  };
+
+  // Theme application function
+  const applyTheme = (theme: string) => {
+    console.log('applyTheme called with:', theme);
+    const root = document.documentElement;
+    const body = document.body;
+    
+    // Remove existing theme classes
+    root.classList.remove('light-theme', 'dark-theme', 'auto-theme');
+    body.classList.remove('light-theme', 'dark-theme', 'auto-theme');
+    
+    if (theme === 'light') {
+      root.classList.add('light-theme');
+      body.classList.add('light-theme');
+      root.style.colorScheme = 'light';
+      body.style.background = '#f4f6fb';
+      body.style.color = '#1f2937';
+      console.log('Applied light theme');
+    } else if (theme === 'dark') {
+      root.classList.add('dark-theme');
+      body.classList.add('dark-theme');
+      root.style.colorScheme = 'dark';
+      body.style.background = '#0f172a';
+      body.style.color = '#f1f5f9';
+      console.log('Applied dark theme');
+    } else {
+      root.classList.add('auto-theme');
+      body.classList.add('auto-theme');
+      root.style.colorScheme = 'auto';
+      // Auto theme - let CSS handle it
+      body.style.background = '';
+      body.style.color = '';
+      console.log('Applied auto theme');
+    }
+    
+    // Apply theme to main content areas
+    const mainAreas = document.querySelectorAll('.main-area, .admin-layout, .settings-screen');
+    console.log('Found main areas:', mainAreas.length);
+    mainAreas.forEach(area => {
+      if (area instanceof HTMLElement) {
+        area.classList.remove('light-theme', 'dark-theme', 'auto-theme');
+        area.classList.add(`${theme}-theme`);
+        console.log('Applied theme to area:', area.className);
+      }
+    });
+    
+    console.log(`Theme applied: ${theme}`);
+  };
+
+  // Notification permission request
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        console.log('Notification permission granted');
+        // Show a test notification
+        new Notification('RegistrarConnect', {
+          body: 'Notifications are now enabled!',
+          icon: '/favicon.ico'
+        });
+      } else {
+        console.log('Notification permission denied');
+        // Reset the preference if permission denied
+        updatePreference('notifications.push', false);
+      }
+    }
+  };
+
+  // Dashboard layout application
+  const applyDashboardLayout = (layout: string) => {
+    const dashboard = document.querySelector('.dashboard-screen');
+    if (dashboard) {
+      dashboard.classList.remove('compact', 'comfortable', 'spacious');
+      dashboard.classList.add(layout);
+    }
+    
+    // Apply to main content areas
+    const mainAreas = document.querySelectorAll('.main-area, .admin-layout');
+    mainAreas.forEach(area => {
+      if (area instanceof HTMLElement) {
+        area.classList.remove('compact', 'comfortable', 'spacious');
+        area.classList.add(layout);
+      }
+    });
+    
+    console.log(`Dashboard layout applied: ${layout}`);
+  };
+
   useEffect(() => {
     // Load preferences from localStorage
     const saved = localStorage.getItem('userPreferences');
     if (saved) {
-      setPreferences(JSON.parse(saved));
+      const parsedPrefs = JSON.parse(saved);
+      setPreferences(parsedPrefs);
+      // Apply saved theme
+      applyTheme(parsedPrefs.theme);
     }
   }, []);
+
+  // Auto-save preferences when they change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      localStorage.setItem('userPreferences', JSON.stringify(preferences));
+      console.log('Preferences auto-saved');
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [preferences]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -81,6 +216,10 @@ export default function SettingsScreen() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       localStorage.setItem('userPreferences', JSON.stringify(preferences));
+      
+      // Apply theme immediately
+      applyTheme(preferences.theme);
+      
       setSaveStatus('saved');
       
       setTimeout(() => setSaveStatus('idle'), 2000);
@@ -113,21 +252,6 @@ export default function SettingsScreen() {
     });
   };
 
-  const updatePreference = (path: string, value: any) => {
-    setPreferences(prev => {
-      const newPrefs = { ...prev };
-      const keys = path.split('.');
-      let current = newPrefs;
-      
-      for (let i = 0; i < keys.length - 1; i++) {
-        current = current[keys[i]];
-      }
-      
-      current[keys[keys.length - 1]] = value;
-      return newPrefs;
-    });
-  };
-
   const tabs = [
     { id: 'general', label: 'General', icon: Settings },
     { id: 'personalization', label: 'Personalization', icon: Sparkles },
@@ -146,6 +270,16 @@ export default function SettingsScreen() {
           <p className="settings-subtitle">Customize your experience</p>
         </div>
         <div className="header-actions">
+          <button 
+            className="action-btn secondary"
+            onClick={() => {
+              console.log('Current preferences:', preferences);
+              console.log('localStorage userPreferences:', localStorage.getItem('userPreferences'));
+            }}
+          >
+            <Database size={16} />
+            Debug
+          </button>
           <button 
             className="action-btn secondary"
             onClick={handleReset}
@@ -356,7 +490,32 @@ export default function SettingsScreen() {
                       <span className="toggle-slider"></span>
                     </div>
                   </div>
-                </label>
+          </label>
+
+                <div className="setting-item">
+                  <div className="setting-content">
+                    <div className="setting-info">
+                      <span className="setting-name">Test Notifications</span>
+                      <span className="setting-description">Send a test notification to verify settings</span>
+                    </div>
+                    <button 
+                      className="action-btn secondary"
+                      onClick={() => {
+                        if (preferences.notifications.push && 'Notification' in window) {
+                          new Notification('Test Notification', {
+                            body: 'This is a test notification from RegistrarConnect!',
+                            icon: '/favicon.ico'
+                          });
+                        } else {
+                          alert('Please enable push notifications first');
+                        }
+                      }}
+                    >
+                      <Bell size={16} />
+                      Test Notification
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -423,7 +582,8 @@ export default function SettingsScreen() {
             </div>
           )}
         </div>
-          </div>
+      </div>
     </div>
   );
 }
+

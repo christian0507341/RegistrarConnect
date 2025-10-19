@@ -6,7 +6,12 @@ import {
   User, 
   LogOut,
   Menu,
-  X
+  X,
+  MessageCircle,
+  Bell,
+  Plus,
+  Settings,
+  HelpCircle
 } from "lucide-react";
 import { useState } from "react";
 import "../styles/layouts/StudentLayout.css";
@@ -23,13 +28,21 @@ export default function StudentLayout({ onLogout }: StudentLayoutProps) {
   const navigation = [
     { name: "Dashboard", href: "/student/dashboard", icon: Home },
     { name: "My Requests", href: "/student/requests", icon: FileText },
+    { name: "New Request", href: "/student/requests/new", icon: Plus },
     { name: "Appointments", href: "/student/appointments", icon: Calendar },
+    { name: "AI Assistant", href: "/student/chat", icon: MessageCircle },
+    { name: "Notifications", href: "/student/notifications", icon: Bell },
     { name: "Profile", href: "/student/profile", icon: User },
   ];
 
   const handleLogout = () => {
     onLogout();
     navigate("/student/login");
+  };
+
+  const getPageTitle = () => {
+    const currentPage = navigation.find(item => item.href === location.pathname);
+    return currentPage?.name || "Dashboard";
   };
 
   return (
@@ -42,11 +55,13 @@ export default function StudentLayout({ onLogout }: StudentLayoutProps) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Professional Sidebar */}
       <div className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <div className="brand">
-            <div className="brand-icon">🎓</div>
+            <div className="brand-icon">
+              <div className="brand-logo">🎓</div>
+            </div>
             <div className="brand-text">
               <div className="brand-name">RegistrarConnect</div>
               <div className="brand-subtitle">Student Portal</div>
@@ -76,12 +91,22 @@ export default function StudentLayout({ onLogout }: StudentLayoutProps) {
               >
                 <Icon size={20} />
                 <span>{item.name}</span>
+                {isActive && <div className="nav-indicator" />}
               </button>
             );
           })}
         </nav>
 
         <div className="sidebar-footer">
+          <div className="user-info">
+            <div className="user-avatar">
+              {localStorage.getItem("name")?.charAt(0).toUpperCase() || "S"}
+            </div>
+            <div className="user-details">
+              <div className="user-name">{localStorage.getItem("name") || "Student"}</div>
+              <div className="user-role">Student</div>
+            </div>
+          </div>
           <button 
             className="logout-btn"
             onClick={handleLogout}
@@ -92,9 +117,9 @@ export default function StudentLayout({ onLogout }: StudentLayoutProps) {
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Main content area */}
       <div className="main-content">
-        {/* Top bar */}
+        {/* Professional Topbar */}
         <div className="topbar">
           <div className="topbar-left">
             <button 
@@ -103,16 +128,41 @@ export default function StudentLayout({ onLogout }: StudentLayoutProps) {
             >
               <Menu size={20} />
             </button>
-            <h1 className="page-title">
-              {navigation.find(item => item.href === location.pathname)?.name || "Dashboard"}
-            </h1>
+            <div className="page-info">
+              <h1 className="page-title">{getPageTitle()}</h1>
+              <p className="page-subtitle">Manage your academic documents and requests</p>
+            </div>
           </div>
           <div className="topbar-right">
-            <div className="user-info">
+            <div className="topbar-actions">
+              <button 
+                className="action-btn"
+                onClick={() => navigate('/student/notifications')}
+                title="Notifications"
+              >
+                <Bell size={18} />
+                <span className="notification-badge">3</span>
+              </button>
+              <button 
+                className="action-btn"
+                onClick={() => navigate('/student/chat')}
+                title="AI Assistant"
+              >
+                <MessageCircle size={18} />
+              </button>
+              <button 
+                className="action-btn"
+                onClick={() => navigate('/student/requests/new')}
+                title="New Request"
+              >
+                <Plus size={18} />
+              </button>
+            </div>
+            <div className="user-profile">
               <div className="user-avatar">
                 {localStorage.getItem("name")?.charAt(0).toUpperCase() || "S"}
               </div>
-              <div className="user-details">
+              <div className="user-info">
                 <div className="user-name">{localStorage.getItem("name") || "Student"}</div>
                 <div className="user-role">Student</div>
               </div>

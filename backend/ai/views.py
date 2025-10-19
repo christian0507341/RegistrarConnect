@@ -172,67 +172,170 @@ def chat(request):
     POST /api/ai/chat/
       Body: { conversation_id, text?, session?, history?, status? }
     """
-    data = request.data or {}
-    conv_id = data.get("conversation_id") or data.get("conversationId")
-    text = (data.get("text") or data.get("message") or "").strip()
-    if not conv_id:
-        return Response({"detail": "conversation_id is required"}, status=400)
+    try:
+        data = request.data or {}
+        conv_id = data.get("conversation_id") or data.get("conversationId")
+        text = (data.get("text") or data.get("message") or "").strip()
+        
+        if not conv_id:
+            return Response({"detail": "conversation_id is required"}, status=400)
+        
+        # Log the request for debugging
+        print(f"🔍 Chat request - User: {request.user.id}, Conv: {conv_id}, Text: {text[:50]}...")
+        
+    except Exception as e:
+        print(f"❌ Error parsing chat request: {e}")
+        return Response({"detail": "Invalid request data"}, status=400)
 
     # Ensure user is authenticated
     if not request.user or not request.user.is_authenticated:
         return Response({"error": "Authentication required"}, status=401)
 
-    access_token = _extract_bearer_token(request)
-    now_iso = timezone.now().isoformat()
-    
-    # Ensure we have a valid access token
-    if not access_token:
-        return Response({"detail": "Authentication required"}, status=401)
+    try:
+        access_token = _extract_bearer_token(request)
+        now_iso = timezone.now().isoformat()
+        
+        # Ensure we have a valid access token
+        if not access_token:
+            return Response({"detail": "Authentication required"}, status=401)
+    except Exception as e:
+        print(f"❌ Error extracting token: {e}")
+        return Response({"detail": "Authentication error"}, status=401)
 
     LOCKED_STATUSES = {"pending", "on_process", "ready_to_claim", "rejected"}
 
-    with transaction.atomic():
-        user_id = str(request.user.id)
-        row, _created = ChatHistory.objects.select_for_update().get_or_create(
-            user_id=user_id,
-            conversation_id=conv_id,
-            defaults={
-                "history": [],
+    try:
+        with transaction.atomic():
+            user_id = str(request.user.id)
+            row, _created = ChatHistory.objects.select_for_update().get_or_create(
+                user_id=user_id,
+                conversation_id=conv_id,
+                defaults={
+                    "history": [],
                 "session": start_new_session(user_id),
             },
-        )
-        
-        # Security check: Ensure conversation belongs to the authenticated user
-        if row.user_id != user_id:
-            return Response({"error": "Access denied - conversation does not belong to user"}, status=403)
+            )
+            
+            # Security check: Ensure conversation belongs to the authenticated user
+            if row.user_id != user_id:
+                return Response({"error": "Access denied - conversation does not belong to user"}, status=403)
 
-        # Get inbound session data
-        inbound_session = data.get("session") or {}
-        
-        # For new conversations, start fresh
-        if _created:
-            # Start with a fresh session, then merge any inbound data
-            merged_session = start_new_session(str(request.user.id))
-            merged_session.update(inbound_session)
-            history = data.get("history", [])
-        else:
-            # Merge inbound data for existing conversations
-            merged_session = dict(getattr(row, "session", {}) or {})
-            # Ensure existing session has required keys
-            if "mode" not in merged_session:
-                merged_session.update(start_new_session(str(request.user.id)))
-            merged_session.update(inbound_session)
-            history = (row.history or []) + (data.get("history") or [])
+            # Get inbound session data
+            inbound_session = data.get("session") or {}
+            
+            # For new conversations, start fresh
+            if _created:
+                # Start with a fresh session, then merge any inbound data
+                merged_session = start_new_session(str(request.user.id))
+                merged_session.update(inbound_session)
+                history = data.get("history", [])
+            else:
+                # Merge inbound data for existing conversations
+                merged_session = dict(getattr(row, "session", {}) or {})
+                # Ensure existing session has required keys
+                if "mode" not in merged_session:
+                    merged_session.update(start_new_session(str(request.user.id)))
+                merged_session.update(inbound_session)
+                history = (row.history or []) + (data.get("history") or [])
 
-        # Status preference: payload -> session -> row -> draft
-        status_val = data.get("status") or merged_session.get("status") or row.status or "draft"
+            # Status preference: payload -> session -> row -> draft
+            status_val = data.get("status") or merged_session.get("status") or row.status or "draft"
 
-        reply_text = "State saved successfully"
-        action = None
+            reply_text = "State saved successfully"
+            action = None
 
-        if text:
-            # If the chat is locked to a submitted request, just notify
-            if row.document_request and row.document_request.status in LOCKED_STATUSES:
+            if text:
+                # If the chat is locked to a submitted request, just notify
+                if row.document_request and row.document_request.status in LOCKED_STATUSES:
+                    user_msg = {
+                        "id": str(uuid4()),
+                        "conversation_id": conv_id,
+                        "sender": "student",
+                        "text": text,
+                        "timestamp": now_iso,
+                    }
+                    
+                    # Provide more specific message based on status
+                    status_messages = {
+                        "pending": "under faculty review for payment approval",
+                        "on_process": "approved and being processed",
+                        "ready_to_claim": "ready for you to claim",
+                        "rejected": "rejected"
+                    }
+                    
+                    locked_notice = (
+                        f"🔒 **This conversation is locked** to your submitted **{row.document_request.document_type}** request.\n\n"
+                        f"📊 **Current Status:** {status_messages.get(row.document_request.status, row.document_request.status)}\n\n"
+                        f"💡 **To request another document:**\n"
+                        f"• Tap the **'+' button** in the chat header\n"
+                        f"• Or go to **Settings → Chat History** to start fresh\n"
+                        f"• Or use the **'New Conversation'** option in the menu\n\n"
+                        f"🎯 This ensures each document request is tracked separately!"
+                    )
+                    
+                    bot_msg = {
+                        "id": str(uuid4()),
+                        "conversation_id": conv_id,
+                        "sender": "bot",
+                        "text": locked_notice,
+                        "timestamp": timezone.now().isoformat(),
+                    }
+                    history.extend([user_msg, bot_msg])
+
+                    status_val = row.document_request.status
+                    row.history = history
+                    row.session = merged_session
+                    row.status = status_val
+                    row.save(update_fields=["history", "session", "status", "updated_at"])
+
+                    return Response({"message": bot_msg, "action": action}, status=200)
+
+                # Normal engine path
+                try:
+                    push_history(merged_session, "user", text)
+                    reply_text = handle_user_text(merged_session, text, access_token)
+                except Exception as e:
+                    print(f"❌ Chatbot error: {e}")
+                    # Provide a helpful fallback response
+                    reply_text = (
+                        "👋 **Hello! I'm your AI Assistant for document requests.**\n\n"
+                        "I can help you with:\n"
+                        "• **OTR** (Official Transcript of Records)\n"
+                        "• **COG** (Certificate of Grades)\n"
+                        "• **COE** (Certificate of Enrollment)\n"
+                        "• **Other certificates**\n\n"
+                        "💡 **Try saying:**\n"
+                        "• \"I need my transcript\"\n"
+                        "• \"Request COG\"\n"
+                        "• \"How to get COE?\"\n\n"
+                        "What can I help you with today?"
+                    )
+
+                # Try to link the chat to the most recent relevant DocumentRequest
+                if not row.document_request and merged_session.get("doc_type"):
+                    q = DocumentRequest.objects.filter(
+                        student_id=request.user,
+                        document_type=merged_session.get("doc_type"),
+                    ).order_by("-requested_at")
+
+                    sem = merged_session.get("semester")
+                    sy = merged_session.get("school_year")
+                    purpose = merged_session.get("purpose")
+                    if sem in (1, 2):
+                        q = q.filter(semester=sem)
+                    if sy:
+                        q = q.filter(school_year=sy)
+                    if purpose:
+                        q = q.filter(purpose=purpose)
+
+                    doc = q.filter(status__in=["draft", "awaiting_payment", "pending"]).first()
+                    if doc:
+                        row.document_request = doc
+                        row.status = doc.status
+                        row.save(update_fields=["document_request", "status", "updated_at"])
+                        status_val = doc.status
+
+                # Add the two chat bubbles
                 user_msg = {
                     "id": str(uuid4()),
                     "conversation_id": conv_id,
@@ -240,108 +343,47 @@ def chat(request):
                     "text": text,
                     "timestamp": now_iso,
                 }
-                
-                # Provide more specific message based on status
-                status_messages = {
-                    "pending": "under faculty review for payment approval",
-                    "on_process": "approved and being processed",
-                    "ready_to_claim": "ready for you to claim",
-                    "rejected": "rejected"
-                }
-                
-                locked_notice = (
-                    f"🔒 **This conversation is locked** to your submitted **{row.document_request.document_type}** request.\n\n"
-                    f"📊 **Current Status:** {status_messages.get(row.document_request.status, row.document_request.status)}\n\n"
-                    f"💡 **To request another document:**\n"
-                    f"• Tap the **'+' button** in the chat header\n"
-                    f"• Or go to **Settings → Chat History** to start fresh\n"
-                    f"• Or use the **'New Conversation'** option in the menu\n\n"
-                    f"🎯 This ensures each document request is tracked separately!"
-                )
-                
                 bot_msg = {
                     "id": str(uuid4()),
                     "conversation_id": conv_id,
                     "sender": "bot",
-                    "text": locked_notice,
+                    "text": reply_text,
                     "timestamp": timezone.now().isoformat(),
                 }
                 history.extend([user_msg, bot_msg])
 
-                status_val = row.document_request.status
+                # Persist merged state
                 row.history = history
                 row.session = merged_session
                 row.status = status_val
                 row.save(update_fields=["history", "session", "status", "updated_at"])
 
-                return Response({"message": bot_msg, "action": action}, status=200)
-
-            # Normal engine path
-            try:
-                push_history(merged_session, "user", text)
-                reply_text = handle_user_text(merged_session, text, access_token)
-            except Exception as e:
-                reply_text = f"⚠️ Error processing your message: {str(e)}"
-                # Log the error for debugging
-                print(f"Chatbot error: {e}")
-
-            # Try to link the chat to the most recent relevant DocumentRequest
-            if not row.document_request and merged_session.get("doc_type"):
-                q = DocumentRequest.objects.filter(
-                    student_id=request.user,
-                    document_type=merged_session.get("doc_type"),
-                ).order_by("-requested_at")
-
-                sem = merged_session.get("semester")
-                sy = merged_session.get("school_year")
-                purpose = merged_session.get("purpose")
-                if sem in (1, 2):
-                    q = q.filter(semester=sem)
-                if sy:
-                    q = q.filter(school_year=sy)
-                if purpose:
-                    q = q.filter(purpose=purpose)
-
-                doc = q.filter(status__in=["draft", "awaiting_payment", "pending"]).first()
-                if doc:
-                    row.document_request = doc
-                    row.status = doc.status
-                    row.save(update_fields=["document_request", "status", "updated_at"])
-                    status_val = doc.status
-
-            # Add the two chat bubbles
-            user_msg = {
-                "id": str(uuid4()),
-                "conversation_id": conv_id,
-                "sender": "student",
-                "text": text,
-                "timestamp": now_iso,
-            }
-            bot_msg = {
-                "id": str(uuid4()),
-                "conversation_id": conv_id,
-                "sender": "bot",
-                "text": reply_text,
-                "timestamp": timezone.now().isoformat(),
-            }
-            history.extend([user_msg, bot_msg])
-
-        # Persist merged state
-        row.history = history
-        row.session = merged_session
-        row.status = status_val
-        row.save(update_fields=["history", "session", "status", "updated_at"])
-
-    return Response(
-        {
-            "message": {
-                "id": str(uuid4()),
-                "conversation_id": conv_id,
-                "sender": "bot",
-                "text": reply_text,
-                "timestamp": now_iso,
+            return Response(
+                {
+                    "message": {
+                        "id": str(uuid4()),
+                        "conversation_id": conv_id,
+                        "sender": "bot",
+                        "text": reply_text,
+                        "timestamp": now_iso,
+                    },
+                    "action": action,
+                },
+                status=200,
+            )
+        
+    except Exception as e:
+        print(f"❌ Chat error: {e}")
+        return Response(
+            {
+                "message": {
+                    "id": str(uuid4()),
+                    "conversation_id": conv_id,
+                    "sender": "bot",
+                    "text": "I'm sorry, I encountered an error. Please try again.",
+                    "timestamp": timezone.now().isoformat(),
+                },
+                "action": None,
             },
-            "action": action,
-        },
-        status=200,
-    )
+            status=200,
+        )

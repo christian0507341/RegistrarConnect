@@ -1,23 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "../services/api";
-import { notificationService } from "../services/notificationService";
-import Card from "../components/Card";
 import {
   FileText,
   Calendar,
   Bell,
-  User,
   Clock,
   CheckCircle2,
   AlertTriangle,
   Plus,
-  Download,
-  Settings,
-  BookOpen,
-  GraduationCap,
+  MessageCircle,
+  Eye,
   TrendingUp,
-  Activity
+  ArrowRight,
+  Award
 } from "lucide-react";
 import "../styles/screens/StudentDashboardScreen.css";
 
@@ -54,365 +50,360 @@ export default function StudentDashboard() {
   const [requests, setRequests] = useState<DocumentRequest[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState({
-    totalRequests: 0,
-    pendingRequests: 0,
-    approvedRequests: 0,
-    upcomingAppointments: 0
-  });
 
-  // Fetch student data
   useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        setLoading(true);
-        
-        // Check authentication
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          navigate("/student/login");
-          return;
-        }
-
-        // Fetch document requests
-        const requestsResponse = await apiService.getDocumentRequests();
-        const requestsData = Array.isArray(requestsResponse.data) 
-          ? requestsResponse.data 
-          : requestsResponse.data?.results || [];
-        
-        setRequests(requestsData);
-
-        // Fetch appointments
-        try {
-          const appointmentsResponse = await apiService.getStudentAppointments();
-          setAppointments(appointmentsResponse.data || []);
-        } catch (err) {
-          console.log("No appointments found");
-          setAppointments([]);
-        }
-
-        // Calculate stats
-        const totalRequests = requestsData.length;
-        const pendingRequests = requestsData.filter(req => 
-          ['pending', 'awaiting_payment', 'on_process'].includes(req.status)
-        ).length;
-        const approvedRequests = requestsData.filter(req => 
-          ['ready_to_claim', 'claimed'].includes(req.status)
-        ).length;
-        const upcomingAppointments = appointmentsData?.filter(apt => 
-          new Date(apt.appointment_date) >= new Date()
-        ).length || 0;
-
-        setStats({
-          totalRequests,
-          pendingRequests,
-          approvedRequests,
-          upcomingAppointments
-        });
-
-      } catch (err) {
-        console.error("Error fetching student data:", err);
-        setError("Failed to load dashboard data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStudentData();
+    // Check if user is authenticated and is a student
+    const token = localStorage.getItem("accessToken");
+    const role = localStorage.getItem("role");
+    
+    if (!token || role !== 'student') {
+      navigate('/login');
+      return;
+    }
+    
+    fetchData();
   }, [navigate]);
 
-  // Request notification permission
-  useEffect(() => {
-    notificationService.requestPermission();
-  }, []);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [requestsResponse, appointmentsResponse] = await Promise.all([
+        apiService.getDocumentRequests(),
+        apiService.getAppointments()
+      ]);
+      
+      setRequests(requestsResponse.data || []);
+      setAppointments(appointmentsResponse.data || []);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const getStatusDisplay = (status: string) => {
-    switch (status) {
-      case 'draft': return 'Draft';
-      case 'confirming': return 'Confirming';
-      case 'awaiting_payment': return 'Awaiting Payment';
-      case 'pending': return 'Pending';
-      case 'on_process': return 'Processing';
-      case 'ready_to_claim': return 'Ready to Claim';
-      case 'cancelled': return 'Cancelled';
-      case 'rejected': return 'Rejected';
-      case 'claimed': return 'Claimed';
-      default: return 'Pending';
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return <Clock size={16} className="text-amber-500" />;
+      case 'approved':
+      case 'completed':
+        return <CheckCircle2 size={16} className="text-emerald-500" />;
+      case 'rejected':
+        return <AlertTriangle size={16} className="text-red-500" />;
+      default:
+        return <Clock size={16} className="text-gray-500" />;
     }
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ready_to_claim': return 'success';
-      case 'claimed': return 'success';
-      case 'rejected': return 'error';
-      case 'cancelled': return 'error';
-      case 'on_process': return 'warning';
-      default: return 'info';
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'approved':
+      case 'completed':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'rejected':
+        return 'bg-red-50 text-red-700 border-red-200';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
+  const upcomingAppointments = appointments?.filter((apt: any) =>
+    new Date(apt.appointment_date) >= new Date()
+  ).length || 0;
+
+  const pendingRequests = requests?.filter((req: any) =>
+    req.status === 'pending'
+  ).length || 0;
+
+  const completedRequests = requests?.filter((req: any) =>
+    req.status === 'completed' || req.status === 'approved'
+  ).length || 0;
+
+  const totalRequests = requests?.length || 0;
+
   if (loading) {
     return (
-      <div className="student-dashboard-screen">
+      <div className="student-dashboard">
         <div className="loading-container">
-          <div className="spinner"></div>
+          <div className="loading-spinner"></div>
           <p>Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="student-dashboard-screen">
-        <div className="error-container">
-          <AlertTriangle size={48} />
-          <h3>Error Loading Dashboard</h3>
-          <p>{error}</p>
-          <button onClick={() => window.location.reload()}>Retry</button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="student-dashboard-screen">
-      {/* Header Section */}
+    <div className="student-dashboard">
+      {/* Professional Header */}
       <div className="dashboard-header">
-        <div className="welcome-section">
-          <div className="welcome-content">
-            <h1 className="dashboard-title">
-              <span className="title-gradient">Welcome back,</span>
-              <span className="title-name">{localStorage.getItem("name") || "Student"}</span>
-            </h1>
-            <p className="dashboard-subtitle">
-              Your personalized student portal with real-time updates
-            </p>
-          </div>
-          <div className="student-badge">
-            <div className="badge-icon">🎓</div>
-            <span>Student Portal</span>
-          </div>
-        </div>
-        <div className="dashboard-actions">
-          <button 
-            className="action-btn primary"
-            onClick={() => navigate("/student/requests/new")}
-          >
-            <Plus size={16} />
-            <span>New Request</span>
-          </button>
-          <button 
-            className="action-btn secondary"
-            onClick={() => navigate("/student/appointments")}
-          >
-            <Calendar size={16} />
-            <span>Book Appointment</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="stats-grid">
-        <div className="stat-card primary">
-          <div className="stat-content">
-            <div className="stat-header">
-              <div className="stat-icon">
-                <FileText size={24} />
-              </div>
+        <div className="header-content">
+          <div className="welcome-section">
+            <div className="greeting">
+              <h1>{getGreeting()}, {localStorage.getItem("name") || "Student"}!</h1>
+              <p>Here's your academic document management overview</p>
             </div>
-            <div className="stat-value">{stats.totalRequests}</div>
-            <div className="stat-label">Total Requests</div>
-            <div className="stat-sublabel">All time</div>
-          </div>
-        </div>
-
-        <div className="stat-card warning">
-          <div className="stat-content">
-            <div className="stat-header">
-              <div className="stat-icon">
-                <Clock size={24} />
-              </div>
+            <div className="header-actions">
+              <button 
+                className="action-btn secondary"
+                onClick={() => navigate('/student/notifications')}
+              >
+                <Bell size={18} />
+                Notifications
+              </button>
+              <button 
+                className="action-btn primary"
+                onClick={() => navigate('/student/requests/new')}
+              >
+                <Plus size={18} />
+                New Request
+              </button>
             </div>
-            <div className="stat-value">{stats.pendingRequests}</div>
-            <div className="stat-label">Pending</div>
-            <div className="stat-sublabel">Under review</div>
-          </div>
-        </div>
-
-        <div className="stat-card success">
-          <div className="stat-content">
-            <div className="stat-header">
-              <div className="stat-icon">
-                <CheckCircle2 size={24} />
-              </div>
-            </div>
-            <div className="stat-value">{stats.approvedRequests}</div>
-            <div className="stat-label">Approved</div>
-            <div className="stat-sublabel">Ready to claim</div>
-          </div>
-        </div>
-
-        <div className="stat-card info">
-          <div className="stat-content">
-            <div className="stat-header">
-              <div className="stat-icon">
-                <Calendar size={24} />
-              </div>
-            </div>
-            <div className="stat-value">{stats.upcomingAppointments}</div>
-            <div className="stat-label">Appointments</div>
-            <div className="stat-sublabel">Scheduled</div>
           </div>
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="content-grid">
-        {/* Recent Requests */}
-        <Card
-          title={
-            <div className="card-header-content">
-              <div className="card-title">
-                <FileText size={20} />
-                <span>Recent Requests</span>
-              </div>
-              <button 
-                className="view-all-btn"
-                onClick={() => navigate("/student/requests")}
-              >
-                View All
-              </button>
+      {/* Key Metrics Dashboard */}
+      <div className="metrics-section">
+        <div className="metrics-grid">
+          <div className="metric-card primary">
+            <div className="metric-icon">
+              <FileText size={24} />
             </div>
-          }
-          className="requests-card"
-        >
-          <div className="requests-list">
-            {requests.slice(0, 5).map((request) => (
-              <div key={request.id} className="request-item">
-                <div className="request-info">
-                  <div className="request-type">{request.document_type}</div>
-                  <div className="request-date">
-                    {new Date(request.requested_at).toLocaleDateString()}
-                  </div>
-                </div>
-                <div className={`status-badge ${getStatusColor(request.status)}`}>
-                  {getStatusDisplay(request.status)}
-                </div>
-              </div>
-            ))}
-            {requests.length === 0 && (
-              <div className="empty-state">
-                <FileText size={48} />
-                <h3>No requests yet</h3>
-                <p>Start by creating your first document request</p>
-                <button 
-                  className="action-btn primary"
-                  onClick={() => navigate("/student/requests/new")}
-                >
-                  <Plus size={16} />
-                  Create Request
-                </button>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* Upcoming Appointments */}
-        <Card
-          title={
-            <div className="card-header-content">
-              <div className="card-title">
-                <Calendar size={20} />
-                <span>Upcoming Appointments</span>
-              </div>
-              <button 
-                className="view-all-btn"
-                onClick={() => navigate("/student/appointments")}
-              >
-                View All
-              </button>
+            <div className="metric-content">
+              <h3>{totalRequests}</h3>
+              <p>Total Requests</p>
+              <span className="metric-trend">
+                <TrendingUp size={14} />
+                All time
+              </span>
             </div>
-          }
-          className="appointments-card"
-        >
-          <div className="appointments-list">
-            {appointments.slice(0, 3).map((appointment) => (
-              <div key={appointment.id} className="appointment-item">
-                <div className="appointment-info">
-                  <div className="appointment-document">{appointment.document_type}</div>
-                  <div className="appointment-date">
-                    {new Date(appointment.appointment_date).toLocaleDateString()} at {appointment.appointment_time}
-                  </div>
-                </div>
-                <div className={`status-badge ${appointment.status}`}>
-                  {appointment.status}
-                </div>
-              </div>
-            ))}
-            {appointments.length === 0 && (
-              <div className="empty-state">
-                <Calendar size={48} />
-                <h3>No appointments</h3>
-                <p>Book an appointment to claim your documents</p>
-                <button 
-                  className="action-btn primary"
-                  onClick={() => navigate("/student/appointments")}
-                >
-                  <Calendar size={16} />
-                  Book Appointment
-                </button>
-              </div>
-            )}
           </div>
-        </Card>
+          
+          <div className="metric-card warning">
+            <div className="metric-icon">
+              <Clock size={24} />
+            </div>
+            <div className="metric-content">
+              <h3>{pendingRequests}</h3>
+              <p>Pending Review</p>
+              <span className="metric-trend">
+                <Clock size={14} />
+                In progress
+              </span>
+            </div>
+          </div>
+          
+          <div className="metric-card success">
+            <div className="metric-icon">
+              <CheckCircle2 size={24} />
+            </div>
+            <div className="metric-content">
+              <h3>{completedRequests}</h3>
+              <p>Completed</p>
+              <span className="metric-trend">
+                <Award size={14} />
+                Ready for pickup
+              </span>
+            </div>
+          </div>
+          
+          <div className="metric-card info">
+            <div className="metric-icon">
+              <Calendar size={24} />
+            </div>
+            <div className="metric-content">
+              <h3>{upcomingAppointments}</h3>
+              <p>Appointments</p>
+              <span className="metric-trend">
+                <Calendar size={14} />
+                This week
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Quick Actions */}
-      <Card
-        title={
-          <div className="card-header-content">
-            <div className="card-title">
-              <Activity size={20} />
-              <span>Quick Actions</span>
+      <div className="actions-section">
+        <h2 className="section-title">Quick Actions</h2>
+        <div className="actions-grid">
+          <button 
+            onClick={() => navigate('/student/requests/new')}
+            className="action-card primary"
+          >
+            <div className="action-icon">
+              <Plus size={24} />
             </div>
-          </div>
-        }
-        className="quick-actions-card"
-      >
-        <div className="quick-actions-grid">
-          <button 
-            className="quick-action-btn"
-            onClick={() => navigate("/student/requests/new")}
-          >
-            <FileText size={24} />
-            <span>New Document Request</span>
+            <div className="action-content">
+              <h3>Submit Request</h3>
+              <p>Create a new document request</p>
+            </div>
+            <ArrowRight size={20} className="action-arrow" />
           </button>
+          
           <button 
-            className="quick-action-btn"
-            onClick={() => navigate("/student/appointments")}
+            onClick={() => navigate('/student/requests')}
+            className="action-card"
           >
-            <Calendar size={24} />
-            <span>Book Appointment</span>
+            <div className="action-icon">
+              <Eye size={24} />
+            </div>
+            <div className="action-content">
+              <h3>View Requests</h3>
+              <p>Track your document requests</p>
+            </div>
+            <ArrowRight size={20} className="action-arrow" />
           </button>
+          
           <button 
-            className="quick-action-btn"
-            onClick={() => navigate("/student/requests")}
+            onClick={() => navigate('/student/appointments')}
+            className="action-card"
           >
-            <BookOpen size={24} />
-            <span>View All Requests</span>
+            <div className="action-icon">
+              <Calendar size={24} />
+            </div>
+            <div className="action-content">
+              <h3>Appointments</h3>
+              <p>Schedule and manage meetings</p>
+            </div>
+            <ArrowRight size={20} className="action-arrow" />
           </button>
+          
           <button 
-            className="quick-action-btn"
-            onClick={() => navigate("/student/profile")}
+            onClick={() => navigate('/student/chat')}
+            className="action-card"
           >
-            <User size={24} />
-            <span>Profile Settings</span>
+            <div className="action-icon">
+              <MessageCircle size={24} />
+            </div>
+            <div className="action-content">
+              <h3>AI Assistant</h3>
+              <p>Get help with your requests</p>
+            </div>
+            <ArrowRight size={20} className="action-arrow" />
           </button>
         </div>
-      </Card>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="activity-section">
+        <div className="section-header">
+          <h2 className="section-title">Recent Activity</h2>
+          <button 
+            onClick={() => navigate('/student/requests')}
+            className="view-all-btn"
+          >
+            View All
+            <ArrowRight size={16} />
+          </button>
+        </div>
+        
+        <div className="activity-list">
+          {requests?.slice(0, 4).map((request) => (
+            <div key={request.id} className="activity-item">
+              <div className="activity-icon">
+                <FileText size={20} />
+              </div>
+              <div className="activity-content">
+                <h4>{request.document_type}</h4>
+                <p>{request.purpose}</p>
+                <span className="activity-date">{formatDate(request.requested_at)}</span>
+              </div>
+              <div className="activity-status">
+                <span className={`status-badge ${getStatusColor(request.status)}`}>
+                  {getStatusIcon(request.status)}
+                  {request.status}
+                </span>
+              </div>
+            </div>
+          )) || (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <FileText size={48} />
+              </div>
+              <h3>No requests yet</h3>
+              <p>Start by creating your first document request</p>
+              <button 
+                onClick={() => navigate('/student/requests/new')}
+                className="cta-button"
+              >
+                <Plus size={16} />
+                Create Your First Request
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Upcoming Appointments */}
+      {upcomingAppointments > 0 && (
+        <div className="appointments-section">
+          <h2 className="section-title">Upcoming Appointments</h2>
+          <div className="appointments-list">
+            {appointments?.slice(0, 2).map((appointment) => (
+              <div key={appointment.id} className="appointment-card">
+                <div className="appointment-date">
+                  <span className="day">{new Date(appointment.appointment_date).getDate()}</span>
+                  <span className="month">{new Date(appointment.appointment_date).toLocaleDateString('en', { month: 'short' })}</span>
+                </div>
+                <div className="appointment-content">
+                  <h4>Document Review</h4>
+                  <p>{appointment.document_type}</p>
+                  <span className="appointment-time">{appointment.appointment_time}</span>
+                </div>
+                <div className="appointment-status">
+                  <span className={`status-badge ${getStatusColor(appointment.status)}`}>
+                    {appointment.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Help Section */}
+      <div className="help-section">
+        <div className="help-card">
+          <div className="help-content">
+            <h3>Need Help?</h3>
+            <p>Get assistance with your document requests or schedule an appointment with our staff.</p>
+            <div className="help-actions">
+              <button 
+                onClick={() => navigate('/student/chat')}
+                className="help-btn primary"
+              >
+                <MessageCircle size={16} />
+                Chat with AI
+              </button>
+              <button 
+                onClick={() => navigate('/student/appointments')}
+                className="help-btn secondary"
+              >
+                <Calendar size={16} />
+                Schedule Meeting
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

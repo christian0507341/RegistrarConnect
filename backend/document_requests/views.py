@@ -19,6 +19,18 @@ from backend.appointments.models import Appointment, AppointmentAction
 from backend.appointments.services import AutomaticAppointmentService
 from backend.ai.models import ChatHistory
 import logging
+import csv
+import io
+from django.http import HttpResponse
+from datetime import datetime
+from django.utils import timezone
+
+# Optional imports for Excel export
+try:
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+except ImportError:
+    openpyxl = None
 
 logger = logging.getLogger(__name__)
 
@@ -710,7 +722,6 @@ def _getNotificationMessage(doc_request, action):
 
 def _getTimeAgo(created_at):
     """Convert datetime to human-readable time ago"""
-    from django.utils import timezone
     now = timezone.now()
     diff = now - created_at
     
@@ -773,3 +784,129 @@ def view_receipt(request, pk):
         })
     except DocumentRequest.DoesNotExist:
         return Response({"error": "Document request not found"}, status=404)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def export_document_requests(request):
+    """
+    Export document requests to CSV or Excel format
+    """
+    format_type = request.GET.get('format', 'csv').lower()
+    
+    # Get document requests based on user role
+    user = request.user
+    if hasattr(user, 'role') and user.role in ['admin', 'faculty']:
+        queryset = DocumentRequest.objects.all().select_related('student_id')
+    else:
+        queryset = DocumentRequest.objects.filter(student_id=user).select_related('student_id')
+    
+    if format_type == 'csv':
+        return export_to_csv(queryset)
+    elif format_type == 'excel':
+        return export_to_excel(queryset)
+    else:
+        return Response({"error": "Unsupported format. Use 'csv' or 'excel'."}, status=400)
+
+
+def export_to_csv(queryset):
+    """Export document requests to CSV format"""
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="document_requests_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+    
+    writer = csv.writer(response)
+    
+    # Write header
+    writer.writerow([
+        'ID', 'Student Name', 'Student Email', 'Document Type', 'Purpose',
+        'Status', 'Requested Date', 'Payment Status', 'Payment Amount',
+        'Claim Info', 'Notes', 'Created At', 'Updated At'
+    ])
+    
+    # Write data
+    for request in queryset:
+        writer.writerow([
+            request.id,
+            request.student_id.get_full_name() if hasattr(request.student_id, 'get_full_name') else str(request.student_id),
+            request.student_id.email if hasattr(request.student_id, 'email') else '',
+            request.document_type,
+            request.purpose,
+            request.status,
+            request.requested_at.strftime('%Y-%m-%d') if request.requested_at else '',
+            'Paid' if request.payment else 'Unpaid',
+            request.payment_amount or 0,
+            request.claim_info or '',
+            request.notes or '',
+            request.created_at.strftime('%Y-%m-%d %H:%M:%S') if request.created_at else '',
+            request.updated_at.strftime('%Y-%m-%d %H:%M:%S') if request.updated_at else ''
+        ])
+    
+    return response
+
+
+def export_to_excel(queryset):
+    """Export document requests to Excel format"""
+    if not openpyxl:
+        return Response({"error": "Excel export requires openpyxl package. Please install it."}, status=500)
+    
+    # Create workbook and worksheet
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Document Requests"
+    
+    # Define headers
+    headers = [
+        'ID', 'Student Name', 'Student Email', 'Document Type', 'Purpose',
+        'Status', 'Requested Date', 'Payment Status', 'Payment Amount',
+        'Claim Info', 'Notes', 'Created At', 'Updated At'
+    ]
+    
+    # Style header row
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center")
+    
+    # Write headers
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+    
+    # Write data
+    for row, request in enumerate(queryset, 2):
+        ws.cell(row=row, column=1, value=request.id)
+        ws.cell(row=row, column=2, value=request.student_id.get_full_name() if hasattr(request.student_id, 'get_full_name') else str(request.student_id))
+        ws.cell(row=row, column=3, value=request.student_id.email if hasattr(request.student_id, 'email') else '')
+        ws.cell(row=row, column=4, value=request.document_type)
+        ws.cell(row=row, column=5, value=request.purpose)
+        ws.cell(row=row, column=6, value=request.status)
+        ws.cell(row=row, column=7, value=request.requested_at.strftime('%Y-%m-%d') if request.requested_at else '')
+        ws.cell(row=row, column=8, value='Paid' if request.payment else 'Unpaid')
+        ws.cell(row=row, column=9, value=request.payment_amount or 0)
+        ws.cell(row=row, column=10, value=request.claim_info or '')
+        ws.cell(row=row, column=11, value=request.notes or '')
+        ws.cell(row=row, column=12, value=request.created_at.strftime('%Y-%m-%d %H:%M:%S') if request.created_at else '')
+        ws.cell(row=row, column=13, value=request.updated_at.strftime('%Y-%m-%d %H:%M:%S') if request.updated_at else '')
+    
+    # Auto-adjust column widths
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # Save to response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="document_requests_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+    
+    wb.save(response)
+    return response

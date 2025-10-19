@@ -6,3 +6,5 @@ description:
 globs:
 alwaysApply: true
 ---
+# PowerShell command to run your Python script with the virtual environment already activated:
+python your_script.py

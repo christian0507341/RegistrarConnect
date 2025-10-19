@@ -3,6 +3,42 @@
   padding: 0;
   background: transparent;
   min-height: 100vh;
+  transition: all 0.3s ease;
+}
+
+/* Theme Support */
+.settings-screen.light-theme {
+  background: #f4f6fb;
+  color: #1f2937;
+}
+
+.settings-screen.dark-theme {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+
+.settings-screen.auto-theme {
+  background: transparent;
+  color: inherit;
+}
+
+/* Dashboard Layout Support */
+.compact {
+  --spacing: 8px;
+  --padding: 12px;
+  --gap: 8px;
+}
+
+.comfortable {
+  --spacing: 16px;
+  --padding: 20px;
+  --gap: 16px;
+}
+
+.spacious {
+  --spacing: 24px;
+  --padding: 32px;
+  --gap: 24px;
 }
 
 /* Settings Header */

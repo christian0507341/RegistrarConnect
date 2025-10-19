@@ -9,13 +9,23 @@ const api = axios.create({
   timeout: 10000,
 });
 
-// Add request interceptor to include auth token
+// Add request interceptor to include auth token and user validation
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
+    const userRole = localStorage.getItem("role");
+    const userId = localStorage.getItem("userId");
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add user context to requests for backend filtering
+    if (userId && userRole === 'student') {
+      config.headers['X-User-ID'] = userId;
+      config.headers['X-User-Role'] = userRole;
+    }
+    
     return config;
   },
   (error) => {
@@ -47,17 +57,32 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${access}`;
           return api(originalRequest);
         } catch (refreshError) {
-          // Refresh failed, redirect to login
+          // Refresh failed, clear auth data and redirect to login
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
+          localStorage.removeItem("userId");
+          localStorage.removeItem("role");
+          localStorage.removeItem("name");
+          localStorage.removeItem("email");
           window.location.href = "/login";
         }
       } else {
-        // No refresh token, redirect to login
+        // No refresh token, clear auth data and redirect to login
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("role");
+        localStorage.removeItem("name");
+        localStorage.removeItem("email");
         window.location.href = "/login";
       }
+    }
+    
+    // Handle 403 Forbidden (user trying to access data they shouldn't)
+    if (error.response?.status === 403) {
+      console.error("Access denied: User does not have permission to access this data");
+      // Optionally redirect to login or show error message
+      window.location.href = "/login";
     }
     
     return Promise.reject(error);
@@ -155,6 +180,49 @@ export const apiService = {
 
   updateAppointmentStatus: (id: number, data: any) =>
     api.patch(`/appointments/${id}/status/`, data),
+
+  // AI Chat
+  sendChatMessage: (message: string, history: Array<{ role: string; content: string }>) => {
+    // Generate a conversation ID for the current session
+    const conversationId = localStorage.getItem("chatConversationId") || `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem("chatConversationId", conversationId);
+    
+    return api.post("/ai/chat/", { 
+      conversation_id: conversationId,
+      text: message,
+      history: history 
+    });
+  },
+
+  // Notifications
+  getNotifications: () =>
+    api.get("/document-requests/student/notifications/"),
+
+  markNotificationAsRead: (id: string) => {
+    // Backend doesn't support marking notifications as read
+    // Return a mock success response
+    return Promise.resolve({ data: { success: true } });
+  },
+
+  deleteNotification: (id: string) => {
+    // Backend doesn't support deleting notifications
+    // Return a mock success response
+    return Promise.resolve({ data: { success: true } });
+  },
+
+  // Document Requests
+  createDocumentRequest: (data: any) =>
+    api.post("/document-requests/", data),
+
+  // Student Profile
+  getStudentProfile: () =>
+    api.get("/auth/me/"),
+
+  updateStudentProfile: (data: any) =>
+    api.patch("/auth/me/", data),
+
+  changePassword: (data: { current_password: string; new_password: string; confirm_password: string }) =>
+    api.post("/auth/change-password/", data),
 };
 
 export default api;

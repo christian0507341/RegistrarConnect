@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "../services/api";
-import { Eye, EyeOff, User, Mail, Lock, AlertCircle, BookOpen, GraduationCap, Users, Shield } from "lucide-react";
+import { Eye, EyeOff, User, Mail, Lock, AlertCircle, BookOpen, GraduationCap, Users, Shield, UserCheck } from "lucide-react";
 import "../styles/screens/UnifiedLoginScreen.css";
 
 type UnifiedLoginProps = {
@@ -16,6 +16,7 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginType, setLoginType] = useState<"student" | "admin">("student");
+  const [adminRole, setAdminRole] = useState<"admin" | "faculty">("admin");
   const [isTransitioning, setIsTransitioning] = useState(false);
   const navigate = useNavigate();
 
@@ -38,11 +39,25 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
       return;
     }
 
+    // Validate PHINMA email format
+    if (!email.endsWith('.up@phinmaed.com')) {
+      setError("Email must be a PHINMA address ending with .up@phinmaed.com");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await apiService.login(email, password, loginType);
+      const roleToSend = loginType === "student" ? "student" : adminRole;
+      console.log('Login attempt:', { 
+        email, 
+        password, 
+        loginType, 
+        adminRole, 
+        roleToSend 
+      });
+      const response = await apiService.login(email, password, roleToSend);
 
       const { access, refresh, role: userRole, name, email: userEmail } =
         response.data;
@@ -52,6 +67,7 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
       localStorage.setItem("role", userRole);
       localStorage.setItem("name", name);
       localStorage.setItem("email", userEmail);
+      localStorage.setItem("adminRole", adminRole);
 
       if (loginType === "admin") {
         setIsAuthenticated(true);
@@ -61,11 +77,27 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
         navigate("/student/dashboard");
       }
     } catch (err: unknown) {
+      console.error('Login error:', err);
       let message = "Login failed. Please try again.";
       if (err && typeof err === "object" && "response" in err) {
-        const axiosErr = err as { response?: { data?: { message?: string } } };
+        const axiosErr = err as { response?: { data?: { message?: string; detail?: string; role?: string[]; email?: string[]; password?: string[] } } };
+        
+        console.error('Full error response:', axiosErr.response?.data);
+        
         if (axiosErr.response?.data?.message) {
           message = axiosErr.response.data.message;
+        } else if (axiosErr.response?.data?.detail) {
+          message = axiosErr.response.data.detail;
+        } else if (axiosErr.response?.data?.role) {
+          message = `Role error: ${axiosErr.response.data.role.join(', ')}`;
+        } else if (axiosErr.response?.data?.email) {
+          message = `Email error: ${axiosErr.response.data.email.join(', ')}`;
+        } else if (axiosErr.response?.data?.password) {
+          message = `Password error: ${axiosErr.response.data.password.join(', ')}`;
+        } else if (axiosErr.response?.status === 400) {
+          message = "Invalid credentials or request format. Please check your email and password.";
+        } else if (axiosErr.response?.status === 500) {
+          message = "Server error. Please try again later.";
         }
       }
       setError(message);
@@ -96,7 +128,7 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
               <div className="brand-text">
                 <h1>RegistrarConnect</h1>
                 <p className={isTransitioning ? 'transitioning' : ''}>
-                  {loginType === "student" ? "Student Portal" : "Admin Portal"}
+                  {loginType === "student" ? "Student Portal" : `${adminRole.charAt(0).toUpperCase() + adminRole.slice(1)} Portal`}
                 </p>
               </div>
             </div>
@@ -128,11 +160,13 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
             <div className={`left-side ${isTransitioning ? 'transitioning' : ''}`}>
               <div className="info-section">
                 <div className={`welcome-message ${isTransitioning ? 'transitioning' : ''}`}>
-                  <h2>Welcome to {loginType === "student" ? "Student" : "Admin"} Portal</h2>
+                  <h2>Welcome to {loginType === "student" ? "Student" : adminRole.charAt(0).toUpperCase() + adminRole.slice(1)} Portal</h2>
                   <p>
                     {loginType === "student" 
                       ? "Access your academic documents, track requests, and manage your academic journey with ease."
-                      : "Manage student requests, approve documents, and oversee the academic process efficiently."
+                      : adminRole === "admin" 
+                        ? "Manage student requests, approve documents, and oversee the academic process efficiently."
+                        : "Review and process student document requests, manage academic records, and support student success."
                     }
                   </p>
                 </div>
@@ -158,18 +192,38 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
                       </>
                     ) : (
                       <>
-                        <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
-                          <Users size={20} />
-                          <span>Manage student requests</span>
-                        </div>
-                        <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
-                          <Shield size={20} />
-                          <span>Approve documents</span>
-                        </div>
-                        <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
-                          <BookOpen size={20} />
-                          <span>View analytics</span>
-                        </div>
+                        {adminRole === "admin" && (
+                          <>
+                            <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
+                              <Users size={20} />
+                              <span>Manage student requests</span>
+                            </div>
+                            <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
+                              <Shield size={20} />
+                              <span>Approve documents</span>
+                            </div>
+                            <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
+                              <BookOpen size={20} />
+                              <span>View analytics</span>
+                            </div>
+                          </>
+                        )}
+                        {adminRole === "faculty" && (
+                          <>
+                            <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
+                              <UserCheck size={20} />
+                              <span>Review student requests</span>
+                            </div>
+                            <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
+                              <BookOpen size={20} />
+                              <span>Manage academic records</span>
+                            </div>
+                            <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
+                              <Users size={20} />
+                              <span>Support students</span>
+                            </div>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
@@ -180,6 +234,24 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
             {/* Right Side - Login Form */}
             <div className={`right-side ${isTransitioning ? 'transitioning' : ''}`}>
               <form onSubmit={handleSubmit} className="login-form">
+                {loginType === "admin" && (
+                  <div className="form-group">
+                    <label htmlFor="role">Role</label>
+                    <div className="input-wrapper">
+                      <Shield size={20} className="input-icon" />
+                      <select
+                        id="role"
+                        value={adminRole}
+                        onChange={(e) => setAdminRole(e.target.value as "admin" | "faculty")}
+                        className="role-select"
+                      >
+                        <option value="admin">Administrator</option>
+                        <option value="faculty">Faculty</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
                 <div className="form-group">
                   <label htmlFor="email">Email Address</label>
                   <div className="input-wrapper">
@@ -189,10 +261,13 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
+                      placeholder="name.up@phinmaed.com"
                       required
                     />
                   </div>
+                  <small className="form-help">
+                    Must be a PHINMA email ending with .up@phinmaed.com
+                  </small>
                 </div>
 
                 <div className="form-group">
