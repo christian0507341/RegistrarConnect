@@ -1,17 +1,64 @@
 .card {
   background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-  border: 1px solid rgba(15, 23, 42, 0.03);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
   overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .card-header {
-  padding: 14px 16px;
+  padding: 20px 24px;
   border-bottom: 1px solid #f1f5f9;
-  background: linear-gradient(180deg, rgba(250,250,255,0.6), rgba(250,250,255,0.2));
+  background: #fafbfc;
   font-weight: 600;
-  color: #0f172a;
+  color: #374151;
+  font-size: 1.1rem;
 }
 
-.card-body { padding: 16px; }
+.card-body { 
+  padding: 24px; 
+}
+
+/* Special card variants */
+.card.chart-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+}
+
+.card.activities-card,
+.card.actions-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card-header {
+    padding: 16px 20px;
+    font-size: 1rem;
+  }
+  
+  .card-body {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-header {
+    padding: 14px 16px;
+  }
+  
+  .card-body {
+    padding: 16px;
+  }
+}

@@ -21,7 +21,6 @@ export default function AdminLayout({ onLogout }: AdminLayoutProps) {
   };
 
   const title = pageTitles[location.pathname] || "RegistrarConnect";
-  const adminName = localStorage.getItem("name") || "Admin";
 
   return (
     <div className="admin-layout">

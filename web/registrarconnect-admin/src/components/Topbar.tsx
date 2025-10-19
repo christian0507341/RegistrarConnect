@@ -1,12 +1,11 @@
-import { Search, Bell, LogOut } from "lucide-react";
+import { Search, Bell } from "lucide-react";
 import "../styles/components/Topbar.css";
 
 type Props = {
   title: string;
-  onLogout?: () => void;
 };
 
-export default function Topbar({ title, onLogout }: Props) {
+export default function Topbar({ title }: Props) {
   const adminName = localStorage.getItem("name") || "Admin";
 
   return (

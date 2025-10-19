@@ -85,8 +85,8 @@ def create_document_request(request):
     school_year = request.data.get("school_year")
     purpose = request.data.get("purpose")
     
-    # Check for existing active requests of the same type
-    active_statuses = ['draft', 'confirming', 'awaiting_payment', 'pending', 'on_process']
+    # Check for existing active requests of the same type (excluding rejected/cancelled)
+    active_statuses = ['draft', 'confirming', 'awaiting_payment', 'pending', 'on_process', 'ready_to_claim']
     existing_active = DocumentRequest.objects.filter(
         student_id=request.user,
         document_type=document_type,
@@ -373,35 +373,68 @@ class DocumentRequestStatusUpdateView(generics.UpdateAPIView):
             schedule = self.request.data.get('schedule')
             notes = self.request.data.get('notes', '')
             
-            # Determine new status based on checkbox logic
-            new_status = old_status  # default: no change
+            # Determine new status - prioritize explicit status field, then checkbox logic
+            explicit_status = self.request.data.get('status')
+            if explicit_status:
+                # Use explicit status if provided
+                new_status = explicit_status
+            else:
+                # Fall back to checkbox logic
+                new_status = old_status  # default: no change
+                
+                if payment and document:
+                    # Both checked: document is ready to claim
+                    new_status = 'ready_to_claim'
+                elif payment and not document:
+                    # Only payment approved: processing document
+                    new_status = 'on_process'
+                elif old_status == 'pending' and not payment:
+                    # Faculty can keep it pending or reject
+                    new_status = 'pending'
             
-            if payment and document:
-                # Both checked: document is ready to claim
-                new_status = 'ready_to_claim'
-            elif payment and not document:
-                # Only payment approved: processing document
-                new_status = 'on_process'
-            elif old_status == 'pending' and not payment:
-                # Faculty can keep it pending or reject
-                new_status = self.request.data.get('status', 'pending')
+            # Update instance status only if it's different from current status
+            if new_status != old_status:
+                instance.status = new_status
+                instance.processed_by_id = self.request.user
+                instance.save(update_fields=['status', 'processed_by_id'])
             
-            # Update instance
-            instance.status = new_status
-            instance.processed_by_id = self.request.user
-            instance.save(update_fields=['status', 'processed_by_id'])
-            
-            # Create action log with proper from/to
-            action = DocumentRequestAction.objects.create(
+            # Update or create action log with proper from/to
+            # Try to find existing action record for this request
+            existing_action = DocumentRequestAction.objects.filter(
                 request=instance,
-                actor=self.request.user,
-                action='status_changed',
-                from_status=old_status,
-                to_status=new_status,
-                notes=notes,
-                payment=payment,
-                document=document
-            )
+                action='status_changed'
+            ).order_by('-created_at').first()
+            
+            if existing_action:
+                # Update existing action record - preserve existing values if not provided
+                existing_action.actor = self.request.user
+                existing_action.from_status = old_status
+                existing_action.to_status = new_status
+                existing_action.notes = notes
+                # Only update payment if explicitly provided in request, otherwise keep existing value
+                if 'payment' in self.request.data:
+                    existing_action.payment = payment
+                # Only update document if explicitly provided in request, otherwise keep existing value
+                if 'document' in self.request.data:
+                    existing_action.document = document
+                # For rejection, reset both payment and document to False
+                if new_status == 'rejected':
+                    existing_action.payment = False
+                    existing_action.document = False
+                existing_action.save()
+                action = existing_action
+            else:
+                # Create new action record if none exists
+                action = DocumentRequestAction.objects.create(
+                    request=instance,
+                    actor=self.request.user,
+                    action='status_changed',
+                    from_status=old_status,
+                    to_status=new_status,
+                    notes=notes,
+                    payment=payment,
+                    document=document
+                )
             
             # Sync ChatHistory status
             chat = instance.chat_history.first()
@@ -498,24 +531,21 @@ def student_transaction_status(request):
         transactions = []
         
         for doc_request in document_requests:
-            # Get the latest action for this request
-            latest_action = DocumentRequestAction.objects.filter(
-                request=doc_request,
-                actor=request.user
-            ).order_by('-created_at').first()
+            # Get action-based status using the new method
+            action_status = doc_request.get_current_status_from_actions()
             
-            # Determine approval status based on payment and document fields
-            payment_approved = False
-            document_approved = False
+            # Use action-based status
+            payment_approved = action_status['payment_approved']
+            document_approved = action_status['document_approved']
+            current_status = action_status['current_status']
+            last_updated = action_status['last_updated']
             
-            if latest_action:
-                payment_approved = latest_action.payment
-                document_approved = latest_action.document
-            
-            # Determine overall status
-            if doc_request.status == 'approved' and payment_approved and document_approved:
-                overall_status = 'approved'
-            elif doc_request.status == 'pending':
+            # Determine overall status for display
+            if current_status == 'ready_to_claim' and payment_approved and document_approved:
+                overall_status = 'ready_to_claim'
+            elif current_status == 'on_process':
+                overall_status = 'on_process'
+            elif current_status == 'pending':
                 if payment_approved and not document_approved:
                     overall_status = 'payment_approved_document_pending'
                 elif not payment_approved and document_approved:
@@ -523,7 +553,7 @@ def student_transaction_status(request):
                 else:
                     overall_status = 'pending_review'
             else:
-                overall_status = doc_request.status
+                overall_status = current_status
             
             transaction = {
                 'id': doc_request.id,
@@ -532,7 +562,8 @@ def student_transaction_status(request):
                 'payment_approved': payment_approved,
                 'document_approved': document_approved,
                 'requested_at': doc_request.requested_at.strftime('%Y-%m-%d'),
-                'last_updated': latest_action.created_at.strftime('%Y-%m-%d') if latest_action else doc_request.requested_at.strftime('%Y-%m-%d'),
+                'last_updated': last_updated.strftime('%Y-%m-%d %H:%M:%S') if last_updated else doc_request.requested_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'current_status': current_status,
                 'original_status': doc_request.status,
                 'purpose': doc_request.purpose,
                 'semester': doc_request.semester,

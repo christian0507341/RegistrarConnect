@@ -4,9 +4,10 @@ import type { ReactNode } from "react";
 type Props = {
   headers: string[];
   rows: (string | ReactNode)[][];
+  rowClasses?: string[];
 };
 
-export default function Table({ headers, rows }: Props) {
+export default function Table({ headers, rows, rowClasses = [] }: Props) {
   return (
     <div className="table-wrap">
       <table className="table">
@@ -19,7 +20,7 @@ export default function Table({ headers, rows }: Props) {
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i}>
+            <tr key={i} className={rowClasses[i] || ""}>
               {r.map((c, j) => (
                 <td key={j}>{c}</td>
               ))}

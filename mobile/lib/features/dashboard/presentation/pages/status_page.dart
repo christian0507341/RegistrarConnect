@@ -95,6 +95,25 @@ class _StatusPageState extends State<StatusPage> {
     ));
   }
 
+  void _triggerPaymentNotification(String documentType, bool isApproved, int requestId) {
+    // Trigger payment notification through NotificationBloc
+    final notificationBloc = BlocProvider.of<NotificationBloc>(context);
+    notificationBloc.add(ShowPaymentNotification(
+      documentType: documentType,
+      isApproved: isApproved,
+      requestId: requestId,
+    ));
+  }
+
+  void _triggerReceiptNotification(String documentType, int requestId) {
+    // Trigger receipt notification through NotificationBloc
+    final notificationBloc = BlocProvider.of<NotificationBloc>(context);
+    notificationBloc.add(ShowReceiptNotification(
+      documentType: documentType,
+      requestId: requestId,
+    ));
+  }
+
   Future<void> _loadTransactions({bool silent = false}) async {
     if (!silent) {
       setState(() {
@@ -136,7 +155,9 @@ class _StatusPageState extends State<StatusPage> {
             
             if (oldTransaction['status'] != newTransaction['status'] ||
                 oldTransaction['payment_approved'] != newTransaction['payment_approved'] ||
-                oldTransaction['document_approved'] != newTransaction['document_approved']) {
+                oldTransaction['document_approved'] != newTransaction['document_approved'] ||
+                oldTransaction['current_status'] != newTransaction['current_status'] ||
+                oldTransaction['last_updated'] != newTransaction['last_updated']) {
               hasChanges = true;
               
               // Track specific status changes
@@ -177,6 +198,29 @@ class _StatusPageState extends State<StatusPage> {
               );
             }
           } else {
+            // Check for payment/document approval changes
+            for (int i = 0; i < newTransactions.length; i++) {
+              final oldTransaction = _transactions[i];
+              final newTransaction = newTransactions[i];
+              
+              // Check for payment approval changes
+              if (oldTransaction['payment_approved'] != newTransaction['payment_approved']) {
+                _triggerPaymentNotification(
+                  newTransaction['document_type'],
+                  newTransaction['payment_approved'],
+                  newTransaction['id'],
+                );
+              }
+              
+              // Check for document approval changes
+              if (oldTransaction['document_approved'] != newTransaction['document_approved']) {
+                _triggerReceiptNotification(
+                  newTransaction['document_type'],
+                  newTransaction['id'],
+                );
+              }
+            }
+            
             // Show general update notification
             _showUpdateNotification();
           }
@@ -257,52 +301,92 @@ class _StatusPageState extends State<StatusPage> {
 
   String _getStatusText(Map<String, dynamic> transaction) {
     final status = transaction['status'] as String;
-    final paymentApproved = transaction['payment_approved'] as bool;
-    final documentApproved = transaction['document_approved'] as bool;
+    final currentStatus = transaction['current_status'] as String? ?? status;
+    final paymentApproved = transaction['payment_approved'] as bool? ?? false;
+    final documentApproved = transaction['document_approved'] as bool? ?? false;
 
-    if (status == 'approved' && paymentApproved && documentApproved) {
-      return 'Approved';
-    } else if (status == 'pending') {
-      if (paymentApproved && !documentApproved) {
-        return 'Payment Approved - Document Pending';
+    // Use current_status from action table if available, otherwise fall back to main status
+    final effectiveStatus = currentStatus;
+
+    // Check for rejected status first (both in current_status and main status)
+    if (effectiveStatus == 'rejected' || status == 'rejected') {
+      return '❌ REJECTED - You can request another document';
+    } else if (effectiveStatus == 'cancelled' || status == 'cancelled') {
+      return 'Cancelled';
+    } else if (effectiveStatus == 'ready_to_claim' && paymentApproved && documentApproved) {
+      return '✅ Ready to Claim';
+    } else if (effectiveStatus == 'ready_to_claim') {
+      return '✅ Ready to Claim';
+    } else if (effectiveStatus == 'on_process') {
+      return '⏳ Processing Document';
+    } else if (effectiveStatus == 'pending') {
+      if (paymentApproved && documentApproved) {
+        return '✅ Both Approved - Processing';
+      } else if (paymentApproved && !documentApproved) {
+        return '✅ Payment Approved - Document Pending';
       } else if (!paymentApproved && documentApproved) {
-        return 'Document Approved - Payment Pending';
-      } else if (!paymentApproved && !documentApproved) {
-        return 'Pending Review';
+        return '✅ Document Approved - Payment Pending';
+      } else {
+        return '⏳ Pending Review';
       }
     }
+    
     return 'Processing';
   }
 
   Color _getStatusColor(Map<String, dynamic> transaction) {
     final status = transaction['status'] as String;
-    final paymentApproved = transaction['payment_approved'] as bool;
-    final documentApproved = transaction['document_approved'] as bool;
+    final currentStatus = transaction['current_status'] as String? ?? status;
+    final paymentApproved = transaction['payment_approved'] as bool? ?? false;
+    final documentApproved = transaction['document_approved'] as bool? ?? false;
 
-    if (status == 'approved' && paymentApproved && documentApproved) {
+    // Use current_status from action table if available
+    final effectiveStatus = currentStatus;
+
+    // Check for rejected status first (both in current_status and main status)
+    if (effectiveStatus == 'rejected' || status == 'rejected') {
+      return Colors.red[600] ?? Colors.red;
+    } else if (effectiveStatus == 'cancelled' || status == 'cancelled') {
+      return Colors.grey;
+    } else if (effectiveStatus == 'ready_to_claim') {
       return Colors.green;
-    } else if (status == 'pending') {
+    } else if (effectiveStatus == 'on_process') {
+      return Colors.orange;
+    } else if (effectiveStatus == 'pending') {
       if (paymentApproved || documentApproved) {
         return Colors.orange;
       }
       return Colors.blue;
     }
+    
     return Colors.grey;
   }
 
   IconData _getStatusIcon(Map<String, dynamic> transaction) {
     final status = transaction['status'] as String;
-    final paymentApproved = transaction['payment_approved'] as bool;
-    final documentApproved = transaction['document_approved'] as bool;
+    final currentStatus = transaction['current_status'] as String? ?? status;
+    final paymentApproved = transaction['payment_approved'] as bool? ?? false;
+    final documentApproved = transaction['document_approved'] as bool? ?? false;
 
-    if (status == 'approved' && paymentApproved && documentApproved) {
+    // Use current_status from action table if available
+    final effectiveStatus = currentStatus;
+
+    // Check for rejected status first (both in current_status and main status)
+    if (effectiveStatus == 'rejected' || status == 'rejected') {
+      return Icons.cancel;
+    } else if (effectiveStatus == 'cancelled' || status == 'cancelled') {
+      return Icons.cancel_outlined;
+    } else if (effectiveStatus == 'ready_to_claim') {
       return Icons.check_circle;
-    } else if (status == 'pending') {
+    } else if (effectiveStatus == 'on_process') {
+      return Icons.hourglass_empty;
+    } else if (effectiveStatus == 'pending') {
       if (paymentApproved || documentApproved) {
         return Icons.hourglass_empty;
       }
       return Icons.pending;
     }
+    
     return Icons.info;
   }
 
@@ -418,42 +502,91 @@ class _StatusPageState extends State<StatusPage> {
                           )
                         : RefreshIndicator(
                             onRefresh: () => _loadTransactions(),
-                            child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _transactions.length,
-                          itemBuilder: (context, index) {
+                            child: Column(
+                              children: [
+                                // Show rejected requests banner if any
+                                if (_transactions.any((t) => 
+                                    t['current_status'] == 'rejected' || t['status'] == 'rejected'))
+                                  Container(
+                                    margin: const EdgeInsets.all(16),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red[50],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.red[200] ?? Colors.red),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.info_outline, color: Colors.red[600], size: 20),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Some requests were rejected. You can request new documents of the same type.',
+                                            style: TextStyle(
+                                              color: Colors.red[700],
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                // Transactions list
+                                Expanded(
+                                  child: ListView.builder(
+                                    padding: const EdgeInsets.all(16),
+                                    itemCount: _transactions.length,
+                                    itemBuilder: (context, index) {
                             final transaction = _transactions[index];
                             final statusText = _getStatusText(transaction);
                             final statusColor = _getStatusColor(transaction);
                             final statusIcon = _getStatusIcon(transaction);
 
+                            // Check if this is a rejected request
+                            final isRejected = (transaction['current_status'] == 'rejected' || 
+                                               transaction['status'] == 'rejected');
+                            
                             return Container(
                               margin: const EdgeInsets.only(bottom: 16),
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: isDarkMode
-                                      ? [
-                                          const Color(0xFF1E1E1E),
-                                          const Color(0xFF2A2A2A),
-                                        ]
-                                      : [
-                                          Colors.white,
-                                          const Color(0xFFF8F9FA),
+                                gradient: isRejected 
+                                    ? LinearGradient(
+                                        colors: [
+                                          Colors.red[50] ?? Colors.red.withValues(alpha: 0.1),
+                                          Colors.red[100] ?? Colors.red.withValues(alpha: 0.2),
                                         ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                    : LinearGradient(
+                                        colors: isDarkMode
+                                            ? [
+                                                const Color(0xFF1E1E1E),
+                                                const Color(0xFF2A2A2A),
+                                              ]
+                                            : [
+                                                Colors.white,
+                                                const Color(0xFFF8F9FA),
+                                              ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: statusColor.withValues(alpha: 0.3),
-                                  width: 1.5,
+                                  color: isRejected 
+                                      ? Colors.red[300] ?? Colors.red
+                                      : statusColor.withValues(alpha: 0.3),
+                                  width: isRejected ? 2.0 : 1.5,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: statusColor.withValues(alpha: 0.1),
-                                    blurRadius: 12,
+                                    color: isRejected 
+                                        ? Colors.red.withValues(alpha: 0.2)
+                                        : statusColor.withValues(alpha: 0.1),
+                                    blurRadius: isRejected ? 16 : 12,
                                     offset: const Offset(0, 4),
-                                    spreadRadius: 2,
+                                    spreadRadius: isRejected ? 3 : 2,
                                   ),
                                   BoxShadow(
                                     color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),
@@ -589,7 +722,7 @@ class _StatusPageState extends State<StatusPage> {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          'Updated: ${transaction['last_updated']}',
+                                          'Updated: ${transaction['last_updated'] ?? 'N/A'}',
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -602,8 +735,11 @@ class _StatusPageState extends State<StatusPage> {
                               ),
                             );
                           },
-                        ),
-                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
           ),
         );
       },

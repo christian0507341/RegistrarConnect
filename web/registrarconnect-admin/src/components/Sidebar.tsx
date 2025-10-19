@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { 
   LayoutDashboard, FileText, Calendar, 
-  BarChart2, Bell, Settings, LogOut 
+  BarChart2, Bell, Settings
 } from "lucide-react";
 import "../styles/components/Sidebar.css";
 

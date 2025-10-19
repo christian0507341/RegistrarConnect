@@ -65,6 +65,11 @@ class DocumentRequestSerializer(serializers.ModelSerializer):
     actions = DocumentRequestActionSerializer(many=True, read_only=True)
     appointment = serializers.SerializerMethodField()
     receipt_reference = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    # Action-based status fields
+    payment_approved = serializers.SerializerMethodField()
+    document_approved = serializers.SerializerMethodField()
+    current_status = serializers.SerializerMethodField()
+    last_updated = serializers.SerializerMethodField()
 
     class Meta:
         model = DocumentRequest
@@ -76,7 +81,23 @@ class DocumentRequestSerializer(serializers.ModelSerializer):
             'student_id',
             'actions',
             'appointment',
+            'payment_approved',
+            'document_approved',
+            'current_status',
+            'last_updated',
         ]
+
+    def get_payment_approved(self, obj):
+        return obj.get_current_status_from_actions()['payment_approved']
+    
+    def get_document_approved(self, obj):
+        return obj.get_current_status_from_actions()['document_approved']
+    
+    def get_current_status(self, obj):
+        return obj.get_current_status_from_actions()['current_status']
+    
+    def get_last_updated(self, obj):
+        return obj.get_current_status_from_actions()['last_updated']
 
     def get_appointment(self, obj):
         appointment = obj.appointments.first()

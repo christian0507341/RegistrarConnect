@@ -74,6 +74,32 @@ class DocumentRequest(models.Model):
     )
     requested_at = models.DateTimeField(auto_now_add=True)
 
+    def get_current_status_from_actions(self):
+        """
+        Get the current status based on the action record.
+        Returns: dict with payment, document, and overall status
+        """
+        # Get the action record for this request (should be only one now)
+        action_record = self.actions.filter(
+            action='status_changed'
+        ).order_by('-created_at').first()
+        
+        if action_record:
+            return {
+                'payment_approved': action_record.payment,
+                'document_approved': action_record.document,
+                'current_status': action_record.to_status,
+                'last_updated': action_record.created_at
+            }
+        else:
+            # Fallback to main table if no action record exists
+            return {
+                'payment_approved': False,
+                'document_approved': False,
+                'current_status': self.status,
+                'last_updated': self.requested_at
+            }
+
     def __str__(self):
         return f"{self.student_id} - {self.document_type} - {self.status}"
 
