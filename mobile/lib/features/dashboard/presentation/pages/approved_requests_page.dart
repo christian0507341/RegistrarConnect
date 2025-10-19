@@ -11,7 +11,7 @@ class ApprovedRequestsPage extends StatelessWidget {
       builder: (context, themeState) {
         final isDarkMode = themeState is ThemeLoadedState ? themeState.isDarkMode : false;
         
-        // TODO: Replace with BlocBuilder if you already fetch approved requests
+        // Mock data for approved requests
         final approvedRequests = [
           {"title": "Transcript of Records", "date": "Sept 15, 2025"},
           {"title": "Good Moral Certificate", "date": "Sept 10, 2025"},
@@ -33,7 +33,7 @@ class ApprovedRequestsPage extends StatelessWidget {
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: approvedRequests.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final req = approvedRequests[index];
                 return Card(
@@ -43,7 +43,7 @@ class ApprovedRequestsPage extends StatelessWidget {
                   elevation: 3,
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Colors.green.withOpacity(0.2),
+                      backgroundColor: Colors.green.withValues(alpha: 0.2),
                       child: const Icon(Icons.check_circle, color: Colors.blue),
                     ),
                     title: Text(

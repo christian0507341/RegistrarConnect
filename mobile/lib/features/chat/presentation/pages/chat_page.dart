@@ -26,19 +26,86 @@ class _ChatPageState extends State<ChatPage> {
 
   File? _receiptImage;
   bool _showUploadButton = false;
+  bool _isInitialized = false;
+  String? _conversationStatus;
+  bool _isConversationLocked = false;
 
   @override
   void initState() {
     super.initState();
-    _conversationService.getOrCreate().then((id) {
-      // ChatBloc is provided globally in main.dart
-      if (mounted) {
-      context.read<ChatBloc>().add(ChatInit(id));
+    // Don't access context here - wait for didChangeDependencies
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      _initializeChat();
+    }
+  }
+
+  Future<void> _initializeChat() async {
+    if (_isInitialized) return;
+    
+    // Get conversation ID from arguments or create new one
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+    String conversationId;
+    
+    if (arguments != null && arguments is Map<String, dynamic>) {
+      conversationId = arguments['conversationId'] as String? ?? '';
+      _conversationStatus = arguments['status'] as String?;
+    } else {
+      conversationId = '';
+    }
+    
+    // If no conversation ID provided, get or create one
+    if (conversationId.isEmpty) {
+      conversationId = await _conversationService.getOrCreate();
+    }
+    
+    // Check if conversation is locked
+    _checkConversationStatus(conversationId);
+    
+    // Initialize chat with the conversation ID
+    if (mounted) {
+      _isInitialized = true;
+      context.read<ChatBloc>().add(ChatInit(conversationId));
+    }
+  }
+
+  Future<void> _checkConversationStatus(String conversationId) async {
+    try {
+      // Get conversation history to check status
+      final history = await _conversationService.getConversationHistory();
+      final conversation = history.firstWhere(
+        (conv) => conv['id'] == conversationId,
+        orElse: () => <String, dynamic>{},
+      );
+      
+      if (conversation.isNotEmpty) {
+        final status = conversation['status'] as String?;
+        _conversationStatus = status;
+        
+        // Check if conversation is locked
+        final lockedStatuses = ['pending', 'on_process', 'ready_to_claim', 'rejected'];
+        _isConversationLocked = status != null && lockedStatuses.contains(status);
+        
+        if (mounted) {
+          setState(() {});
+        }
       }
-    });
+    } catch (e) {
+      // Error checking conversation status
+    }
   }
 
   void _sendMessage() {
+    // Check if conversation is locked
+    if (_isConversationLocked) {
+      _showLockedMessage();
+      return;
+    }
+    
     final text = _messageController.text.trim();
     if (text.isNotEmpty) {
       context.read<ChatBloc>().add(ChatSendPressed(text));
@@ -49,6 +116,40 @@ class _ChatPageState extends State<ChatPage> {
       _conversationService.getOrCreate().then((conversationId) {
         _conversationService.updateConversationLastMessage(conversationId, text);
       });
+    }
+  }
+
+  void _showLockedMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'This conversation is locked. You cannot send new messages while your request is being processed.',
+        ),
+        backgroundColor: Colors.orange,
+        duration: const Duration(seconds: 3),
+        action: SnackBarAction(
+          label: 'OK',
+          textColor: Colors.white,
+          onPressed: () {},
+        ),
+      ),
+    );
+  }
+
+  String _getStatusText(String status) {
+    switch (status.toLowerCase()) {
+      case 'draft':
+        return 'DRAFT';
+      case 'pending':
+        return 'PENDING';
+      case 'on_process':
+        return 'PROCESSING';
+      case 'ready_to_claim':
+        return 'READY';
+      case 'rejected':
+        return 'REJECTED';
+      default:
+        return status.toUpperCase();
     }
   }
 
@@ -261,6 +362,26 @@ class _ChatPageState extends State<ChatPage> {
                             fontWeight: FontWeight.w400,
                           ),
                         ),
+                        if (_conversationStatus != null) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _isConversationLocked 
+                                  ? Colors.orange.withValues(alpha: 0.8)
+                                  : Colors.green.withValues(alpha: 0.8),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              _getStatusText(_conversationStatus!),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -404,8 +525,11 @@ class _ChatPageState extends State<ChatPage> {
                           ),
                         child: TextField(
                           controller: _messageController,
+                          enabled: !_isConversationLocked,
                           decoration: InputDecoration(
-                            hintText: "Ask Anything...",
+                            hintText: _isConversationLocked 
+                                ? "Conversation locked - cannot send messages"
+                                : "Ask Anything...",
                               hintStyle: TextStyle(
                                 color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                               ),
@@ -463,8 +587,13 @@ class _ChatPageState extends State<ChatPage> {
                           ],
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.send, color: Colors.white),
-                        onPressed: _sendMessage,
+                          icon: Icon(
+                            Icons.send, 
+                            color: _isConversationLocked 
+                                ? Colors.grey 
+                                : Colors.white
+                          ),
+                        onPressed: _isConversationLocked ? null : _sendMessage,
                           iconSize: 24,
                         ),
                       ),
@@ -942,8 +1071,8 @@ class _ChatPageState extends State<ChatPage> {
           child: FloatingActionButton(
             onPressed: _createNewConversation,
             backgroundColor: Theme.of(context).primaryColor,
-            child: const Icon(Icons.add, color: Colors.white),
             tooltip: 'Start New Conversation',
+            child: const Icon(Icons.add, color: Colors.white),
           ),
         );
       },

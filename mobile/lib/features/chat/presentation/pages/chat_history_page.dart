@@ -50,6 +50,28 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
   }
 
   Future<void> _createNewConversation() async {
+    // Check if there are any locked conversations
+    final hasLockedConversation = _conversations.any((conv) {
+      final status = conv['status'] as String?;
+      final lockedStatuses = ['pending', 'on_process', 'ready_to_claim', 'rejected'];
+      return status != null && lockedStatuses.contains(status);
+    });
+
+    if (hasLockedConversation) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'You have a pending request. Please wait for it to be completed before starting a new conversation.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
     try {
       final newConversationId = await _conversationService.createNewConversation();
       
@@ -70,6 +92,14 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
         );
       }
     }
+  }
+
+  bool _hasLockedConversation() {
+    return _conversations.any((conv) {
+      final status = conv['status'] as String?;
+      final lockedStatuses = ['pending', 'on_process', 'ready_to_claim', 'rejected'];
+      return status != null && lockedStatuses.contains(status);
+    });
   }
 
   Future<void> _deleteConversation(String conversationId) async {
@@ -114,8 +144,10 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.add),
-                onPressed: _createNewConversation,
-                tooltip: 'New Conversation',
+                onPressed: _hasLockedConversation() ? null : _createNewConversation,
+                tooltip: _hasLockedConversation() 
+                    ? 'Cannot create new conversation - pending request exists'
+                    : 'New Conversation',
               ),
             ],
           ),
@@ -162,9 +194,9 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: _createNewConversation,
+            onPressed: _hasLockedConversation() ? null : _createNewConversation,
             icon: const Icon(Icons.add),
-            label: const Text('Start New Chat'),
+            label: Text(_hasLockedConversation() ? 'Cannot Start New Chat' : 'Start New Chat'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
@@ -193,6 +225,8 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
     final lastMessage = conversation['lastMessage'] as String?;
     final timestamp = conversation['timestamp'] as DateTime;
     final messageCount = conversation['messageCount'] as int? ?? 0;
+    final status = conversation['status'] as String?;
+    final documentType = conversation['documentType'] as String?;
     
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -206,7 +240,10 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
           Navigator.pushNamed(
             context,
             '/chat',
-            arguments: {'conversationId': conversationId},
+            arguments: {
+              'conversationId': conversationId,
+              'status': conversation['status'],
+            },
           );
         },
         child: Padding(
@@ -242,7 +279,7 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                       children: [
                         Expanded(
                           child: Text(
-                            'AI Assistant',
+                            documentType != null ? '$documentType Request' : 'AI Assistant',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -250,6 +287,24 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                             ),
                           ),
                         ),
+                        if (status != null) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(status),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              _getStatusText(status),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
                         Text(
                           _formatTimestamp(timestamp),
                           style: TextStyle(
@@ -361,6 +416,52 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
       return '${difference.inMinutes}m ago';
     } else {
       return 'Just now';
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'draft':
+        return Colors.grey;
+      case 'confirming':
+        return Colors.orange;
+      case 'awaiting_payment':
+        return Colors.blue;
+      case 'pending':
+        return Colors.amber;
+      case 'on_process':
+        return Colors.purple;
+      case 'ready_to_claim':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      case 'rejected':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getStatusText(String status) {
+    switch (status.toLowerCase()) {
+      case 'draft':
+        return 'Draft';
+      case 'confirming':
+        return 'Confirming';
+      case 'awaiting_payment':
+        return 'Payment';
+      case 'pending':
+        return 'Pending';
+      case 'on_process':
+        return 'Processing';
+      case 'ready_to_claim':
+        return 'Ready';
+      case 'cancelled':
+        return 'Cancelled';
+      case 'rejected':
+        return 'Rejected';
+      default:
+        return status;
     }
   }
 }

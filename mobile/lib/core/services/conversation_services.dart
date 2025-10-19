@@ -1,14 +1,17 @@
 import 'dart:math';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:mobile/features/chat/data/sources/chat_api.dart';
 
 class ConversationService {
   static const _key = 'conversation_id';
   static const _historyKey = 'conversation_history';
   final FlutterSecureStorage storage;
+  final ChatApi _chatApi;
 
-  ConversationService([FlutterSecureStorage? s])
-    : storage = s ?? const FlutterSecureStorage();
+  ConversationService([FlutterSecureStorage? s, ChatApi? chatApi])
+    : storage = s ?? const FlutterSecureStorage(),
+      _chatApi = chatApi ?? ChatApi();
 
   Future<String> getOrCreate() async {
     final existing = await storage.read(key: _key);
@@ -55,12 +58,28 @@ class ConversationService {
       await storage.write(key: _historyKey, value: jsonEncode(history));
     } catch (e) {
       // Handle error silently for now
-      print('Error adding to history: $e');
+      // Error adding to history - continue without failing
     }
   }
 
   Future<List<Map<String, dynamic>>> getConversationHistory() async {
     try {
+      // Try to get from backend API first
+      final backendHistory = await _chatApi.getChatHistory();
+      if (backendHistory.isNotEmpty) {
+        return backendHistory.map((item) {
+          return {
+            'id': item['id'],
+            'timestamp': DateTime.parse(item['timestamp']),
+            'lastMessage': item['lastMessage'],
+            'messageCount': item['messageCount'] ?? 0,
+            'status': item['status'],
+            'documentType': item['documentType'],
+          };
+        }).toList();
+      }
+      
+      // Fallback to local storage
       final historyJson = await storage.read(key: _historyKey);
       if (historyJson == null) return [];
       
@@ -74,7 +93,7 @@ class ConversationService {
         };
       }).toList();
     } catch (e) {
-      print('Error loading history: $e');
+      // Error loading history - return empty list
       return [];
     }
   }
@@ -96,12 +115,16 @@ class ConversationService {
         await storage.write(key: _historyKey, value: jsonEncode(history));
       }
     } catch (e) {
-      print('Error updating conversation: $e');
+      // Error updating conversation - continue silently
     }
   }
 
   Future<void> deleteConversation(String conversationId) async {
     try {
+      // Delete from backend API
+      await _chatApi.deleteChatHistory(conversationId);
+      
+      // Also remove from local storage
       final historyJson = await storage.read(key: _historyKey);
       if (historyJson == null) return;
       
@@ -112,7 +135,8 @@ class ConversationService {
       
       await storage.write(key: _historyKey, value: jsonEncode(history));
     } catch (e) {
-      print('Error deleting conversation: $e');
+      // Error deleting conversation - re-throw to show error to user
+      rethrow;
     }
   }
 

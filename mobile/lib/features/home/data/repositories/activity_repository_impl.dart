@@ -1,8 +1,13 @@
 import '../../domain/entities/activity.dart';
 import '../../domain/entities/home_data.dart';
 import '../../domain/repositories/activity_repository.dart';
+import 'package:mobile/core/services/conversation_services.dart';
+import 'package:mobile/features/document_requests/data/sources/document_request_api.dart';
 
 class ActivityRepositoryImpl implements IActivityRepository {
+  final ConversationService _conversationService = ConversationService();
+  final DocumentRequestApi _documentRequestApi = DocumentRequestApi();
+  
   final List<Activity> _activities = [
     Activity(title: "OTR Request Submitted", timestamp: DateTime.now().subtract(const Duration(hours: 2))),
     Activity(title: "Appointment Confirmed", timestamp: DateTime.now().subtract(const Duration(days: 1))),
@@ -18,37 +23,35 @@ class ActivityRepositoryImpl implements IActivityRepository {
   }
 
   // New method to get comprehensive home data
+  @override
   Future<HomeData> getHomeData() async {
-    await Future.delayed(const Duration(milliseconds: 300)); // simulate delay
-    
-    return HomeData(
-      pendingRequests: 3,
-      upcomingAppointments: 2,
-      completedRequests: 12,
-      aiChats: 5,
-      recentDocuments: [
-        DocumentRequest(
-          id: "1",
-          title: "OTR Request",
-          status: "Pending",
-          submittedDate: DateTime.now().subtract(const Duration(days: 1)),
-          documentType: "OTR",
-        ),
-        DocumentRequest(
-          id: "2",
-          title: "COG Request",
-          status: "Approved",
-          submittedDate: DateTime.now().subtract(const Duration(days: 3)),
-          documentType: "COG",
-        ),
-        DocumentRequest(
-          id: "3",
-          title: "COE Request",
-          status: "Processing",
-          submittedDate: DateTime.now().subtract(const Duration(days: 5)),
-          documentType: "COE",
-        ),
-      ],
+    try {
+      // Fetch real document request data
+      final documentRequests = await _documentRequestApi.getDocumentRequests();
+      
+      // Count document requests by status
+      int pendingRequests = documentRequests.where((req) {
+        final status = req['status'] as String?;
+        return status != null && ['pending', 'on_process', 'awaiting_payment'].contains(status);
+      }).length;
+      
+      int completedRequests = documentRequests.where((req) {
+        final status = req['status'] as String?;
+        return status != null && ['ready_to_claim', 'completed', 'rejected'].contains(status);
+      }).length;
+      
+      // Count AI chats from conversations
+      final conversations = await _conversationService.getConversationHistory();
+      int totalChats = conversations.length;
+      
+      // Home data processed successfully
+      
+      return HomeData(
+        pendingRequests: pendingRequests,
+        upcomingAppointments: 2, // Keep mock data for now
+        completedRequests: completedRequests,
+        aiChats: totalChats,
+      recentDocuments: _buildRecentDocuments(documentRequests),
       upcomingEvents: [
         Appointment(
           id: "1",
@@ -67,5 +70,42 @@ class ActivityRepositoryImpl implements IActivityRepository {
       ],
       recentActivities: _activities,
     );
+    } catch (e) {
+      // Error fetching home data - using fallback data
+      // Return fallback data if there's an error
+      return HomeData(
+        pendingRequests: 0,
+        upcomingAppointments: 2,
+        completedRequests: 0,
+        aiChats: 0,
+        recentDocuments: [],
+        upcomingEvents: [],
+        recentActivities: _activities,
+      );
+    }
+  }
+
+  List<DocumentRequest> _buildRecentDocuments(List<Map<String, dynamic>> documentRequests) {
+    // Sort by submission date and take the most recent 3
+    final sortedRequests = documentRequests
+      ..sort((a, b) {
+        final dateA = DateTime.tryParse(a['requested_at'] ?? a['created_at'] ?? '') ?? DateTime(1970);
+        final dateB = DateTime.tryParse(b['requested_at'] ?? b['created_at'] ?? '') ?? DateTime(1970);
+        return dateB.compareTo(dateA);
+      });
+    
+    return sortedRequests.take(3).map((req) {
+      final status = req['status'] as String? ?? 'Unknown';
+      final documentType = req['document_type'] as String? ?? 'Unknown';
+      final submittedDate = DateTime.tryParse(req['requested_at'] ?? req['created_at'] ?? '') ?? DateTime.now();
+      
+      return DocumentRequest(
+        id: req['id']?.toString() ?? '0',
+        title: '$documentType Request',
+        status: status,
+        submittedDate: submittedDate,
+        documentType: documentType,
+      );
+    }).toList();
   }
 }

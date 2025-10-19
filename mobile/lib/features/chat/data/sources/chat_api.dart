@@ -37,7 +37,11 @@ class ChatApi {
     if (limit != null) qp['limit'] = limit;
     if (beforeId != null) qp['before_id'] = beforeId;
 
+    // Loading chat history for conversation
+
     final resp = await _dio.get(_historyUrl, queryParameters: qp);
+
+    // Response received
 
     final raw = resp.data;
     List<dynamic> list;
@@ -60,5 +64,19 @@ class ChatApi {
     return list
         .map((e) => ChatMessageDto.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getChatHistory() async {
+    final resp = await _dio.get(Endpoints.chatHistory);
+    final raw = resp.data;
+    
+    if (raw is List) {
+      return raw.cast<Map<String, dynamic>>();
+    }
+    return [];
+  }
+
+  Future<void> deleteChatHistory(String conversationId) async {
+    await _dio.delete('${Endpoints.chatHistory}$conversationId/');
   }
 }

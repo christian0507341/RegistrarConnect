@@ -36,10 +36,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ? e.conversationId
         : await _generateOrLoadConversationId();
     try {
+      // Loading messages for conversation
       final msgs = await _loadHistory(conversationId: _conversationId);
       msgs.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       emit(ChatLoaded(conversationId: _conversationId, messages: msgs));
     } catch (err) {
+      // Error loading messages
       emit(ChatError(err.toString()));
     }
   }

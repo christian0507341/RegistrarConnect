@@ -3,14 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/core/widgets/futuristic_card.dart';
 import 'package:mobile/core/widgets/futuristic_button.dart';
 import 'package:mobile/core/widgets/animated_gradient_background.dart';
-import 'package:mobile/core/theme/theme_bloc.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
 import 'package:mobile/features/chat/presentation/pages/chat_page.dart';
-import 'package:mobile/features/chat/presentation/pages/chat_history_page.dart';
-import 'package:mobile/features/appointment/presentation/pages/calendar_page.dart';
-import 'package:mobile/features/dashboard/presentation/pages/status_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

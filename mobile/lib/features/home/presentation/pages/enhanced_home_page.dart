@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/core/widgets/futuristic_button.dart';
 import 'package:mobile/core/widgets/animated_gradient_background.dart';
@@ -17,14 +18,67 @@ class EnhancedHomePage extends StatefulWidget {
   State<EnhancedHomePage> createState() => _EnhancedHomePageState();
 }
 
-class _EnhancedHomePageState extends State<EnhancedHomePage> {
+class _EnhancedHomePageState extends State<EnhancedHomePage> with WidgetsBindingObserver {
   late final HomeBloc _homeBloc;
+  final ScrollController _scrollController = ScrollController();
+  bool _isRefreshing = false;
 
   @override
   void initState() {
     super.initState();
     _homeBloc = BlocProvider.of<HomeBloc>(context);
     _homeBloc.add(LoadHomeData());
+    WidgetsBinding.instance.addObserver(this);
+    _setupScrollListener();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _setupScrollListener() {
+    _scrollController.addListener(() {
+      // Detect scroll to top for refresh (with a small threshold)
+      if (_scrollController.position.pixels <= 10 && 
+          _scrollController.position.pixels >= 0 && 
+          !_isRefreshing) {
+        _handleScrollUpRefresh();
+      }
+    });
+  }
+
+  Future<void> _handleScrollUpRefresh() async {
+    if (_isRefreshing) return;
+    
+    // Provide haptic feedback
+    HapticFeedback.lightImpact();
+    
+    setState(() {
+      _isRefreshing = true;
+    });
+    
+    try {
+      _homeBloc.add(LoadHomeData());
+      // Wait for the data to load
+      await Future.delayed(const Duration(milliseconds: 800));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Refresh data when app becomes active
+      _homeBloc.add(LoadHomeData());
+    }
   }
 
   @override
@@ -55,9 +109,24 @@ class _EnhancedHomePageState extends State<EnhancedHomePage> {
               body: AnimatedGradientBackground(
                 isDarkMode: isDarkMode,
                 child: SafeArea(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: body,
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      // Provide haptic feedback for pull-to-refresh
+                      HapticFeedback.lightImpact();
+                      _homeBloc.add(LoadHomeData());
+                      // Wait a bit for the data to load
+                      await Future.delayed(const Duration(milliseconds: 500));
+                    },
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          if (_isRefreshing) _buildRefreshIndicator(),
+                          body,
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -299,7 +368,9 @@ class _EnhancedHomePageState extends State<EnhancedHomePage> {
               child: _buildStatCard(
                 title: "Pending Requests",
                 value: homeData.pendingRequests.toString(),
-                subtitle: "Documents",
+                subtitle: homeData.pendingRequests > 0 
+                    ? "${homeData.pendingRequests} document requests" 
+                    : "No pending requests",
                 icon: Icons.pending_actions,
                 color: Colors.orange,
                 onTap: () => _navigateToStatus(),
@@ -325,7 +396,9 @@ class _EnhancedHomePageState extends State<EnhancedHomePage> {
               child: _buildStatCard(
                 title: "Completed",
                 value: homeData.completedRequests.toString(),
-                subtitle: "This month",
+                subtitle: homeData.completedRequests > 0 
+                    ? "${homeData.completedRequests} document requests" 
+                    : "No completed requests",
                 icon: Icons.check_circle,
                 color: Colors.green,
                 onTap: () => _navigateToStatus(),
@@ -336,7 +409,7 @@ class _EnhancedHomePageState extends State<EnhancedHomePage> {
               child: _buildStatCard(
                 title: "AI Chats",
                 value: homeData.aiChats.toString(),
-                subtitle: "Conversations",
+                subtitle: _getChatSubtitle(homeData),
                 icon: Icons.chat_bubble,
                 color: Colors.purple,
                 onTap: () => _navigateToChatHistory(),
@@ -403,8 +476,8 @@ class _EnhancedHomePageState extends State<EnhancedHomePage> {
             Expanded(
               child: _buildStatCard(
                 title: "AI Chats",
-                value: "5",
-                subtitle: "Conversations",
+                value: "0",
+                subtitle: "No conversations",
                 icon: Icons.chat_bubble,
                 color: Colors.purple,
                 onTap: () => _navigateToChatHistory(),
@@ -1286,6 +1359,53 @@ class _EnhancedHomePageState extends State<EnhancedHomePage> {
 
   void _navigateToChatHistory() {
     Navigator.pushNamed(context, '/chat-history');
+  }
+
+  String _getChatSubtitle(HomeData homeData) {
+    if (homeData.aiChats == 0) {
+      return "No conversations";
+    } else {
+      return "Active conversations";
+    }
+  }
+
+  Widget _buildRefreshIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).primaryColor,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Refreshing data...',
+            style: TextStyle(
+              color: Theme.of(context).primaryColor,
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _switchToTab(int tabIndex) {

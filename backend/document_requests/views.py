@@ -1,6 +1,7 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
 from .models import DocumentRequest, DocumentRequestAction
 from .serializers import (
     DocumentRequestSerializer,
@@ -79,9 +80,53 @@ def create_document_request(request):
     If a 'conversation_id' is provided, link THAT ChatHistory row; else, link the most
     recent unlinked ChatHistory for this user.
     """
+    document_type = request.data.get("document_type")
+    semester = request.data.get("semester")
+    school_year = request.data.get("school_year")
+    purpose = request.data.get("purpose")
+    
+    # Check for existing active requests of the same type
+    active_statuses = ['draft', 'confirming', 'awaiting_payment', 'pending', 'on_process']
+    existing_active = DocumentRequest.objects.filter(
+        student_id=request.user,
+        document_type=document_type,
+        status__in=active_statuses
+    )
+    
+    # For COG and COE, also check semester and school year
+    if document_type in ['COG', 'COE'] and semester and school_year:
+        existing_active = existing_active.filter(
+            semester=semester,
+            school_year=school_year
+        )
+    
+    # For OTR and OTHERS, check if any active request exists
+    if document_type in ['OTR', 'OTHERS']:
+        existing_active = existing_active.filter(
+            purpose=purpose if purpose else Q(purpose__isnull=True)
+        )
+    
+    if existing_active.exists():
+        existing_request = existing_active.first()
+        return Response({
+            "error": "duplicate_request",
+            "message": f"You already have a {document_type} request in progress.",
+            "existing_request": {
+                "id": existing_request.id,
+                "document_type": existing_request.document_type,
+                "status": existing_request.status,
+                "requested_at": existing_request.requested_at,
+                "semester": existing_request.semester,
+                "school_year": existing_request.school_year,
+                "purpose": existing_request.purpose
+            },
+            "status_message": f"Your {existing_request.document_type} request is currently {existing_request.get_status_display().lower()}. Please wait for it to be completed before submitting another request."
+        }, status=status.HTTP_409_CONFLICT)
+
+    # Check for existing draft request to update
     existing = DocumentRequest.objects.filter(
         student_id=request.user,
-        document_type=request.data.get("document_type"),
+        document_type=document_type,
         status="draft"
     ).first()
 

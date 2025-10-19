@@ -16,8 +16,7 @@ class Endpoints {
   // Chat
   static const String chat = '/api/ai/chat/';
   static const String chatMessages = '/api/ai/chat/messages/';
-  // If your backend exposes a dedicated history endpoint, set it here:
-  // e.g. '/api/ai/chat/messages/'
+  static const String chatHistory = '/api/ai/chat/history/';
 
   // Other
   static const String receipts = '/api/document-requests/';  // Receipt upload is part of document requests

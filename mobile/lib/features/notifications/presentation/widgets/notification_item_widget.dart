@@ -9,7 +9,7 @@ class NotificationItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: notification.color.withOpacity(0.2),
+        backgroundColor: notification.color.withValues(alpha: 0.2),
         child: Icon(notification.icon, color: notification.color),
       ),
       title: Text(notification.title, style: const TextStyle(fontWeight: FontWeight.bold)),

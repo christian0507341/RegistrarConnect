@@ -57,15 +57,112 @@ def input_check(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def chat_messages(request):
+    """Get messages for a specific conversation - only if it belongs to the authenticated user."""
     conv_id = request.query_params.get("conversation_id") or request.query_params.get("conversationId")
     if not conv_id:
         return Response({"detail": "conversation_id is required"}, status=400)
 
+    # Ensure user is authenticated
+    if not request.user or not request.user.is_authenticated:
+        return Response({"error": "Authentication required"}, status=401)
+
     try:
-        row = ChatHistory.objects.get(user_id=str(request.user.id), conversation_id=conv_id)
+        user_id = str(request.user.id)
+        print(f"🔍 Backend: User {user_id} requesting messages for conversation {conv_id}")
+        
+        row = ChatHistory.objects.get(user_id=user_id, conversation_id=conv_id)
+        
+        # Double-check ownership
+        if row.user_id != user_id:
+            return Response({"error": "Access denied - conversation does not belong to user"}, status=403)
+        
+        # Log access for security monitoring
+        print(f"🔍 Backend: Found conversation with {len(row.history or [])} messages")
+        
         return Response(row.history or [], status=200)
     except ChatHistory.DoesNotExist:
+        print(f"🔍 Backend: Conversation {conv_id} not found for user {user_id}")
         return Response([], status=200)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def chat_history_list(request):
+    """Get list of all chat conversations for the authenticated user only."""
+    try:
+        # Ensure user is authenticated and get their ID
+        if not request.user or not request.user.is_authenticated:
+            return Response({"error": "Authentication required"}, status=401)
+        
+        user_id = str(request.user.id)
+        
+        # Double-check: Only get conversations for this specific user
+        conversations = ChatHistory.objects.filter(
+            user_id=user_id
+        ).order_by('-updated_at')
+        
+        # Log access for security monitoring (optional)
+        print(f"User {user_id} accessed chat history - {conversations.count()} conversations")
+        
+        history_list = []
+        for conv in conversations:
+            # Additional security check: ensure conversation belongs to user
+            if conv.user_id != user_id:
+                continue  # Skip if somehow not matching
+                
+            last_message = None
+            if conv.history and len(conv.history) > 0:
+                # Get the last message from history
+                last_msg = conv.history[-1]
+                if isinstance(last_msg, dict):
+                    last_message = last_msg.get('text', '')
+            
+            history_list.append({
+                'id': conv.conversation_id,
+                'timestamp': conv.updated_at.isoformat(),
+                'lastMessage': last_message,
+                'messageCount': len(conv.history) if conv.history else 0,
+                'status': conv.status,
+                'documentType': conv.document_request.document_type if conv.document_request else None,
+            })
+        
+        return Response(history_list, status=200)
+    except Exception as e:
+        print(f"Error in chat_history_list for user {request.user.id}: {str(e)}")
+        return Response({"error": "Failed to retrieve chat history"}, status=500)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_chat_history(request, conversation_id):
+    """Delete a specific chat conversation - only if it belongs to the authenticated user."""
+    try:
+        # Ensure user is authenticated
+        if not request.user or not request.user.is_authenticated:
+            return Response({"error": "Authentication required"}, status=401)
+        
+        user_id = str(request.user.id)
+        
+        # Get conversation and verify ownership
+        conv = ChatHistory.objects.get(
+            user_id=user_id,
+            conversation_id=conversation_id
+        )
+        
+        # Double-check ownership before deletion
+        if conv.user_id != user_id:
+            return Response({"error": "Access denied - conversation does not belong to user"}, status=403)
+        
+        # Log deletion for security monitoring
+        print(f"User {user_id} deleted conversation {conversation_id}")
+        
+        conv.delete()
+        return Response({"message": "Conversation deleted successfully"}, status=200)
+    except ChatHistory.DoesNotExist:
+        return Response({"error": "Conversation not found or access denied"}, status=404)
+    except Exception as e:
+        print(f"Error deleting conversation {conversation_id} for user {request.user.id}: {str(e)}")
+        return Response({"error": "Failed to delete conversation"}, status=500)
 
 
 @api_view(["POST"])
@@ -81,6 +178,10 @@ def chat(request):
     if not conv_id:
         return Response({"detail": "conversation_id is required"}, status=400)
 
+    # Ensure user is authenticated
+    if not request.user or not request.user.is_authenticated:
+        return Response({"error": "Authentication required"}, status=401)
+
     access_token = _extract_bearer_token(request)
     now_iso = timezone.now().isoformat()
     
@@ -91,14 +192,19 @@ def chat(request):
     LOCKED_STATUSES = {"pending", "on_process", "ready_to_claim", "rejected"}
 
     with transaction.atomic():
+        user_id = str(request.user.id)
         row, _created = ChatHistory.objects.select_for_update().get_or_create(
-            user_id=str(request.user.id),
+            user_id=user_id,
             conversation_id=conv_id,
             defaults={
                 "history": [],
-                "session": start_new_session(str(request.user.id)),
+                "session": start_new_session(user_id),
             },
         )
+        
+        # Security check: Ensure conversation belongs to the authenticated user
+        if row.user_id != user_id:
+            return Response({"error": "Access denied - conversation does not belong to user"}, status=403)
 
         # Get inbound session data
         inbound_session = data.get("session") or {}

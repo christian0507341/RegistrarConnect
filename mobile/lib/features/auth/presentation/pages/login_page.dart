@@ -138,9 +138,10 @@ class _LoginPageState extends State<LoginPage> {
           );
           
           // Navigate to home after a short delay
+          final navigator = Navigator.of(context);
           Future.delayed(const Duration(milliseconds: 500), () {
             if (mounted) {
-              Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+              navigator.pushNamedAndRemoveUntil('/home', (route) => false);
             }
           });
         } else if (state is AuthError) {

@@ -102,6 +102,10 @@ def submit_document_request(
         doc = resp.json()
         print(f"✅ Request created: {doc['document_type']} (Status: {doc['status']})")
         return doc
+    elif resp.status_code == 409:  # Conflict - duplicate request
+        error_data = resp.json()
+        print(f"⚠️ Duplicate request detected: {error_data.get('message', 'Request already exists')}")
+        return {"error": "duplicate", "details": error_data}
     else:
         print(f"❌ Failed to create request: {resp.status_code} {resp.text}")
         return None
@@ -473,8 +477,73 @@ def save_to_db(session, access_token):
     if resp.status_code != 200:
         print(f"⚠️ Failed to save chat history: {resp.text}")
 
+def check_duplicate_requests(session: Dict, access_token: str) -> str:
+    """Check if user already has active requests for the same document type."""
+    if not session.get("doc_type"):
+        return None
+    
+    reqs = fetch_my_requests(access_token) or []
+    if not reqs:
+        return None
+    
+    doc_type = session.get("doc_type")
+    semester = session.get("semester")
+    school_year = session.get("school_year")
+    purpose = session.get("purpose")
+    
+    # Check for active requests of the same type
+    active_statuses = ["draft", "confirming", "awaiting_payment", "pending", "on_process"]
+    
+    for req in reqs:
+        if (req.get("document_type") == doc_type and 
+            req.get("status") in active_statuses):
+            
+            # For COG and COE, also check semester and school year
+            if doc_type in ['COG', 'COE']:
+                if (req.get("semester") == semester and 
+                    req.get("school_year") == school_year):
+                    return req
+            # For OTR and OTHERS, check purpose
+            elif doc_type in ['OTR', 'OTHERS']:
+                if req.get("purpose") == purpose:
+                    return req
+            else:
+                return req
+    
+    return None
+
 def handle_user_text(session: Dict, text: str, access_token: str) -> str:
     text_lower = text.strip().lower()
+    
+    # Check for duplicate requests early in the conversation
+    if session.get("doc_type") and session.get("mode") == "collecting":
+        duplicate_req = check_duplicate_requests(session, access_token)
+        if duplicate_req:
+            session["status"] = duplicate_req.get("status", "pending")
+            session["expected"] = "another"
+            session["mode"] = "qa"
+            save_to_db(session, access_token)
+            
+            status_messages = {
+                "draft": "being prepared",
+                "confirming": "awaiting your confirmation", 
+                "awaiting_payment": "awaiting payment",
+                "pending": "under faculty review",
+                "on_process": "being processed"
+            }
+            current_status = status_messages.get(duplicate_req.get("status"), "in progress")
+            
+            return (
+                f"🔒 **You already have a {session.get('doc_type')} request {current_status}.**\n\n"
+                f"📊 **Current Status:** {current_status}\n"
+                f"📅 **Requested:** {duplicate_req.get('requested_at', 'Recently')}\n\n"
+                f"💡 **To request another document:**\n"
+                f"• Wait for your current request to be completed\n"
+                f"• Or request a **different document type**\n"
+                f"• Or start a **new conversation** for a different purpose\n\n"
+                f"🎯 This ensures each document request is tracked separately!"
+            )
+    
     if text_lower in {"help", "/help"}:
         save_to_db(session, access_token)
         return (
@@ -761,10 +830,11 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
                 and (r.get("purpose") == session.get("purpose"))
             )
 
-        # If there is already a submitted/processing/ready match, do NOT submit again
+        # Check for any active requests (including draft, confirming, awaiting_payment, pending, on_process)
+        active_statuses = ["draft", "confirming", "awaiting_payment", "pending", "on_process"]
         already_submitted = next(
             (r for r in reqs if is_same_request(r)
-             and r.get("status") in ["pending", "on_process", "ready_to_claim"]),
+             and r.get("status") in active_statuses),
             None
         )
         if already_submitted:
@@ -772,9 +842,26 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
             session["expected"] = "another"
             session["mode"] = "qa"
             save_to_db(session, access_token)
+            
+            # Enhanced message with status information
+            status_messages = {
+                "draft": "being prepared",
+                "confirming": "awaiting your confirmation", 
+                "awaiting_payment": "awaiting payment",
+                "pending": "under faculty review",
+                "on_process": "being processed"
+            }
+            current_status = status_messages.get(already_submitted.get("status"), "in progress")
+            
             return (
-                "We already have your request on file for this document. "
-                "Would you like to **request another document now**? (Yes/No)"
+                f"🔒 **You already have a {session.get('doc_type')} request {current_status}.**\n\n"
+                f"📊 **Current Status:** {current_status}\n"
+                f"📅 **Requested:** {already_submitted.get('requested_at', 'Recently')}\n\n"
+                f"💡 **To request another document:**\n"
+                f"• Wait for your current request to be completed\n"
+                f"• Or request a **different document type**\n"
+                f"• Or start a **new conversation** for a different purpose\n\n"
+                f"🎯 This ensures each document request is tracked separately!"
             )
 
         # Otherwise: create/update the *current* in-progress request
@@ -791,13 +878,31 @@ def handle_user_text(session: Dict, text: str, access_token: str) -> str:
         )
 
         if resp:
+            # Check if it's a duplicate request error
+            if resp.get("error") == "duplicate":
+                error_details = resp.get("details", {})
+                existing_request = error_details.get("existing_request", {})
+                session["status"] = existing_request.get("status", "pending")
+                session["expected"] = "another"
+                session["mode"] = "qa"
+                save_to_db(session, access_token)
+                
+                return (
+                    f"🔒 **Duplicate Request Detected!**\n\n"
+                    f"You already have a **{existing_request.get('document_type', session.get('doc_type'))}** request in progress.\n\n"
+                    f"📊 **Current Status:** {existing_request.get('status', 'pending')}\n"
+                    f"📅 **Requested:** {existing_request.get('requested_at', 'Recently')}\n\n"
+                    f"💡 **Please wait for your current request to be completed before submitting another one.**\n\n"
+                    f"Would you like to **request a different document**? (Yes/No)"
+                )
+            
             # Success path: flip state and route to "another" prompt
             session["status"] = "pending"
             session["expected"] = "another"
             session["mode"] = "qa"
             save_to_db(session, access_token)
             msg = (
-                "Thanks, I’ve recorded your receipt.\n"
+                "Thanks, I've recorded your receipt.\n"
                 f"✅ Request created: {resp['document_type']} (Status: {resp['status']})\n"
                 + sameday_line(session)
                 + "\n\nWould you like to **request another document now**? (Yes/No)"
