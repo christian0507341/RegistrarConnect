@@ -28,8 +28,8 @@ class AppointmentList extends StatelessWidget {
     final color = _getStatusColor(status);
     return LinearGradient(
       colors: [
-        color.withOpacity(0.1),
-        color.withOpacity(0.05),
+        color.withAlpha(26),
+        color.withAlpha(13),
       ],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
@@ -112,7 +112,7 @@ class AppointmentList extends StatelessWidget {
             gradient: _getStatusGradient(appointment.status),
             boxShadow: [
               BoxShadow(
-                color: _getStatusColor(appointment.status).withOpacity(0.2),
+                color: _getStatusColor(appointment.status).withAlpha(51),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -122,7 +122,7 @@ class AppointmentList extends StatelessWidget {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: _getStatusColor(appointment.status).withOpacity(0.2),
+                color: _getStatusColor(appointment.status).withAlpha(51),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -161,10 +161,10 @@ class AppointmentList extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(appointment.status).withOpacity(0.1),
+                    color: _getStatusColor(appointment.status).withAlpha(26),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _getStatusColor(appointment.status).withOpacity(0.3),
+                      color: _getStatusColor(appointment.status).withAlpha(77),
                       width: 1,
                     ),
                   ),

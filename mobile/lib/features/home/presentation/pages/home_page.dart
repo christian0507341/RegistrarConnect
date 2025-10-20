@@ -77,7 +77,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withAlpha(13),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -102,7 +102,7 @@ class _HomePageState extends State<HomePage> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF667EEA).withOpacity(0.3),
+                                color: const Color(0xFF667EEA).withAlpha(77),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -153,7 +153,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withAlpha(13),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -177,7 +177,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withAlpha(13),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -225,7 +225,7 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
                 ),
               ),
               const SizedBox(height: 10),
@@ -246,7 +246,7 @@ class _HomePageState extends State<HomePage> {
                   color: Theme.of(context).colorScheme.surfaceContainer,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                    color: Theme.of(context).colorScheme.outline.withAlpha(51),
                   ),
                 ),
                 child: Column(
@@ -261,7 +261,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     Divider(
-                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                      color: Theme.of(context).colorScheme.outline.withAlpha(77),
                     ),
                     ...state.activities.map(
                       (a) => Padding(
@@ -366,7 +366,7 @@ class _StatusCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 14, 
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+              color: Theme.of(context).colorScheme.onSurface.withAlpha(204),
             ),
           ),
           const SizedBox(height: 8),
@@ -412,11 +412,11 @@ class _RecentDocCard extends StatelessWidget {
           color: Theme.of(context).colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+            color: Theme.of(context).colorScheme.outline.withAlpha(51),
           ),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
+              color: Theme.of(context).colorScheme.shadow.withAlpha(26),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -426,7 +426,7 @@ class _RecentDocCard extends StatelessWidget {
           child: Icon(
             Icons.description_outlined,
             size: 40,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
           ),
         ),
       ),

@@ -21,17 +21,17 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
           if (json is Map<String, dynamic>) {
             appointments.add(AppointmentModel.fromJson(json).toEntity());
           } else {
-            print('Warning: Skipping invalid appointment data: $json');
+            // Skip invalid appointment data
           }
         } catch (e) {
-          print('Error parsing appointment: $e, data: $json');
+          // Error parsing appointment, continue with others
           // Continue with other appointments
         }
       }
       
       return appointments;
     } catch (e) {
-      print('Failed to fetch appointments: $e');
+      // Failed to fetch appointments
       throw Exception('Failed to fetch appointments: $e');
     }
   }
