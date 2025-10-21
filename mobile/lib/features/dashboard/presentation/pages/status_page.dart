@@ -451,7 +451,7 @@ class _StatusPageState extends State<StatusPage> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withAlpha(13),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -499,7 +499,7 @@ class _StatusPageState extends State<StatusPage> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withAlpha(26),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -511,7 +511,7 @@ class _StatusPageState extends State<StatusPage> {
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.1),
+                                  color: Colors.red.withAlpha(26),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
@@ -560,7 +560,7 @@ class _StatusPageState extends State<StatusPage> {
                                 Icon(
                                   Icons.inbox_outlined,
                                   size: 64,
-                                  color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
+                                  color: Theme.of(context).primaryColor.withAlpha(128),
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
@@ -677,8 +677,8 @@ class _StatusPageState extends State<StatusPage> {
                                 gradient: isRejected 
                                     ? LinearGradient(
                                         colors: [
-                                          Colors.red[50] ?? Colors.red.withValues(alpha: 0.1),
-                                          Colors.red[100] ?? Colors.red.withValues(alpha: 0.2),
+                                          Colors.red[50] ?? Colors.red.withAlpha(26),
+                                          Colors.red[100] ?? Colors.red.withAlpha(51),
                                         ],
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
@@ -686,8 +686,8 @@ class _StatusPageState extends State<StatusPage> {
                                     : isClaimed
                                         ? LinearGradient(
                                             colors: [
-                                              Colors.purple[50] ?? Colors.purple.withValues(alpha: 0.1),
-                                              Colors.purple[100] ?? Colors.purple.withValues(alpha: 0.2),
+                                              Colors.purple[50] ?? Colors.purple.withAlpha(26),
+                                              Colors.purple[100] ?? Colors.purple.withAlpha(51),
                                             ],
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
@@ -711,22 +711,22 @@ class _StatusPageState extends State<StatusPage> {
                                       ? Colors.red[300] ?? Colors.red
                                       : isClaimed
                                           ? Colors.purple[300] ?? Colors.purple
-                                          : statusColor.withValues(alpha: 0.3),
+                                          : statusColor.withAlpha(77),
                                   width: isRejected ? 2.0 : 1.5,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: isRejected 
-                                        ? Colors.red.withValues(alpha: 0.2)
+                                        ? Colors.red.withAlpha(51)
                                         : isClaimed
-                                            ? Colors.purple.withValues(alpha: 0.2)
-                                            : statusColor.withValues(alpha: 0.1),
+                                            ? Colors.purple.withAlpha(51)
+                                            : statusColor.withAlpha(26),
                                     blurRadius: isRejected ? 16 : isClaimed ? 16 : 12,
                                     offset: const Offset(0, 4),
                                     spreadRadius: isRejected ? 3 : isClaimed ? 3 : 2,
                                   ),
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),
+                                    color: Colors.black.withAlpha(isDarkMode ? 77 : 26),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -742,7 +742,7 @@ class _StatusPageState extends State<StatusPage> {
                                         Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: statusColor.withValues(alpha: 0.1),
+                                            color: statusColor.withAlpha(26),
                                             borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: Icon(
@@ -779,7 +779,7 @@ class _StatusPageState extends State<StatusPage> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: statusColor.withValues(alpha: 0.1),
+                                            color: statusColor.withAlpha(26),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Text(

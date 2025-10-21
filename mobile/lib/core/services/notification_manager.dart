@@ -264,7 +264,7 @@ class NotificationManager {
       id: requestId + 10000, // Offset to avoid conflicts
       title: title,
       body: body,
-      payload: 'claimed_${requestId}_${documentType}_${studentName}',
+      payload: 'claimed_${requestId}_${documentType}_$studentName',
     );
   }
 

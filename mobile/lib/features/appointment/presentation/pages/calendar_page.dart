@@ -74,10 +74,10 @@ class _CalendarPageState extends State<CalendarPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withAlpha(26),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withAlpha(77),
           width: 1,
         ),
       ),
@@ -92,7 +92,7 @@ class _CalendarPageState extends State<CalendarPage> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.3),
+                  color: color.withAlpha(77),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -167,7 +167,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withAlpha(13),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -175,7 +175,7 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-              child: BlocBuilder<AppointmentBloc, AppointmentState>(
+                child: BlocBuilder<AppointmentBloc, AppointmentState>(
                 builder: (context, state) {
                   return TableCalendar(
                     firstDay: DateTime.utc(2020, 1, 1),
@@ -263,7 +263,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
+                    color: Colors.black.withAlpha(isDarkMode ? 51 : 13),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),

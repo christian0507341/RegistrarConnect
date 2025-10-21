@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from .models import ChatHistory
 from backend.document_requests.models import DocumentRequest
+from .services.enhanced_chatbot import EnhancedChatbot
 
 # engine pieces from the CLI module
 try:
@@ -245,6 +246,9 @@ def chat(request):
             action = None
 
             if text:
+                # Initialize enhanced chatbot
+                enhanced_chatbot = EnhancedChatbot()
+                
                 # If the chat is locked to a submitted request, just notify
                 if row.document_request and row.document_request.status in LOCKED_STATUSES:
                     user_msg = {
@@ -290,10 +294,16 @@ def chat(request):
 
                     return Response({"message": bot_msg, "action": action}, status=200)
 
-                # Normal engine path
+                # Normal engine path with enhanced processing
                 try:
                     push_history(merged_session, "user", text)
-                    reply_text = handle_user_text(merged_session, text, access_token)
+                    
+                    # Use enhanced chatbot for better responses
+                    reply_text = enhanced_chatbot.process_user_input(text, merged_session, access_token)
+                    
+                    # Fallback to original if enhanced fails
+                    if not reply_text or reply_text.strip() == "":
+                        reply_text = handle_user_text(merged_session, text, access_token)
                 except Exception as e:
                     print(f"❌ Chatbot error: {e}")
                     # Provide a helpful fallback response
