@@ -1,0 +1,110 @@
+{
+  "user_id": "christianmondala.up@phinmaed.com",
+  "mode": "qa",
+  "status": "pending",
+  "doc_type": "COE",
+  "semester": 2,
+  "school_year": "2029-2030",
+  "purpose": "test4",
+  "specify": null,
+  "other_doc_name": null,
+  "sis_confirmed": true,
+  "payment_method": "personal",
+  "receipt_hashes": [
+    "86985e105f79b95d6bc918fb45ec7727"
+  ],
+  "expected": null,
+  "same_day": {
+    "enabled": false,
+    "reason": ""
+  },
+  "history": [
+    {
+      "ts": "2025-10-20T21:49:31",
+      "sender": "bot",
+      "text": "That’s Certificate of Enrollment (COE).\nPlease provide Semester (1/2) and School Year (e.g., 2025-2026).\nYou can type them together, like: `Sem 1 SY 2025-2026`."
+    },
+    {
+      "ts": "2025-10-20T21:50:00",
+      "sender": "user",
+      "text": "s2 2930 test4"
+    },
+    {
+      "ts": "2025-10-20T21:50:00",
+      "sender": "bot",
+      "text": "✅ Before we proceed:\n\nAre your SIS personal details up to date?\n\nThis includes your name, address, and contact information. Please confirm: Yes or No"
+    },
+    {
+      "ts": "2025-10-20T21:50:03",
+      "sender": "user",
+      "text": "yes"
+    },
+    {
+      "ts": "2025-10-20T21:50:03",
+      "sender": "bot",
+      "text": "✅ Please review your request:\n\n📜 COE (Certificate of Enrollment)\n📅 Semester 2, School Year 2029-2030\n🎯 Purpose: Not specified\n\n\nType confirm to proceed, edit to change, or cancel to abort."
+    },
+    {
+      "ts": "2025-10-20T21:50:08",
+      "sender": "user",
+      "text": "confirm"
+    },
+    {
+      "ts": "2025-10-20T21:50:08",
+      "sender": "bot",
+      "text": "Oh, it looks like you missed the purpose for your request. Please provide it (e.g., Scholarship, Visa, PRC)."
+    },
+    {
+      "ts": "2025-10-20T21:50:11",
+      "sender": "user",
+      "text": "test4"
+    },
+    {
+      "ts": "2025-10-20T21:50:11",
+      "sender": "bot",
+      "text": "✅ Please review your request:\n\n📜 COE (Certificate of Enrollment)\n📅 Semester 2, School Year 2029-2030\n🎯 Purpose: test4\n\n\nType confirm to proceed, edit to change, or cancel to abort."
+    },
+    {
+      "ts": "2025-10-20T21:50:14",
+      "sender": "user",
+      "text": "confirm"
+    },
+    {
+      "ts": "2025-10-20T21:50:15",
+      "sender": "bot",
+      "text": "🎉 Excellent! Your request is confirmed:\n\n📜 COE (Certificate of Enrollment)\n📅 Semester 2, School Year 2029-2030\n🎯 Purpose: test4\n\n💰 Payment Information:\n⚠️ Important: Once paid, your request cannot be cancelled and is non-refundable.\n\n💳 Payment Options:\n• Personal (Finance) - Pay at the Finance Office\n• Online (GCash) - Pay via GCash\n\nHow would you like to pay?"
+    },
+    {
+      "ts": "2025-10-20T21:50:18",
+      "sender": "user",
+      "text": "personal"
+    },
+    {
+      "ts": "2025-10-20T21:50:18",
+      "sender": "bot",
+      "text": "Okay. Once you finish payment at the Finance Department, please paste your receipt/reference code (e.g., `RCPT12345`)."
+    },
+    {
+      "ts": "2025-10-20T21:50:22",
+      "sender": "user",
+      "text": "test4"
+    },
+    {
+      "ts": "2025-10-20T21:50:22",
+      "sender": "bot",
+      "text": "Thanks, I've recorded your receipt.\n✅ Request created: COE (Status: payment_method_set)\nRelease is the next working day after approval.\n\nWould you like to request another document now? (Yes/No)"
+    },
+    {
+      "ts": "2025-10-20T21:50:26",
+      "sender": "user",
+      "text": "no"
+    },
+    {
+      "ts": "2025-10-20T21:50:26",
+      "sender": "bot",
+      "text": "Okay. I’m here if you need anything else."
+    }
+  ],
+  "policy_version": "v1.0",
+  "conversation_id": "christianmondalaupphinmaedcom_2025-10-20t214930"
+}

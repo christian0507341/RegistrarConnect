@@ -1,4 +1,4 @@
-Enhanced Training Log - 2025-10-19 07:17:32.699792
+Enhanced Training Log - 2025-10-20 19:49:00.950853
 ==================================================
 Starting Enhanced AI Training
 ==================================================
@@ -12,315 +12,302 @@ Augmented validation samples: 42
 Training Document Type Classifier...
 Starting enhanced training for doc...
 Training doc model...
-{'eval_loss': 0.9396564960479736, 'eval_accuracy': 0.6904761904761905, 'eval_f1': 0.6208895679483916, 'eval_precision': 0.7753357753357752, 'eval_recall': 0.6904761904761905, 'eval_runtime': 0.776, 'eval_samples_per_second': 54.123, 'eval_steps_per_second': 2.577, 'epoch': 1.0}
-{'eval_loss': 0.44750532507896423, 'eval_accuracy': 0.9285714285714286, 'eval_f1': 0.9292436974789915, 'eval_precision': 0.9318783068783068, 'eval_recall': 0.9285714285714286, 'eval_runtime': 0.558, 'eval_samples_per_second': 75.269, 'eval_steps_per_second': 3.584, 'epoch': 2.0}
-{'loss': 0.7991, 'grad_norm': 2.1318657398223877, 'learning_rate': 9.166666666666666e-06, 'epoch': 2.5}
-{'eval_loss': 0.31532469391822815, 'eval_accuracy': 0.9285714285714286, 'eval_f1': 0.9283473389355741, 'eval_precision': 0.9304029304029304, 'eval_recall': 0.9285714285714286, 'eval_runtime': 0.574, 'eval_samples_per_second': 73.17, 'eval_steps_per_second': 3.484, 'epoch': 3.0}
-{'train_runtime': 93.8973, 'train_samples_per_second': 10.064, 'train_steps_per_second': 0.639, 'train_loss': 0.709017527103424, 'epoch': 3.0}
+{'eval_loss': 0.8421856164932251, 'eval_accuracy': 0.9047619047619048, 'eval_f1': 0.9027838827838828, 'eval_precision': 0.9061791383219953, 'eval_recall': 0.9047619047619048, 'eval_runtime': 0.3563, 'eval_samples_per_second': 117.892, 'eval_steps_per_second': 5.614, 'epoch': 1.0}
+{'eval_loss': 0.31873390078544617, 'eval_accuracy': 0.9523809523809523, 'eval_f1': 0.9523809523809523, 'eval_precision': 0.9523809523809523, 'eval_recall': 0.9523809523809523, 'eval_runtime': 0.2705, 'eval_samples_per_second': 155.251, 'eval_steps_per_second': 7.393, 'epoch': 2.0}
+{'loss': 0.7313, 'grad_norm': 2.310460329055786, 'learning_rate': 9.166666666666666e-06, 'epoch': 2.5}
+{'eval_loss': 0.22640591859817505, 'eval_accuracy': 0.9523809523809523, 'eval_f1': 0.9523809523809523, 'eval_precision': 0.9523809523809523, 'eval_recall': 0.9523809523809523, 'eval_runtime': 0.2875, 'eval_samples_per_second': 146.107, 'eval_steps_per_second': 6.957, 'epoch': 3.0}
+{'train_runtime': 40.4284, 'train_samples_per_second': 23.375, 'train_steps_per_second': 1.484, 'train_loss': 0.6439175327618917, 'epoch': 3.0}
 doc model evaluation results:
-  eval_loss: 0.3153
-  eval_accuracy: 0.9286
-  eval_f1: 0.9283
-  eval_precision: 0.9304
-  eval_recall: 0.9286
-  eval_runtime: 1.7140
-  eval_samples_per_second: 24.5040
-  eval_steps_per_second: 1.1670
+  eval_loss: 0.2264
+  eval_accuracy: 0.9524
+  eval_f1: 0.9524
+  eval_precision: 0.9524
+  eval_recall: 0.9524
+  eval_runtime: 0.3420
+  eval_samples_per_second: 122.7960
+  eval_steps_per_second: 5.8470
   epoch: 3.0000
 
 Training Semester Classifier...
 Starting enhanced training for sem...
 Training sem model...
-{'eval_loss': 0.5242322087287903, 'eval_accuracy': 0.7380952380952381, 'eval_f1': 0.6574800860515145, 'eval_precision': 0.6254826254826255, 'eval_recall': 0.7380952380952381, 'eval_runtime': 0.577, 'eval_samples_per_second': 72.791, 'eval_steps_per_second': 3.466, 'epoch': 1.0}
-{'eval_loss': 0.34606271982192993, 'eval_accuracy': 0.8095238095238095, 'eval_f1': 0.746031746031746, 'eval_precision': 0.7142857142857143, 'eval_recall': 0.8095238095238095, 'eval_runtime': 0.585, 'eval_samples_per_second': 71.795, 'eval_steps_per_second': 3.419, 'epoch': 2.0}
-{'loss': 0.586, 'grad_norm': 1.8960078954696655, 'learning_rate': 9.166666666666666e-06, 'epoch': 2.5}
-{'eval_loss': 0.27924734354019165, 'eval_accuracy': 0.9523809523809523, 'eval_f1': 0.9516250944822373, 'eval_precision': 0.9619047619047618, 'eval_recall': 0.9523809523809523, 'eval_runtime': 0.591, 'eval_samples_per_second': 71.066, 'eval_steps_per_second': 3.384, 'epoch': 3.0}
-{'train_runtime': 83.7403, 'train_samples_per_second': 11.285, 'train_steps_per_second': 0.717, 'train_loss': 0.5486505150794982, 'epoch': 3.0}
+{'eval_loss': 0.5242321491241455, 'eval_accuracy': 0.7380952380952381, 'eval_f1': 0.6574800860515145, 'eval_precision': 0.6254826254826255, 'eval_recall': 0.7380952380952381, 'eval_runtime': 0.3245, 'eval_samples_per_second': 129.437, 'eval_steps_per_second': 6.164, 'epoch': 1.0}
+{'eval_loss': 0.34606266021728516, 'eval_accuracy': 0.8095238095238095, 'eval_f1': 0.746031746031746, 'eval_precision': 0.7142857142857143, 'eval_recall': 0.8095238095238095, 'eval_runtime': 0.285, 'eval_samples_per_second': 147.387, 'eval_steps_per_second': 7.018, 'epoch': 2.0}
+{'loss': 0.586, 'grad_norm': 1.896010398864746, 'learning_rate': 9.166666666666666e-06, 'epoch': 2.5}
+{'eval_loss': 0.27924734354019165, 'eval_accuracy': 0.9523809523809523, 'eval_f1': 0.9516250944822373, 'eval_precision': 0.9619047619047618, 'eval_recall': 0.9523809523809523, 'eval_runtime': 0.2793, 'eval_samples_per_second': 150.388, 'eval_steps_per_second': 7.161, 'epoch': 3.0}
+{'train_runtime': 41.4136, 'train_samples_per_second': 22.819, 'train_steps_per_second': 1.449, 'train_loss': 0.548650574684143, 'epoch': 3.0}
 sem model evaluation results:
   eval_loss: 0.2792
   eval_accuracy: 0.9524
   eval_f1: 0.9516
   eval_precision: 0.9619
   eval_recall: 0.9524
-  eval_runtime: 0.6680
-  eval_samples_per_second: 62.8760
-  eval_steps_per_second: 2.9940
+  eval_runtime: 0.3106
+  eval_samples_per_second: 135.2290
+  eval_steps_per_second: 6.4390
   epoch: 3.0000
 
 Enhanced training completed!
-Models saved to: C:\Users\dummy\Desktop\Shit\RegistrarConnect\backend\ai\services\train\checkpoints
+Models saved to: C:\Users\chris\RegistrarConnect\RegistrarConnect\backend\ai\services\train\checkpoints
 Document types: ['OTR', 'COG', 'COE', 'OTHERS']
 Semester labels: [0, 1, 2]
 
 Errors:
-Some weights of DistilBertForSequenceClassification were not initialized from the model checkpoint at C:\Users\dummy\Desktop\Shit\RegistrarConnect\backend\ai\models\distilbert-base-uncased and are newly initialized: ['classifier.bias', 'classifier.weight', 'pre_classifier.bias', 'pre_classifier.weight']
+Some weights of DistilBertForSequenceClassification were not initialized from the model checkpoint at C:\Users\chris\RegistrarConnect\RegistrarConnect\backend\ai\models\distilbert-base-uncased and are newly initialized: ['classifier.bias', 'classifier.weight', 'pre_classifier.bias', 'pre_classifier.weight']
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 
 Map:   0%|          | 0/315 [00:00<?, ? examples/s]
-Map: 100%|##########| 315/315 [00:00<00:00, 19430.64 examples/s]
+Map: 100%|##########| 315/315 [00:00<00:00, 4575.22 examples/s]
 
 Map:   0%|          | 0/42 [00:00<?, ? examples/s]
-Map: 100%|##########| 42/42 [00:00<00:00, 8391.41 examples/s]
-C:\Users\dummy\Desktop\Shit\RegistrarConnect\backend\ai\services\train\enhanced_training.py:254: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `Trainer.__init__`. Use `processing_class` instead.
+Map: 100%|##########| 42/42 [00:00<00:00, 5249.29 examples/s]
+C:\Users\chris\RegistrarConnect\RegistrarConnect\backend\ai\services\train\enhanced_training.py:254: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `Trainer.__init__`. Use `processing_class` instead.
   trainer = Trainer(
 
-  0%|          | 0/60 [00:00<?, ?it/s]C:\Users\dummy\Desktop\Shit\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  0%|          | 0/60 [00:00<?, ?it/s]C:\Users\chris\RegistrarConnect\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   warnings.warn(warn_msg)
 
-  2%|1         | 1/60 [00:04<04:06,  4.18s/it]
-  3%|3         | 2/60 [00:07<03:40,  3.81s/it]
-  5%|5         | 3/60 [00:09<02:51,  3.01s/it]
-  7%|6         | 4/60 [00:11<02:12,  2.37s/it]
-  8%|8         | 5/60 [00:12<01:46,  1.94s/it]
- 10%|#         | 6/60 [00:13<01:29,  1.67s/it]
- 12%|#1        | 7/60 [00:14<01:17,  1.46s/it]
- 13%|#3        | 8/60 [00:15<01:08,  1.31s/it]
- 15%|#5        | 9/60 [00:16<01:03,  1.24s/it]
- 17%|#6        | 10/60 [00:17<00:59,  1.19s/it]
- 18%|#8        | 11/60 [00:18<00:55,  1.13s/it]
- 20%|##        | 12/60 [00:19<00:53,  1.12s/it]
- 22%|##1       | 13/60 [00:20<00:52,  1.11s/it]
- 23%|##3       | 14/60 [00:21<00:49,  1.07s/it]
- 25%|##5       | 15/60 [00:22<00:48,  1.08s/it]
- 27%|##6       | 16/60 [00:24<00:47,  1.08s/it]
- 28%|##8       | 17/60 [00:24<00:44,  1.04s/it]
- 30%|###       | 18/60 [00:26<00:44,  1.06s/it]
- 32%|###1      | 19/60 [00:27<00:43,  1.07s/it]
- 33%|###3      | 20/60 [00:28<00:40,  1.00s/it]
+  2%|1         | 1/60 [00:00<00:58,  1.01it/s]
+  3%|3         | 2/60 [00:01<00:43,  1.33it/s]
+  5%|5         | 3/60 [00:02<00:39,  1.45it/s]
+  7%|6         | 4/60 [00:02<00:36,  1.51it/s]
+  8%|8         | 5/60 [00:03<00:34,  1.59it/s]
+ 10%|#         | 6/60 [00:04<00:33,  1.60it/s]
+ 12%|#1        | 7/60 [00:04<00:31,  1.66it/s]
+ 13%|#3        | 8/60 [00:05<00:30,  1.69it/s]
+ 15%|#5        | 9/60 [00:05<00:29,  1.72it/s]
+ 17%|#6        | 10/60 [00:06<00:29,  1.72it/s]
+ 18%|#8        | 11/60 [00:06<00:29,  1.69it/s]
+ 20%|##        | 12/60 [00:07<00:27,  1.71it/s]
+ 22%|##1       | 13/60 [00:08<00:27,  1.72it/s]
+ 23%|##3       | 14/60 [00:08<00:26,  1.73it/s]
+ 25%|##5       | 15/60 [00:09<00:25,  1.74it/s]
+ 27%|##6       | 16/60 [00:09<00:25,  1.69it/s]
+ 28%|##8       | 17/60 [00:10<00:25,  1.71it/s]
+ 30%|###       | 18/60 [00:10<00:24,  1.73it/s]
+ 32%|###1      | 19/60 [00:11<00:23,  1.74it/s]
+ 33%|###3      | 20/60 [00:11<00:21,  1.85it/s]
 
   0%|          | 0/2 [00:00<?, ?it/s][A
 
-100%|##########| 2/2 [00:00<00:00, 10.42it/s][A
+100%|##########| 2/2 [00:00<00:00, 17.47it/s][A
                                                
 
 
                                              
 [A
- 33%|###3      | 20/60 [00:28<00:40,  1.00s/it]
+ 33%|###3      | 20/60 [00:12<00:21,  1.85it/s]
 
-100%|##########| 2/2 [00:00<00:00, 10.42it/s][A
+100%|##########| 2/2 [00:00<00:00, 17.47it/s][A
 
-                                             [AC:\Users\dummy\Desktop\Shit\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+                                             [AC:\Users\chris\RegistrarConnect\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   warnings.warn(warn_msg)
 
- 35%|###5      | 21/60 [00:35<01:52,  2.88s/it]
- 37%|###6      | 22/60 [00:36<01:33,  2.46s/it]
- 38%|###8      | 23/60 [00:38<01:18,  2.13s/it]
- 40%|####      | 24/60 [00:39<01:07,  1.86s/it]
- 42%|####1     | 25/60 [00:40<00:57,  1.64s/it]
- 43%|####3     | 26/60 [00:41<00:50,  1.49s/it]
- 45%|####5     | 27/60 [00:42<00:46,  1.41s/it]
- 47%|####6     | 28/60 [00:43<00:41,  1.31s/it]
- 48%|####8     | 29/60 [00:45<00:41,  1.34s/it]
- 50%|#####     | 30/60 [00:47<00:45,  1.52s/it]
- 52%|#####1    | 31/60 [00:50<00:56,  1.94s/it]
- 53%|#####3    | 32/60 [00:52<00:55,  1.99s/it]
- 55%|#####5    | 33/60 [00:53<00:46,  1.73s/it]
- 57%|#####6    | 34/60 [00:55<00:49,  1.90s/it]
- 58%|#####8    | 35/60 [00:57<00:43,  1.74s/it]
- 60%|######    | 36/60 [00:58<00:36,  1.54s/it]
- 62%|######1   | 37/60 [00:59<00:32,  1.43s/it]
- 63%|######3   | 38/60 [01:01<00:36,  1.64s/it]
- 65%|######5   | 39/60 [01:02<00:32,  1.56s/it]
- 67%|######6   | 40/60 [01:03<00:27,  1.39s/it]
+ 35%|###5      | 21/60 [00:14<00:40,  1.03s/it]
+ 37%|###6      | 22/60 [00:14<00:34,  1.12it/s]
+ 38%|###8      | 23/60 [00:15<00:30,  1.23it/s]
+ 40%|####      | 24/60 [00:15<00:26,  1.35it/s]
+ 42%|####1     | 25/60 [00:16<00:24,  1.45it/s]
+ 43%|####3     | 26/60 [00:17<00:22,  1.52it/s]
+ 45%|####5     | 27/60 [00:17<00:20,  1.59it/s]
+ 47%|####6     | 28/60 [00:18<00:19,  1.65it/s]
+ 48%|####8     | 29/60 [00:18<00:18,  1.67it/s]
+ 50%|#####     | 30/60 [00:19<00:17,  1.70it/s]
+ 52%|#####1    | 31/60 [00:19<00:16,  1.71it/s]
+ 53%|#####3    | 32/60 [00:20<00:16,  1.68it/s]
+ 55%|#####5    | 33/60 [00:21<00:15,  1.70it/s]
+ 57%|#####6    | 34/60 [00:21<00:15,  1.71it/s]
+ 58%|#####8    | 35/60 [00:22<00:14,  1.71it/s]
+ 60%|######    | 36/60 [00:22<00:14,  1.70it/s]
+ 62%|######1   | 37/60 [00:23<00:13,  1.68it/s]
+ 63%|######3   | 38/60 [00:24<00:12,  1.71it/s]
+ 65%|######5   | 39/60 [00:24<00:12,  1.71it/s]
+ 67%|######6   | 40/60 [00:25<00:10,  1.86it/s]
 
   0%|          | 0/2 [00:00<?, ?it/s][A
-
-100%|##########| 2/2 [00:00<00:00, 17.24it/s][A
                                                
 
 
-                                             
+                                     
 [A
- 67%|######6   | 40/60 [01:04<00:27,  1.39s/it]
+ 67%|######6   | 40/60 [00:25<00:10,  1.86it/s]
 
-100%|##########| 2/2 [00:00<00:00, 17.24it/s][A
+100%|##########| 2/2 [00:00<00:00, 27.40it/s][A
 
-                                             [AC:\Users\dummy\Desktop\Shit\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+                                             [AC:\Users\chris\RegistrarConnect\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   warnings.warn(warn_msg)
 
- 68%|######8   | 41/60 [01:09<00:49,  2.59s/it]
- 70%|#######   | 42/60 [01:10<00:38,  2.15s/it]
- 72%|#######1  | 43/60 [01:11<00:30,  1.81s/it]
- 73%|#######3  | 44/60 [01:12<00:25,  1.57s/it]
- 75%|#######5  | 45/60 [01:13<00:23,  1.54s/it]
- 77%|#######6  | 46/60 [01:14<00:19,  1.40s/it]
- 78%|#######8  | 47/60 [01:15<00:16,  1.29s/it]
- 80%|########  | 48/60 [01:17<00:14,  1.23s/it]
- 82%|########1 | 49/60 [01:18<00:12,  1.18s/it]
- 83%|########3 | 50/60 [01:19<00:11,  1.13s/it]
+ 68%|######8   | 41/60 [00:27<00:20,  1.06s/it]
+ 70%|#######   | 42/60 [00:27<00:16,  1.09it/s]
+ 72%|#######1  | 43/60 [00:28<00:14,  1.21it/s]
+ 73%|#######3  | 44/60 [00:29<00:12,  1.32it/s]
+ 75%|#######5  | 45/60 [00:29<00:10,  1.40it/s]
+ 77%|#######6  | 46/60 [00:30<00:09,  1.46it/s]
+ 78%|#######8  | 47/60 [00:30<00:08,  1.52it/s]
+ 80%|########  | 48/60 [00:31<00:07,  1.55it/s]
+ 82%|########1 | 49/60 [00:32<00:06,  1.58it/s]
+ 83%|########3 | 50/60 [00:32<00:06,  1.59it/s]
                                                
 
- 83%|########3 | 50/60 [01:19<00:11,  1.13s/it]
- 85%|########5 | 51/60 [01:20<00:10,  1.12s/it]
- 87%|########6 | 52/60 [01:21<00:08,  1.12s/it]
- 88%|########8 | 53/60 [01:22<00:08,  1.19s/it]
- 90%|######### | 54/60 [01:23<00:06,  1.14s/it]
- 92%|#########1| 55/60 [01:24<00:05,  1.12s/it]
- 93%|#########3| 56/60 [01:25<00:04,  1.10s/it]
- 95%|#########5| 57/60 [01:26<00:03,  1.07s/it]
- 97%|#########6| 58/60 [01:27<00:02,  1.08s/it]
- 98%|#########8| 59/60 [01:29<00:01,  1.09s/it]
-100%|##########| 60/60 [01:29<00:00,  1.01it/s]
+ 83%|########3 | 50/60 [00:32<00:06,  1.59it/s]
+ 85%|########5 | 51/60 [00:33<00:05,  1.60it/s]
+ 87%|########6 | 52/60 [00:33<00:04,  1.61it/s]
+ 88%|########8 | 53/60 [00:34<00:04,  1.62it/s]
+ 90%|######### | 54/60 [00:35<00:03,  1.63it/s]
+ 92%|#########1| 55/60 [00:35<00:03,  1.64it/s]
+ 93%|#########3| 56/60 [00:36<00:02,  1.65it/s]
+ 95%|#########5| 57/60 [00:36<00:01,  1.65it/s]
+ 97%|#########6| 58/60 [00:37<00:01,  1.67it/s]
+ 98%|#########8| 59/60 [00:38<00:00,  1.68it/s]
+100%|##########| 60/60 [00:38<00:00,  1.81it/s]
 
   0%|          | 0/2 [00:00<?, ?it/s][A
-
-100%|##########| 2/2 [00:00<00:00, 14.08it/s][A
                                                
 
 
-                                             
+                                     
 [A
-100%|##########| 60/60 [01:30<00:00,  1.01it/s]
+100%|##########| 60/60 [00:38<00:00,  1.81it/s]
 
-100%|##########| 2/2 [00:00<00:00, 14.08it/s][A
+100%|##########| 2/2 [00:00<00:00, 23.70it/s][A
 
                                              [A
                                                
 
-100%|##########| 60/60 [01:33<00:00,  1.01it/s]
-100%|##########| 60/60 [01:33<00:00,  1.56s/it]
-C:\Users\dummy\Desktop\Shit\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+100%|##########| 60/60 [00:40<00:00,  1.81it/s]
+100%|##########| 60/60 [00:40<00:00,  1.48it/s]
+C:\Users\chris\RegistrarConnect\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   warnings.warn(warn_msg)
 
   0%|          | 0/2 [00:00<?, ?it/s]
-100%|##########| 2/2 [00:00<00:00,  5.83it/s]
-100%|##########| 2/2 [00:00<00:00,  5.68it/s]
-Some weights of DistilBertForSequenceClassification were not initialized from the model checkpoint at C:\Users\dummy\Desktop\Shit\RegistrarConnect\backend\ai\models\distilbert-base-uncased and are newly initialized: ['classifier.bias', 'classifier.weight', 'pre_classifier.bias', 'pre_classifier.weight']
+100%|##########| 2/2 [00:00<00:00, 24.48it/s]
+Some weights of DistilBertForSequenceClassification were not initialized from the model checkpoint at C:\Users\chris\RegistrarConnect\RegistrarConnect\backend\ai\models\distilbert-base-uncased and are newly initialized: ['classifier.bias', 'classifier.weight', 'pre_classifier.bias', 'pre_classifier.weight']
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 
 Map:   0%|          | 0/315 [00:00<?, ? examples/s]
-Map: 100%|##########| 315/315 [00:00<00:00, 2218.59 examples/s]
-Map: 100%|##########| 315/315 [00:00<00:00, 2072.62 examples/s]
+Map: 100%|##########| 315/315 [00:00<00:00, 14297.22 examples/s]
 
 Map:   0%|          | 0/42 [00:00<?, ? examples/s]
-Map: 100%|##########| 42/42 [00:00<00:00, 4672.08 examples/s]
-C:\Users\dummy\Desktop\Shit\RegistrarConnect\backend\ai\services\train\enhanced_training.py:254: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `Trainer.__init__`. Use `processing_class` instead.
+Map: 100%|##########| 42/42 [00:00<00:00, 4643.88 examples/s]
+C:\Users\chris\RegistrarConnect\RegistrarConnect\backend\ai\services\train\enhanced_training.py:254: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `Trainer.__init__`. Use `processing_class` instead.
   trainer = Trainer(
 
-  0%|          | 0/60 [00:00<?, ?it/s]C:\Users\dummy\Desktop\Shit\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  0%|          | 0/60 [00:00<?, ?it/s]C:\Users\chris\RegistrarConnect\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   warnings.warn(warn_msg)
 
-  2%|1         | 1/60 [00:02<02:10,  2.22s/it]
-  3%|3         | 2/60 [00:03<01:38,  1.69s/it]
-  5%|5         | 3/60 [00:04<01:26,  1.52s/it]
-  7%|6         | 4/60 [00:05<01:14,  1.34s/it]
-  8%|8         | 5/60 [00:07<01:09,  1.27s/it]
- 10%|#         | 6/60 [00:08<01:05,  1.21s/it]
- 12%|#1        | 7/60 [00:09<01:14,  1.40s/it]
- 13%|#3        | 8/60 [00:10<01:06,  1.29s/it]
- 15%|#5        | 9/60 [00:12<01:02,  1.23s/it]
- 17%|#6        | 10/60 [00:13<00:59,  1.18s/it]
- 18%|#8        | 11/60 [00:14<00:54,  1.11s/it]
- 20%|##        | 12/60 [00:15<00:53,  1.11s/it]
- 22%|##1       | 13/60 [00:16<00:52,  1.11s/it]
- 23%|##3       | 14/60 [00:17<00:51,  1.11s/it]
- 25%|##5       | 15/60 [00:18<00:49,  1.09s/it]
- 27%|##6       | 16/60 [00:19<00:48,  1.10s/it]
- 28%|##8       | 17/60 [00:20<00:47,  1.10s/it]
- 30%|###       | 18/60 [00:21<00:44,  1.07s/it]
- 32%|###1      | 19/60 [00:23<00:48,  1.19s/it]
- 33%|###3      | 20/60 [00:24<00:43,  1.09s/it]
+  2%|1         | 1/60 [00:00<00:50,  1.17it/s]
+  3%|3         | 2/60 [00:01<00:42,  1.38it/s]
+  5%|5         | 3/60 [00:02<00:39,  1.46it/s]
+  7%|6         | 4/60 [00:02<00:36,  1.53it/s]
+  8%|8         | 5/60 [00:03<00:34,  1.58it/s]
+ 10%|#         | 6/60 [00:03<00:33,  1.61it/s]
+ 12%|#1        | 7/60 [00:04<00:32,  1.64it/s]
+ 13%|#3        | 8/60 [00:05<00:31,  1.65it/s]
+ 15%|#5        | 9/60 [00:05<00:30,  1.66it/s]
+ 17%|#6        | 10/60 [00:06<00:30,  1.66it/s]
+ 18%|#8        | 11/60 [00:06<00:29,  1.67it/s]
+ 20%|##        | 12/60 [00:07<00:28,  1.68it/s]
+ 22%|##1       | 13/60 [00:08<00:28,  1.67it/s]
+ 23%|##3       | 14/60 [00:08<00:27,  1.68it/s]
+ 25%|##5       | 15/60 [00:09<00:26,  1.68it/s]
+ 27%|##6       | 16/60 [00:09<00:26,  1.68it/s]
+ 28%|##8       | 17/60 [00:10<00:25,  1.67it/s]
+ 30%|###       | 18/60 [00:11<00:25,  1.68it/s]
+ 32%|###1      | 19/60 [00:11<00:24,  1.69it/s]
+ 33%|###3      | 20/60 [00:12<00:22,  1.82it/s]
 
-  0%|          | 0/2 [00:00<?, ?it/s][A
-
-100%|##########| 2/2 [00:00<00:00, 16.38it/s][AC:\Users\dummy\Desktop\Shit\RegistrarConnect\venv\Lib\site-packages\sklearn\metrics\_classification.py:1531: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  0%|          | 0/2 [00:00<?, ?it/s][AC:\Users\chris\RegistrarConnect\RegistrarConnect\venv\Lib\site-packages\sklearn\metrics\_classification.py:1531: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
   _warn_prf(average, modifier, f"{metric.capitalize()} is", len(result))
 
+
+                                     
+[A
                                                
 
 
-                                             
-[A
- 33%|###3      | 20/60 [00:24<00:43,  1.09s/it]
+100%|##########| 2/2 [00:00<00:00, 16.20it/s][A
+ 33%|###3      | 20/60 [00:12<00:22,  1.82it/s]
 
-100%|##########| 2/2 [00:00<00:00, 16.38it/s][A
-
-                                             [AC:\Users\dummy\Desktop\Shit\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+                                             [AC:\Users\chris\RegistrarConnect\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   warnings.warn(warn_msg)
 
- 35%|###5      | 21/60 [00:31<01:56,  2.99s/it]
- 37%|###6      | 22/60 [00:32<01:32,  2.43s/it]
- 38%|###8      | 23/60 [00:33<01:15,  2.03s/it]
- 40%|####      | 24/60 [00:34<01:03,  1.76s/it]
- 42%|####1     | 25/60 [00:35<00:55,  1.58s/it]
- 43%|####3     | 26/60 [00:37<00:49,  1.46s/it]
- 45%|####5     | 27/60 [00:38<00:44,  1.34s/it]
- 47%|####6     | 28/60 [00:39<00:40,  1.25s/it]
- 48%|####8     | 29/60 [00:40<00:37,  1.22s/it]
- 50%|#####     | 30/60 [00:41<00:35,  1.19s/it]
- 52%|#####1    | 31/60 [00:42<00:33,  1.15s/it]
- 53%|#####3    | 32/60 [00:43<00:31,  1.12s/it]
- 55%|#####5    | 33/60 [00:44<00:29,  1.11s/it]
- 57%|#####6    | 34/60 [00:45<00:28,  1.10s/it]
- 58%|#####8    | 35/60 [00:46<00:26,  1.06s/it]
- 60%|######    | 36/60 [00:47<00:26,  1.09s/it]
- 62%|######1   | 37/60 [00:49<00:25,  1.10s/it]
- 63%|######3   | 38/60 [00:50<00:23,  1.06s/it]
- 65%|######5   | 39/60 [00:51<00:22,  1.07s/it]
- 67%|######6   | 40/60 [00:52<00:20,  1.03s/it]
+ 35%|###5      | 21/60 [00:14<00:41,  1.07s/it]
+ 37%|###6      | 22/60 [00:14<00:35,  1.08it/s]
+ 38%|###8      | 23/60 [00:15<00:30,  1.20it/s]
+ 40%|####      | 24/60 [00:16<00:27,  1.31it/s]
+ 42%|####1     | 25/60 [00:16<00:25,  1.40it/s]
+ 43%|####3     | 26/60 [00:17<00:23,  1.47it/s]
+ 45%|####5     | 27/60 [00:18<00:21,  1.52it/s]
+ 47%|####6     | 28/60 [00:18<00:20,  1.57it/s]
+ 48%|####8     | 29/60 [00:19<00:19,  1.58it/s]
+ 50%|#####     | 30/60 [00:19<00:18,  1.61it/s]
+ 52%|#####1    | 31/60 [00:20<00:17,  1.62it/s]
+ 53%|#####3    | 32/60 [00:21<00:17,  1.62it/s]
+ 55%|#####5    | 33/60 [00:21<00:16,  1.63it/s]
+ 57%|#####6    | 34/60 [00:22<00:16,  1.62it/s]
+ 58%|#####8    | 35/60 [00:22<00:15,  1.64it/s]
+ 60%|######    | 36/60 [00:23<00:14,  1.64it/s]
+ 62%|######1   | 37/60 [00:24<00:14,  1.64it/s]
+ 63%|######3   | 38/60 [00:24<00:13,  1.61it/s]
+ 65%|######5   | 39/60 [00:25<00:12,  1.62it/s]
+ 67%|######6   | 40/60 [00:25<00:11,  1.75it/s]
 
-  0%|          | 0/2 [00:00<?, ?it/s][A
-
-100%|##########| 2/2 [00:00<00:00, 16.00it/s][AC:\Users\dummy\Desktop\Shit\RegistrarConnect\venv\Lib\site-packages\sklearn\metrics\_classification.py:1531: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  0%|          | 0/2 [00:00<?, ?it/s][AC:\Users\chris\RegistrarConnect\RegistrarConnect\venv\Lib\site-packages\sklearn\metrics\_classification.py:1531: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
   _warn_prf(average, modifier, f"{metric.capitalize()} is", len(result))
 
+
+                                     
+[A
                                                
 
 
-                                             
-[A
- 67%|######6   | 40/60 [00:52<00:20,  1.03s/it]
+100%|##########| 2/2 [00:00<00:00, 24.23it/s][A
+ 67%|######6   | 40/60 [00:26<00:11,  1.75it/s]
 
-100%|##########| 2/2 [00:00<00:00, 16.00it/s][A
-
-                                             [AC:\Users\dummy\Desktop\Shit\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+                                             [AC:\Users\chris\RegistrarConnect\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   warnings.warn(warn_msg)
 
- 68%|######8   | 41/60 [00:57<00:43,  2.28s/it]
- 70%|#######   | 42/60 [00:58<00:35,  1.95s/it]
- 72%|#######1  | 43/60 [00:59<00:28,  1.69s/it]
- 73%|#######3  | 44/60 [01:00<00:24,  1.53s/it]
- 75%|#######5  | 45/60 [01:01<00:21,  1.40s/it]
- 77%|#######6  | 46/60 [01:02<00:18,  1.30s/it]
- 78%|#######8  | 47/60 [01:03<00:15,  1.21s/it]
- 80%|########  | 48/60 [01:04<00:14,  1.17s/it]
- 82%|########1 | 49/60 [01:06<00:12,  1.17s/it]
- 83%|########3 | 50/60 [01:07<00:11,  1.10s/it]
+ 68%|######8   | 41/60 [00:28<00:20,  1.08s/it]
+ 70%|#######   | 42/60 [00:28<00:16,  1.07it/s]
+ 72%|#######1  | 43/60 [00:29<00:14,  1.20it/s]
+ 73%|#######3  | 44/60 [00:29<00:12,  1.31it/s]
+ 75%|#######5  | 45/60 [00:30<00:10,  1.40it/s]
+ 77%|#######6  | 46/60 [00:31<00:09,  1.46it/s]
+ 78%|#######8  | 47/60 [00:31<00:08,  1.50it/s]
+ 80%|########  | 48/60 [00:32<00:07,  1.54it/s]
+ 82%|########1 | 49/60 [00:32<00:07,  1.56it/s]
+ 83%|########3 | 50/60 [00:33<00:06,  1.59it/s]
                                                
 
- 83%|########3 | 50/60 [01:07<00:11,  1.10s/it]
- 85%|########5 | 51/60 [01:08<00:09,  1.10s/it]
- 87%|########6 | 52/60 [01:09<00:08,  1.11s/it]
- 88%|########8 | 53/60 [01:10<00:08,  1.26s/it]
- 90%|######### | 54/60 [01:11<00:07,  1.21s/it]
- 92%|#########1| 55/60 [01:13<00:06,  1.29s/it]
- 93%|#########3| 56/60 [01:15<00:05,  1.42s/it]
- 95%|#########5| 57/60 [01:16<00:04,  1.42s/it]
- 97%|#########6| 58/60 [01:17<00:02,  1.38s/it]
- 98%|#########8| 59/60 [01:19<00:01,  1.42s/it]
-100%|##########| 60/60 [01:21<00:00,  1.59s/it]
+ 83%|########3 | 50/60 [00:33<00:06,  1.59it/s]
+ 85%|########5 | 51/60 [00:34<00:05,  1.62it/s]
+ 87%|########6 | 52/60 [00:34<00:04,  1.62it/s]
+ 88%|########8 | 53/60 [00:35<00:04,  1.63it/s]
+ 90%|######### | 54/60 [00:35<00:03,  1.63it/s]
+ 92%|#########1| 55/60 [00:36<00:03,  1.63it/s]
+ 93%|#########3| 56/60 [00:37<00:02,  1.61it/s]
+ 95%|#########5| 57/60 [00:37<00:01,  1.59it/s]
+ 97%|#########6| 58/60 [00:38<00:01,  1.60it/s]
+ 98%|#########8| 59/60 [00:39<00:00,  1.61it/s]
+100%|##########| 60/60 [00:39<00:00,  1.75it/s]
 
   0%|          | 0/2 [00:00<?, ?it/s][A
 
-100%|##########| 2/2 [00:00<00:00, 12.74it/s][A
+                                     
+[A
                                                
 
 
-                                             
-[A
-100%|##########| 60/60 [01:21<00:00,  1.59s/it]
-
-100%|##########| 2/2 [00:00<00:00, 12.74it/s][A
+100%|##########| 2/2 [00:00<00:00, 26.84it/s][A
+100%|##########| 60/60 [00:39<00:00,  1.75it/s]
 
                                              [A
                                                
 
-100%|##########| 60/60 [01:23<00:00,  1.59s/it]
-100%|##########| 60/60 [01:23<00:00,  1.40s/it]
-C:\Users\dummy\Desktop\Shit\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+100%|##########| 60/60 [00:41<00:00,  1.75it/s]
+100%|##########| 60/60 [00:41<00:00,  1.45it/s]
+C:\Users\chris\RegistrarConnect\RegistrarConnect\venv\Lib\site-packages\torch\utils\data\dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   warnings.warn(warn_msg)
 
   0%|          | 0/2 [00:00<?, ?it/s]
-100%|##########| 2/2 [00:00<00:00, 11.83it/s]
-100%|##########| 2/2 [00:00<00:00, 11.43it/s]
+100%|##########| 2/2 [00:00<00:00, 25.64it/s]

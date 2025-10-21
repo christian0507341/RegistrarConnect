@@ -106,3 +106,9 @@ class DocumentRequest(models.Model):
 
     class Meta:
         ordering = ('-requested_at',)
+        constraints = [
+        models.UniqueConstraint(
+            fields=['student_id', 'document_type', 'purpose'],
+            name='unique_document_request_per_student_doc_purpose'
+        )
+    ]

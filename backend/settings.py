@@ -53,19 +53,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
+    # Custom apps
+    'backend.document_requests.apps.DocumentRequestsConfig',
+    'backend.accounts',
+    'backend.appointments',
+    'backend.ai',
 
     # Third-party apps
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
-
-    # Custom apps
-    'backend.accounts',
-    'backend.document_requests',
-    'backend.appointments',
-    'backend.ai',
 ]
+
 
 
 MIDDLEWARE = [
