@@ -19,8 +19,6 @@ import {
   AlertTriangle,
   Plus
 } from "lucide-react";
-import "../styles/screens/RequestsScreen.css";
-
 type Request = {
   id: string;
   student: string;

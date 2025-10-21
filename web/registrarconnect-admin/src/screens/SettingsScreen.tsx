@@ -19,8 +19,6 @@ import {
   Zap,
   Sparkles
 } from 'lucide-react';
-import '../styles/screens/SettingsScreen.css';
-
 interface UserPreferences {
   theme: 'light' | 'dark' | 'auto';
   notifications: {

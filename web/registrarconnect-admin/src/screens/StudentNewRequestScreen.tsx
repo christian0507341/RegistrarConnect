@@ -17,8 +17,6 @@ import {
   Eye,
   Shield
 } from "lucide-react";
-import "../styles/screens/StudentNewRequestScreen.css";
-
 interface FormData {
   document_type: string;
   purpose: string;

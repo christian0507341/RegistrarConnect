@@ -1,5 +1,3 @@
-import "../styles/components/ReceiptModal.css";
-
 type Props = {
   student: string;
   document: string;

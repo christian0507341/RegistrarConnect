@@ -34,8 +34,6 @@ import {
   FileText,
   Calendar as CalendarIcon
 } from "lucide-react";
-import "../styles/screens/StudentProfileScreen.css";
-
 interface StudentProfile {
   id: string;
   name: string;

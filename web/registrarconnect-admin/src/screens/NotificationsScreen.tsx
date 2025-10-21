@@ -1,6 +1,4 @@
 import Card from "../components/Card";
-import "../styles/screens/NotificationsScreen.css";
-
 export default function NotificationsScreen() {
   const items = [
     { text: "Payment receipt REQ-1043 verified", unread:true },

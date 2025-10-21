@@ -2,8 +2,6 @@
 import { useLocation, Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar.tsx";
 import Topbar from "../components/Topbar.tsx";
-import "../styles/layouts/AdminLayout.css";
-
 type AdminLayoutProps = {
   onLogout: () => void;
 };

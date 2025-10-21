@@ -1,6 +1,4 @@
 import { Search, Bell } from "lucide-react";
-import "../styles/components/Topbar.css";
-
 type Props = {
   title: string;
 };

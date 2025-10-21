@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Card from "../components/Card";
 import Table from "../components/Table";
 import ReceiptModal from "../components/ReceiptModal";
-import "../styles/screens/RequestHistoryScreen.css";
-
 type HistoryRequest = {
   id: string;
   student: string;

@@ -15,8 +15,6 @@ import {
   ArrowRight,
   Award
 } from "lucide-react";
-import "../styles/screens/StudentDashboardScreen.css";
-
 interface DocumentRequest {
   id: string;
   student: string;

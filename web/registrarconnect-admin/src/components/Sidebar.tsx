@@ -4,7 +4,6 @@ import {
   LayoutDashboard, FileText, Calendar, 
   BarChart2, Bell, Settings, ChevronDown, ChevronRight
 } from "lucide-react";
-import "../styles/components/Sidebar.css";
 
 type Props = {
   onLogout: () => void;

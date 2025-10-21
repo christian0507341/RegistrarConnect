@@ -18,8 +18,6 @@ import {
   RefreshCw,
   MoreVertical
 } from "lucide-react";
-import "../styles/screens/StudentRequestsScreen.css";
-
 interface DocumentRequest {
   id: string;
   student: string;

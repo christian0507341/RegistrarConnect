@@ -18,8 +18,6 @@ import {
   Award,
   User
 } from "lucide-react";
-import "../styles/screens/StudentAppointmentsScreen.css";
-
 interface Appointment {
   id: number;
   appointment_date: string;
@@ -146,15 +144,7 @@ export default function StudentAppointmentsScreen() {
               <p>Schedule and manage your registrar appointments</p>
             </div>
           </div>
-          <div className="header-actions">
-            <button 
-              onClick={() => navigate('/student/appointments/new')}
-              className="action-btn primary"
-            >
-              <Plus size={20} />
-              <span>New Appointment</span>
-            </button>
-          </div>
+          {/* Removed header actions - appointments are view-only */}
         </div>
       </div>
 
@@ -278,18 +268,7 @@ export default function StudentAppointmentsScreen() {
                     <Eye size={16} />
                     <span>View Details</span>
                   </button>
-                  {appointment.status === 'scheduled' && (
-                    <button className="action-btn warning">
-                      <Edit size={16} />
-                      <span>Reschedule</span>
-                    </button>
-                  )}
-                  {appointment.status === 'scheduled' && (
-                    <button className="action-btn danger">
-                      <Trash2 size={16} />
-                      <span>Cancel</span>
-                    </button>
-                  )}
+                  {/* Removed Reschedule and Cancel buttons - appointments are view-only */}
                 </div>
               </div>
             ))}
@@ -305,13 +284,7 @@ export default function StudentAppointmentsScreen() {
               }
             </p>
             <div className="empty-actions">
-              <button 
-                onClick={() => navigate('/student/appointments/new')}
-                className="action-btn primary"
-              >
-                <Plus size={20} />
-                <span>Schedule New Appointment</span>
-              </button>
+              {/* Removed Schedule New Appointment button - appointments are view-only */}
               {(searchTerm || filterStatus !== "all" || selectedDate) && (
                 <button 
                   onClick={() => {
@@ -334,14 +307,7 @@ export default function StudentAppointmentsScreen() {
       <div className="quick-actions-section">
         <h2>Quick Actions</h2>
         <div className="quick-actions-grid">
-          <button 
-            onClick={() => navigate('/student/appointments/new')}
-            className="quick-action-card"
-          >
-            <Plus size={32} />
-            <h3>Schedule Appointment</h3>
-            <p>Book a new appointment with the registrar</p>
-          </button>
+          {/* Removed Schedule Appointment - appointments are view-only */}
           <button 
             onClick={() => navigate('/student/requests')}
             className="quick-action-card"

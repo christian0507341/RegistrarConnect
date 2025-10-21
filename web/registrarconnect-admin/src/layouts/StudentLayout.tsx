@@ -14,8 +14,6 @@ import {
   HelpCircle
 } from "lucide-react";
 import { useState } from "react";
-import "../styles/layouts/StudentLayout.css";
-
 type StudentLayoutProps = {
   onLogout: () => void;
 };

@@ -1,0 +1,46 @@
+/* ====================================
+   REGISTRAR CONNECT - MODULAR CSS SYSTEM
+   Professional Management Design
+   ==================================== */
+
+/* Base Styles (Variables, Reset, Animations) */
+@import './base.css';
+@import './utilities.css';
+
+/* Layout Styles */
+@import './layouts/layout.css';
+@import './layouts/admin-layout.css';
+@import './layouts/student-layout.css';
+
+/* Component Styles */
+@import './components/sidebar.css';
+@import './components/topbar.css';
+@import './components/card.css';
+@import './components/table.css';
+@import './components/form.css';
+@import './components/buttons.css';
+@import './components/modal.css';
+@import './components/ReceiptModal.css';
+@import './components/NotificationCenter.css';
+
+/* Admin Screen Styles */
+@import './screens/DashboardScreen.css';
+@import './screens/RequestsScreen.css';
+@import './screens/AppointmentsScreen.css';
+@import './screens/SettingsScreen.css';
+@import './screens/ReportsScreen.css';
+@import './screens/NotificationsScreen.css';
+@import './screens/RequestHistoryScreen.css';
+@import './screens/AppointmentSettingsScreen.css';
+
+/* Student Screen Styles */
+@import './screens/StudentDashboardScreen.css';
+@import './screens/StudentRequestsScreen.css';
+@import './screens/StudentNewRequestScreen.css';
+@import './screens/StudentAppointmentsScreen.css';
+@import './screens/StudentChatScreen.css';
+@import './screens/StudentNotificationsScreen.css';
+@import './screens/StudentProfileScreen.css';
+
+/* Login Screen (Preserved - Do Not Touch) */
+@import './screens/UnifiedLoginScreen.css';

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { apiService } from "../services/api";
 import { notificationService } from "../services/notificationService";
 import Card from "../components/Card";
-import "../styles/screens/AppointmentsScreen.css";
 import { Clock, User, FileCheck, RefreshCw, AlertCircle, CheckCircle, Calendar as CalendarIcon } from "lucide-react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";

@@ -1,4 +1,3 @@
-import "../styles/components/Table.css";
 import type { ReactNode } from "react";
 
 type Props = {

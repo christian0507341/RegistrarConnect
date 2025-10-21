@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "../services/api";
 import { Eye, EyeOff, User, Mail, Lock, AlertCircle, BookOpen, GraduationCap } from "lucide-react";
-import "../styles/screens/StudentLoginScreen.css";
-
 type StudentLoginProps = {
   setIsAuthenticated: (auth: boolean) => void;
 };

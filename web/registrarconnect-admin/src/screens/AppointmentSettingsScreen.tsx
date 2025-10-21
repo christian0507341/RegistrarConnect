@@ -19,8 +19,6 @@ import {
   Play,
   Bug
 } from "lucide-react";
-import "../styles/screens/AppointmentSettingsScreen.css";
-
 interface AppointmentSettings {
   id?: number;
   max_appointments_per_day: number;

@@ -1,231 +1,36 @@
-/* Modern Receipt Modal Styles */
+/* ====================================
+   RECEIPT MODAL COMPONENT
+   Based on ReceiptModal.tsx structure
+   ==================================== */
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(4px);
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease-out;
+  z-index: 9999;
+  padding: 24px;
+  animation: fadeIn 0.2s ease;
 }
 
-.modal {
-  background: white;
-  border-radius: 20px;
-  padding: 32px;
-  width: 600px;
-  max-width: 95vw;
-  max-height: 90vh;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  position: relative;
-  overflow: hidden;
-  animation: slideUp 0.4s ease-out;
-}
-
-.modal::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #667eea, #764ba2);
-}
-
-.modal h2 {
-  margin: 0 0 24px 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2937;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.modal h2::before {
-  content: '📄';
-  font-size: 1.2rem;
-}
-
-/* Receipt Preview */
-.receipt-preview {
-  width: 100%;
-  max-height: 400px;
-  object-fit: contain;
-  margin: 24px 0;
-  border: 2px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.receipt-preview:hover {
-  transform: scale(1.02);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-  border-color: #667eea;
-}
-
-/* Modal Status */
-.modal-status {
-  margin-bottom: 24px;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 12px;
-  border-left: 4px solid #667eea;
-}
-
-.modal-status h3 {
-  margin: 0 0 8px 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.modal-status p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-/* Modal Actions */
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid #f1f5f9;
-}
-
-.btn-danger {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-.btn-danger:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
-}
-
-.btn-danger:active {
-  transform: translateY(0);
-}
-
-.btn-close {
-  background: white;
-  border: 2px solid #e5e7eb;
-  color: #6b7280;
-  border-radius: 12px;
-  padding: 12px 24px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-close:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
-  color: #374151;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.btn-close:active {
-  transform: translateY(0);
-}
-
-/* Success Button */
-.btn-success {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.btn-success:hover {
-  background: linear-gradient(135deg, #059669, #047857);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-}
-
-.btn-success:active {
-  transform: translateY(0);
-}
-
-/* Modal Content */
-.modal-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.modal-info {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.info-item {
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-}
-
-.info-label {
-  font-size: 0.8rem;
-  color: #6b7280;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-}
-
-.info-value {
-  font-size: 0.95rem;
-  color: #374151;
-  font-weight: 500;
-}
-
-/* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-backdrop .modal {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+  animation: slideUp 0.3s ease;
 }
 
 @keyframes slideUp {
@@ -239,57 +44,169 @@
   }
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .modal {
-    width: 95vw;
+.modal-backdrop .modal h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+.modal-backdrop .modal p {
+  font-size: 0.9375rem;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.modal-backdrop .modal p strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+/* Receipt Preview */
+.receipt-preview {
+  width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 20px;
+  background: #f9fafb;
+}
+
+.small-muted {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Modal Status */
+.modal-status {
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  border: 1px solid #e5e7eb;
+}
+
+.modal-status .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
+}
+
+.modal-status .status-badge.approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.modal-status .status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.modal-status .status-badge.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.modal-status .status-badge.checking {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.ai-note {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin: 8px 0 0 0;
+  padding: 12px;
+  background: #ffffff;
+  border-radius: 8px;
+  border-left: 3px solid #2563eb;
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.modal-actions button {
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-actions .btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.modal-actions .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+.modal-actions .btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.modal-actions .btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+.modal-actions .btn-close {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.modal-actions .btn-close:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.modal-actions button.small {
+  padding: 9px 16px;
+  font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .modal-backdrop {
+    padding: 16px;
+  }
+  
+  .modal-backdrop .modal {
     padding: 24px;
-    border-radius: 16px;
-  }
-  
-  .modal h2 {
-    font-size: 1.25rem;
-  }
-  
-  .receipt-preview {
-    max-height: 300px;
   }
   
   .modal-actions {
     flex-direction: column;
-    gap: 8px;
   }
   
-  .btn-danger,
-  .btn-close,
-  .btn-success {
+  .modal-actions button {
     width: 100%;
     justify-content: center;
   }
-  
-  .modal-info {
-    grid-template-columns: 1fr;
-  }
 }
 
-@media (max-width: 480px) {
-  .modal {
-    padding: 20px;
-    border-radius: 12px;
-  }
-  
-  .modal h2 {
-    font-size: 1.1rem;
-  }
-  
-  .receipt-preview {
-    max-height: 250px;
-  }
-  
-  .btn-danger,
-  .btn-close,
-  .btn-success {
-    padding: 10px 20px;
-    font-size: 0.85rem;
-  }
-}

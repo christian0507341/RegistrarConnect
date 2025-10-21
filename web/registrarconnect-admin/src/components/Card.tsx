@@ -1,6 +1,4 @@
 import type { ReactNode } from "react";
-import "../styles/components/Card.css";
-
 type Props = { 
   children: ReactNode; 
   title?: ReactNode; 

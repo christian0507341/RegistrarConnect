@@ -17,8 +17,6 @@ import {
   Star,
   RefreshCw
 } from "lucide-react";
-import "../styles/screens/StudentNotificationsScreen.css";
-
 interface Notification {
   id: string;
   title: string;

@@ -17,8 +17,6 @@ import {
 } from "recharts";
 import { apiService } from "../services/api";
 import { Download, RefreshCw, Calendar, TrendingUp, FileText, Users } from "lucide-react";
-import "../styles/screens/ReportsScreen.css";
-
 // Color scheme for charts
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 

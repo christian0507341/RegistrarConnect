@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import Card from "../components/Card";
-import "../styles/screens/DashboardScreen.css";
 import {
   Activity,
   CheckCircle2,

@@ -3,8 +3,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "../services/api";
 import { Eye, EyeOff, Shield, Users, Mail, Lock, AlertCircle } from "lucide-react";
-import "../styles/screens/LoginScreen.css";
-
 type AdminLoginProps = {
   setIsAuthenticated: (auth: boolean) => void;
 };

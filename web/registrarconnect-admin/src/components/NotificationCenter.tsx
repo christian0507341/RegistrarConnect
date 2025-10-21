@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Bell, X, Check, CheckCheck, Trash2, AlertCircle, CheckCircle, AlertTriangle, Info, Sparkles, Clock, Star } from 'lucide-react';
 import { notificationService, type Notification } from '../services/notificationService';
-import '../styles/components/NotificationCenter.css';
-
 interface NotificationCenterProps {
   className?: string;
 }

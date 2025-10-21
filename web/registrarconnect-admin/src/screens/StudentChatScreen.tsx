@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Send, Bot, User, RefreshCw, Trash2, MessageCircle, Bug } from "lucide-react";
 import { apiService } from "../services/api";
 import { testChatEndpoint } from "../utils/chatTest";
-import "../styles/screens/StudentChatScreen.css";
-
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
