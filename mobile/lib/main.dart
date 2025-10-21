@@ -114,6 +114,17 @@ class MyApp extends StatelessWidget {
             darkTheme: AppThemes.darkTheme,
             themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
             debugShowCheckedModeBanner: false,
+            // Add builder to handle layout overflow gracefully
+            builder: (context, child) {
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(
+                    MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2),
+                  ),
+                ),
+                child: child!,
+              );
+            },
             initialRoute: '/',
             onGenerateRoute: (settings) {
               late Widget page;

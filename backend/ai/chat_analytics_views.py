@@ -74,3 +74,4 @@ def test_chat_ai(request):
         
     except Exception as e:
         return Response({"error": f"Test error: {str(e)}"}, status=500)
+

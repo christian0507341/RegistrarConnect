@@ -117,6 +117,9 @@ class _EnhancedHomePageState extends State<EnhancedHomePage> with WidgetsBinding
                       // Wait a bit for the data to load
                       await Future.delayed(const Duration(milliseconds: 500));
                     },
+                    displacement: 60.0, // Require longer pull to trigger refresh
+                    edgeOffset: 20.0, // Start from slightly lower position
+                    strokeWidth: 3.0,
                     child: SingleChildScrollView(
                       controller: _scrollController,
                       padding: const EdgeInsets.all(16),

@@ -288,32 +288,40 @@ class _CalendarPageState extends State<CalendarPage> {
                         .toList();
                     return appointments.isEmpty
                         ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.event_available,
-                                  size: 64,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  "No appointments on this day",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.grey[600],
+                            child: SingleChildScrollView(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.event_available,
+                                    size: 48,
+                                    color: Colors.grey[400],
                                   ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  "Select a different date to view appointments",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[500],
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    "No appointments on this day",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[600],
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 6),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                    child: Text(
+                                      "Select a different date to view appointments",
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[500],
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           )
                         : AppointmentList(appointments: appointments);

@@ -594,6 +594,9 @@ class _StatusPageState extends State<StatusPage> {
                           )
                         : RefreshIndicator(
                             onRefresh: () => _loadTransactions(),
+                            displacement: 60.0, // Require longer pull to trigger refresh
+                            edgeOffset: 20.0, // Start from slightly lower position
+                            strokeWidth: 3.0,
                             child: Column(
                               children: [
                                 // Show claimed requests banner if any
@@ -804,17 +807,20 @@ class _StatusPageState extends State<StatusPage> {
                                               : Colors.grey,
                                         ),
                                         const SizedBox(width: 4),
-                                        Text(
-                                          'Payment: ${transaction['payment_approved'] ? 'Approved' : 'Pending'}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: transaction['payment_approved'] 
-                                                ? Colors.green 
-                                                : Colors.grey,
-                                            fontWeight: FontWeight.w500,
+                                        Flexible(
+                                          child: Text(
+                                            'Payment: ${transaction['payment_approved'] ? 'Approved' : 'Pending'}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: transaction['payment_approved'] 
+                                                  ? Colors.green 
+                                                  : Colors.grey,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                        const SizedBox(width: 16),
+                                        const SizedBox(width: 12),
                                         Icon(
                                           Icons.description,
                                           size: 16,
@@ -823,14 +829,17 @@ class _StatusPageState extends State<StatusPage> {
                                               : Colors.grey,
                                         ),
                                         const SizedBox(width: 4),
-                                        Text(
-                                          'Document: ${transaction['document_approved'] ? 'Approved' : 'Pending'}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: transaction['document_approved'] 
-                                                ? Colors.green 
-                                                : Colors.grey,
-                                            fontWeight: FontWeight.w500,
+                                        Flexible(
+                                          child: Text(
+                                            'Document: ${transaction['document_approved'] ? 'Approved' : 'Pending'}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: transaction['document_approved'] 
+                                                  ? Colors.green 
+                                                  : Colors.grey,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                       ],
@@ -844,25 +853,31 @@ class _StatusPageState extends State<StatusPage> {
                                           color: Theme.of(context).textTheme.bodyMedium?.color,
                                         ),
                                         const SizedBox(width: 4),
-                                        Text(
-                                          'Requested: ${transaction['requested_at']}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                                        Flexible(
+                                          child: Text(
+                                            'Requested: ${transaction['requested_at']}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                        const SizedBox(width: 16),
+                                        const SizedBox(width: 12),
                                         Icon(
                                           Icons.update,
                                           size: 14,
                                           color: Theme.of(context).textTheme.bodyMedium?.color,
                                         ),
                                         const SizedBox(width: 4),
-                                        Text(
-                                          'Updated: ${transaction['last_updated'] ?? 'N/A'}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                                        Flexible(
+                                          child: Text(
+                                            'Updated: ${transaction['last_updated'] ?? 'N/A'}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                       ],

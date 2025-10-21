@@ -257,7 +257,7 @@ export default function ReportsScreen() {
           </div>
           <div className="card-content">
             <h3>{stats.todayRequests}</h3>
-            <p>Requests Today</p>
+          <p>Requests Today</p>
           </div>
         </div>
         <div className="summary-card">
@@ -266,7 +266,7 @@ export default function ReportsScreen() {
           </div>
           <div className="card-content">
             <h3>{stats.weekRequests}</h3>
-            <p>Requests This Week</p>
+          <p>Requests This Week</p>
           </div>
         </div>
         <div className="summary-card">
@@ -275,7 +275,7 @@ export default function ReportsScreen() {
           </div>
           <div className="card-content">
             <h3>{stats.todayAppointments}</h3>
-            <p>Appointments Today</p>
+          <p>Appointments Today</p>
           </div>
         </div>
         <div className="summary-card">
@@ -284,7 +284,7 @@ export default function ReportsScreen() {
           </div>
           <div className="card-content">
             <h3>{stats.weekAppointments}</h3>
-            <p>Appointments This Week</p>
+          <p>Appointments This Week</p>
           </div>
         </div>
       </div>

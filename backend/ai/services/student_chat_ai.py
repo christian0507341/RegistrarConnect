@@ -319,3 +319,4 @@ class StudentChatAI:
             'average_interactions_per_user': total_interactions / total_users if total_users > 0 else 0,
             'system_status': 'active'
         }
+

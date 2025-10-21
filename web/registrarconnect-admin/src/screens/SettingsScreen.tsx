@@ -582,7 +582,7 @@ export default function SettingsScreen() {
             </div>
           )}
         </div>
-      </div>
+          </div>
     </div>
   );
 }
