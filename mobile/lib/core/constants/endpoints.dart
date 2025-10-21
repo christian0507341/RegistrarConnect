@@ -23,5 +23,7 @@ class Endpoints {
   static const String documentRequests = '/api/document-requests/';
   static const String studentTransactions = '/api/document-requests/student/transactions/';
   static const String studentNotifications = '/api/document-requests/student/notifications/';
+  static const String pendingNotifications = '/api/document-requests/student/pending-notifications/';
+  static const String clearNotifications = '/api/document-requests/student/clear-notifications/';
   static const String appointments = '/api/appointments/';
 }

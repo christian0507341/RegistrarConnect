@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django.db import models
 from .models import Appointment, AppointmentSettings
 from .serializers import AppointmentSerializer, AppointmentSettingsSerializer
 from .services import AutomaticAppointmentService
@@ -17,7 +18,21 @@ class AppointmentListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Appointment.objects.all().order_by('-created_at')
+        user = self.request.user
+        # Students can only see their own appointments
+        # Faculty can see appointments they're assigned to
+        # Admin can see all appointments
+        if user.role == 'student':
+            return Appointment.objects.filter(student=user).order_by('-created_at')
+        elif user.role == 'faculty':
+            return Appointment.objects.filter(faculty=user).order_by('-created_at')
+        elif user.role == 'admin':
+            return Appointment.objects.all().order_by('-created_at')
+        else:
+            # Default: only show appointments where user is involved
+            return Appointment.objects.filter(
+                models.Q(student=user) | models.Q(faculty=user)
+            ).order_by('-created_at')
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -46,7 +61,21 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Appointment.objects.all()
+        user = self.request.user
+        # Students can only see their own appointments
+        # Faculty/Admin can see appointments they're assigned to
+        if user.role == 'student':
+            return Appointment.objects.filter(student=user)
+        elif user.role == 'faculty':
+            return Appointment.objects.filter(faculty=user)
+        elif user.role == 'admin':
+            # Admin can see all appointments
+            return Appointment.objects.all()
+        else:
+            # Default: only show appointments where user is involved
+            return Appointment.objects.filter(
+                models.Q(student=user) | models.Q(faculty=user)
+            )
 
 class AppointmentStatusUpdateView(generics.UpdateAPIView):
     """View for updating appointment status"""
@@ -54,7 +83,21 @@ class AppointmentStatusUpdateView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return Appointment.objects.all()
+        user = self.request.user
+        # Students can only update their own appointments
+        # Faculty/Admin can update appointments they're assigned to
+        if user.role == 'student':
+            return Appointment.objects.filter(student=user)
+        elif user.role == 'faculty':
+            return Appointment.objects.filter(faculty=user)
+        elif user.role == 'admin':
+            # Admin can update all appointments
+            return Appointment.objects.all()
+        else:
+            # Default: only show appointments where user is involved
+            return Appointment.objects.filter(
+                models.Q(student=user) | models.Q(faculty=user)
+            )
     
     def patch(self, request, *args, **kwargs):
         """Handle PATCH requests for status updates"""

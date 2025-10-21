@@ -24,6 +24,7 @@ import io
 from django.http import HttpResponse
 from datetime import datetime
 from django.utils import timezone
+from django.core.cache import cache
 
 # Optional imports for Excel export
 try:
@@ -643,9 +644,9 @@ def student_notifications(request):
         
         for doc_request in document_requests:
             # Get the latest action for this request
+            # Don't filter by actor - we want actions performed ON the student's requests
             latest_action = DocumentRequestAction.objects.filter(
-                request=doc_request,
-                actor=request.user
+                request=doc_request
             ).order_by('-created_at').first()
             
             if latest_action:
@@ -765,6 +766,88 @@ def _getNotificationColor(action_type):
         'updated': 'blue',
     }
     return color_map.get(action_type, 'blue')
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def pending_notifications(request):
+    """
+    Get pending notifications from cache for the current user.
+    These are notifications triggered by database changes (payment/document approval).
+    Mobile app polls this endpoint to check for new notifications.
+    """
+    try:
+        student_id = request.user.id
+        cache_key = f'pending_notifications_{student_id}'
+        
+        # Get pending notifications from cache
+        pending = cache.get(cache_key, [])
+        
+        logger.info(f"Fetching pending notifications for student {student_id}: {len(pending)} found")
+        
+        return Response({
+            'notifications': pending,
+            'count': len(pending),
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching pending notifications: {str(e)}")
+        return Response(
+            {"error": "Failed to fetch pending notifications"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def clear_pending_notifications(request):
+    """
+    Clear pending notifications after they've been shown to the user.
+    Mobile app calls this after displaying notifications.
+    """
+    try:
+        student_id = request.user.id
+        cache_key = f'pending_notifications_{student_id}'
+        
+        # Get notification IDs to clear from request
+        notification_ids = request.data.get('notification_ids', [])
+        
+        if notification_ids:
+            # Get current pending notifications
+            pending = cache.get(cache_key, [])
+            
+            # Remove cleared notifications
+            remaining = [n for n in pending if n['id'] not in notification_ids]
+            
+            # Update cache
+            if remaining:
+                cache.set(cache_key, remaining, timeout=60*60*24*7)
+            else:
+                cache.delete(cache_key)
+            
+            logger.info(f"Cleared {len(notification_ids)} notifications for student {student_id}")
+            
+            return Response({
+                'message': 'Notifications cleared',
+                'cleared_count': len(notification_ids),
+                'remaining_count': len(remaining),
+            })
+        else:
+            # Clear all notifications
+            cache.delete(cache_key)
+            logger.info(f"Cleared all pending notifications for student {student_id}")
+            
+            return Response({
+                'message': 'All notifications cleared',
+            })
+        
+    except Exception as e:
+        logger.error(f"Error clearing pending notifications: {str(e)}")
+        return Response(
+            {"error": "Failed to clear notifications"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, IsFaculty])

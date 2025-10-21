@@ -19,21 +19,31 @@ class NotificationRepositoryImpl implements INotificationRepository {
   @override
   Future<List<NotificationItem>> getNotifications() async {
     try {
-      final response = await _dio.get(
-        '${Endpoints.baseUrl}${Endpoints.studentNotifications}',
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      // Fetch both regular notifications and pending approval notifications
+      final results = await Future.wait([
+        _dio.get(
+          '${Endpoints.baseUrl}${Endpoints.studentNotifications}',
+          options: Options(headers: {'Content-Type': 'application/json'}),
         ),
-      );
+        _dio.get(
+          '${Endpoints.baseUrl}${Endpoints.pendingNotifications}',
+          options: Options(headers: {'Content-Type': 'application/json'}),
+        ),
+      ]);
 
-      if (response.statusCode == 200) {
-        final data = response.data;
+      final regularResponse = results[0];
+      final pendingResponse = results[1];
+      
+      final allNotifications = <NotificationItem>[];
+
+      // Process regular notifications (from document request actions)
+      if (regularResponse.statusCode == 200) {
+        final data = regularResponse.data;
         final notificationsData = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
         
-        return notificationsData.map((notificationData) {
+        final regularNotifications = notificationsData.map((notificationData) {
           return NotificationItem(
+            id: notificationData['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
             title: notificationData['title'] ?? 'Notification',
             message: notificationData['message'] ?? '',
             time: notificationData['time'] ?? 'Just now',
@@ -41,12 +51,60 @@ class NotificationRepositoryImpl implements INotificationRepository {
             color: _getColorFromString(notificationData['color'] ?? 'blue'),
           );
         }).toList();
-      } else {
-        throw Exception('Failed to load notifications: ${response.statusCode}');
+        
+        allNotifications.addAll(regularNotifications);
       }
+
+      // Process pending approval notifications (from cache)
+      if (pendingResponse.statusCode == 200) {
+        final data = pendingResponse.data;
+        final pendingData = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+        
+        final pendingNotifications = pendingData.map((notificationData) {
+          final type = notificationData['type'] ?? '';
+          return NotificationItem(
+            id: notificationData['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+            title: notificationData['title'] ?? 'Notification',
+            message: notificationData['message'] ?? '',
+            time: _getTimeFromTimestamp(notificationData['timestamp']),
+            icon: type == 'payment_approved' ? Icons.payment : 
+                  type == 'document_approved' ? Icons.description : Icons.notifications,
+            color: type == 'payment_approved' || type == 'document_approved' ? Colors.green : Colors.blue,
+          );
+        }).toList();
+        
+        allNotifications.addAll(pendingNotifications);
+      }
+
+      // Sort by time (most recent first)
+      // Note: This is a simple implementation, you might want to parse timestamps for accurate sorting
+      return allNotifications;
+      
     } catch (e) {
+      print('Error fetching notifications: $e');
       // Return empty list on error to prevent app crash
       return [];
+    }
+  }
+  
+  String _getTimeFromTimestamp(dynamic timestamp) {
+    if (timestamp == null) return 'Just now';
+    try {
+      final dateTime = DateTime.parse(timestamp.toString());
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
+      
+      if (difference.inSeconds < 60) {
+        return 'Just now';
+      } else if (difference.inMinutes < 60) {
+        return '${difference.inMinutes}m ago';
+      } else if (difference.inHours < 24) {
+        return '${difference.inHours}h ago';
+      } else {
+        return '${difference.inDays}d ago';
+      }
+    } catch (e) {
+      return 'Just now';
     }
   }
 

@@ -5,17 +5,32 @@ import 'notification_state.dart';
 import '../../domain/entities/notification_item.dart'; // Added import
 import 'package:flutter/material.dart';
 import '../../../../core/services/notification_manager.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:convert';
 
 class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   final INotificationRepository repository;
   final NotificationManager _notificationManager = NotificationManager();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static const String _deletedNotificationsKey = 'deleted_notification_ids';
 
   NotificationBloc({required this.repository}) : super(NotificationInitial()) {
     on<LoadNotifications>((event, emit) async {
-      emit(NotificationLoading());
+      // Only show loading screen on initial load, not on refresh
+      if (event.showLoading) {
+        emit(NotificationLoading());
+      }
+      
       try {
         final notifications = await repository.getNotifications();
-        emit(NotificationLoaded(notifications));
+        
+        // Filter out deleted notifications
+        final deletedIds = await _getDeletedNotificationIds();
+        final filteredNotifications = notifications
+            .where((notification) => !deletedIds.contains(notification.id))
+            .toList();
+        
+        emit(NotificationLoaded(filteredNotifications));
       } catch (e) {
         emit(NotificationError(e.toString()));
       }
@@ -103,5 +118,59 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         studentName: event.studentName,
       );
     });
+
+    // Handle delete notification
+    on<DeleteNotification>((event, emit) async {
+      try {
+        if (state is NotificationLoaded) {
+          final currentNotifications = (state as NotificationLoaded).notifications;
+          final updatedNotifications = currentNotifications
+              .where((notification) => notification.id != event.notificationId)
+              .toList();
+          
+          // Save deleted notification ID
+          await _saveDeletedNotificationId(event.notificationId);
+          
+          // Cancel the local notification if it exists
+          try {
+            final notificationId = int.tryParse(event.notificationId.replaceAll(RegExp(r'[^0-9]'), ''));
+            if (notificationId != null) {
+              await _notificationManager.cancelNotification(notificationId);
+            }
+          } catch (e) {
+            // Ignore error if notification ID is not a number
+          }
+          
+          emit(NotificationLoaded(updatedNotifications));
+        }
+      } catch (e) {
+        emit(NotificationError('Failed to delete notification: ${e.toString()}'));
+      }
+    });
+  }
+
+  // Helper methods for managing deleted notification IDs
+  Future<Set<String>> _getDeletedNotificationIds() async {
+    try {
+      final deletedIdsJson = await _storage.read(key: _deletedNotificationsKey);
+      if (deletedIdsJson == null || deletedIdsJson.isEmpty) {
+        return {};
+      }
+      final List<dynamic> deletedIdsList = jsonDecode(deletedIdsJson);
+      return deletedIdsList.map((id) => id.toString()).toSet();
+    } catch (e) {
+      return {};
+    }
+  }
+
+  Future<void> _saveDeletedNotificationId(String notificationId) async {
+    try {
+      final deletedIds = await _getDeletedNotificationIds();
+      deletedIds.add(notificationId);
+      final deletedIdsJson = jsonEncode(deletedIds.toList());
+      await _storage.write(key: _deletedNotificationsKey, value: deletedIdsJson);
+    } catch (e) {
+      // Ignore error, deletion will still work for current session
+    }
   }
 }

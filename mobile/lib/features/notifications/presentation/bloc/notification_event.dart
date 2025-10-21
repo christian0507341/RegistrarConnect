@@ -2,7 +2,11 @@ import 'package:mobile/features/appointment/domain/entities/appointment.dart';
 
 abstract class NotificationEvent {}
 
-class LoadNotifications extends NotificationEvent {}
+class LoadNotifications extends NotificationEvent {
+  final bool showLoading;
+  
+  LoadNotifications({this.showLoading = true});
+}
 
 class AppointmentScheduled extends NotificationEvent {
   final Appointment appointment;
@@ -82,4 +86,10 @@ class ShowClaimedNotification extends NotificationEvent {
     required this.requestId,
     required this.studentName,
   });
+}
+
+class DeleteNotification extends NotificationEvent {
+  final String notificationId;
+  
+  DeleteNotification(this.notificationId);
 }

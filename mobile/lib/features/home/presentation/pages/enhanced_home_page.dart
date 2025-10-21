@@ -113,7 +113,7 @@ class _EnhancedHomePageState extends State<EnhancedHomePage> with WidgetsBinding
                     onRefresh: () async {
                       // Provide haptic feedback for pull-to-refresh
                       HapticFeedback.lightImpact();
-                      _homeBloc.add(LoadHomeData());
+                      _homeBloc.add(LoadHomeData(showLoading: false));
                       // Wait a bit for the data to load
                       await Future.delayed(const Duration(milliseconds: 500));
                     },
@@ -184,7 +184,7 @@ class _EnhancedHomePageState extends State<EnhancedHomePage> with WidgetsBinding
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () => _homeBloc.add(LoadActivities()),
+            onPressed: () => _homeBloc.add(LoadHomeData(showLoading: true)),
             icon: const Icon(Icons.refresh),
             label: const Text('Try Again'),
           ),

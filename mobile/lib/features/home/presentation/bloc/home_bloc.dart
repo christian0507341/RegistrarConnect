@@ -8,7 +8,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   HomeBloc({required this.repository}) : super(HomeInitial()) {
     on<LoadActivities>((event, emit) async {
-      emit(HomeLoading());
+      // Only show loading screen on initial load, not on refresh
+      if (event.showLoading) {
+        emit(HomeLoading());
+      }
+      
       try {
         final activities = await repository.getRecentActivities();
         emit(HomeLoaded(activities));
@@ -18,7 +22,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     });
 
     on<LoadHomeData>((event, emit) async {
-      emit(HomeLoading());
+      // Only show loading screen on initial load, not on refresh
+      if (event.showLoading) {
+        emit(HomeLoading());
+      }
+      
       try {
         final homeData = await repository.getHomeData();
         emit(HomeDataLoaded(homeData));

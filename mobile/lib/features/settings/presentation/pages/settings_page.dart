@@ -227,6 +227,46 @@ class SettingsPage extends StatelessWidget {
               subtitle: const Text("1.0.0"),
             ),
           ),
+          const SizedBox(height: 12),
+
+          // 🛠️ Developer Settings
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            elevation: 12,
+            shadowColor: Colors.orange.withValues(alpha: 0.4),
+            child: ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.orange, Colors.deepOrange],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.developer_mode,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              title: const Text(
+                "Developer Settings",
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: const Text(
+                "Test notifications and debug features",
+                style: TextStyle(fontSize: 12),
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.pushNamed(context, '/developer-settings');
+              },
+            ),
+          ),
           const SizedBox(height: 40),
 
           // 🚪 Logout button
