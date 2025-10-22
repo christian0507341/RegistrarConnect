@@ -40,9 +40,11 @@ logger = logging.getLogger(__name__)
 @permission_classes([IsAuthenticated])
 def document_requests_web(request):
     user = request.user
-    if hasattr(user, 'role') and user.role == 'faculty':
+    # Registrar, Finance, and Admin can see all requests
+    if hasattr(user, 'role') and user.role in ['faculty', 'registrar', 'finance', 'admin']:
         queryset = DocumentRequest.objects.all().select_related('student_id')
     else:
+        # Students can only see their own requests
         queryset = DocumentRequest.objects.filter(student_id=user).select_related('student_id')
     serializer = DocumentRequestWebSerializer(queryset, many=True)
     return Response(serializer.data)
@@ -324,8 +326,10 @@ class DocumentRequestListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, 'role') and user.role == 'faculty':
+        # Registrar, Finance, and Admin can see all requests
+        if hasattr(user, 'role') and user.role in ['faculty', 'registrar', 'finance', 'admin']:
             return DocumentRequest.objects.all().select_related('student_id', 'processed_by_id')
+        # Students can only see their own requests
         return DocumentRequest.objects.filter(student_id=user).select_related('student_id', 'processed_by_id')
 
     def perform_create(self, serializer):
@@ -366,8 +370,10 @@ class DocumentRequestDetailView(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, 'role') and user.role == 'faculty':
+        # Registrar, Finance, and Admin can see all requests
+        if hasattr(user, 'role') and user.role in ['faculty', 'registrar', 'finance', 'admin']:
             return DocumentRequest.objects.all().select_related('student_id', 'processed_by_id')
+        # Students can only see their own requests
         return DocumentRequest.objects.filter(student_id=user).select_related('student_id', 'processed_by_id')
 
 

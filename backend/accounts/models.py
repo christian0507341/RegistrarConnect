@@ -17,7 +17,8 @@ class User(AbstractUser):
 
     class Roles(models.TextChoices):
         STUDENT = "student", _("Student")
-        FACULTY = "faculty", _("Faculty")
+        REGISTRAR = "registrar", _("Registrar")
+        FINANCE = "finance", _("Finance")
         ADMIN = "admin", _("Admin")
 
     # Tighten built‑ins

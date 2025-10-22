@@ -41,6 +41,18 @@
 @import './screens/StudentChatScreen.css';
 @import './screens/StudentNotificationsScreen.css';
 @import './screens/StudentProfileScreen.css';
+@import './screens/StudentSettingsScreen.css';
+
+/* Admin Dedicated Portal (Complete Package - All Screens) */
+@import './admin-portal.css';
+
+/* Registrar Portal (Complete Package - Orange Theme) */
+@import './registrar-portal.css';
+@import './screens/RegistrarScreens.css';
+
+/* Finance Portal (Complete Package - Teal Theme) */
+@import './finance-portal.css';
+@import './screens/FinanceScreens.css';
 
 /* Login Screen (Preserved - Do Not Touch) */
 @import './screens/UnifiedLoginScreen.css';

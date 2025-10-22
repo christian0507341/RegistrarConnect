@@ -19,6 +19,33 @@ import StudentNewRequestScreen from "./screens/StudentNewRequestScreen";
 import StudentAppointmentsScreen from "./screens/StudentAppointmentsScreen";
 import StudentChatScreen from "./screens/StudentChatScreen";
 import StudentNotificationsScreen from "./screens/StudentNotificationsScreen";
+import StudentSettingsScreen from "./screens/StudentSettingsScreen";
+
+// Registrar imports
+import RegistrarLayout from "./layouts/RegistrarLayout";
+import RegistrarDashboard from "./screens/RegistrarDashboard";
+import RegistrarRequestsScreen from "./screens/RegistrarRequestsScreen";
+import RegistrarApprovalScreen from "./screens/RegistrarApprovalScreen";
+import RegistrarAppointmentsScreen from "./screens/RegistrarAppointmentsScreen";
+import RegistrarScheduleScreen from "./screens/RegistrarScheduleScreen";
+import RegistrarNotificationsScreen from "./screens/RegistrarNotificationsScreen";
+import RegistrarProfileScreen from "./screens/RegistrarProfileScreen";
+
+// Finance imports
+import FinanceLayout from "./layouts/FinanceLayout";
+import FinanceDashboard from "./screens/FinanceDashboard";
+import FinancePaymentsScreen from "./screens/FinancePaymentsScreen";
+import FinanceVerificationScreen from "./screens/FinanceVerificationScreen";
+import FinanceReportsScreen from "./screens/FinanceReportsScreen";
+import FinanceNotificationsScreen from "./screens/FinanceNotificationsScreen";
+import FinanceProfileScreen from "./screens/FinanceProfileScreen";
+
+// Admin Dedicated imports
+import AdminDedicatedLayout from "./layouts/AdminDedicatedLayout";
+import AdminDedicatedDashboard from "./screens/AdminDedicatedDashboard";
+import AdminUsersManagement from "./screens/AdminUsersManagement";
+import AdminSystemSettings from "./screens/AdminSystemSettings";
+import AdminActivityLogs from "./screens/AdminActivityLogs";
 
 // Unified Login
 import UnifiedLogin from "./screens/UnifiedLogin";
@@ -26,6 +53,8 @@ import UnifiedLogin from "./screens/UnifiedLogin";
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isStudentAuthenticated, setIsStudentAuthenticated] = useState(false);
+  const [isRegistrarAuthenticated, setIsRegistrarAuthenticated] = useState(false);
+  const [isFinanceAuthenticated, setIsFinanceAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Check for existing authentication on app load
@@ -42,9 +71,15 @@ export default function App() {
         if (role === "student") {
           setIsStudentAuthenticated(true);
           console.log('Student authenticated');
-        } else if (role === "admin" || role === "faculty") {
+        } else if (role === "registrar") {
+          setIsRegistrarAuthenticated(true);
+          console.log('Registrar authenticated');
+        } else if (role === "finance") {
+          setIsFinanceAuthenticated(true);
+          console.log('Finance authenticated');
+        } else if (role === "admin") {
           setIsAuthenticated(true);
-          console.log('Admin/Faculty authenticated');
+          console.log('Admin authenticated');
         }
       } else {
         // Invalid token, clear storage
@@ -69,6 +104,26 @@ export default function App() {
 
   const handleStudentLogout = () => {
     setIsStudentAuthenticated(false);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("role");
+    localStorage.removeItem("adminRole");
+    localStorage.removeItem("name");
+    localStorage.removeItem("email");
+  };
+
+  const handleRegistrarLogout = () => {
+    setIsRegistrarAuthenticated(false);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("role");
+    localStorage.removeItem("adminRole");
+    localStorage.removeItem("name");
+    localStorage.removeItem("email");
+  };
+
+  const handleFinanceLogout = () => {
+    setIsFinanceAuthenticated(false);
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("role");
@@ -120,23 +175,26 @@ export default function App() {
           element={
             <UnifiedLogin 
               setIsAuthenticated={setIsAuthenticated} 
-              setIsStudentAuthenticated={setIsStudentAuthenticated} 
+              setIsStudentAuthenticated={setIsStudentAuthenticated}
+              setIsRegistrarAuthenticated={setIsRegistrarAuthenticated}
+              setIsFinanceAuthenticated={setIsFinanceAuthenticated}
             />
           }
         />
 
-        {/* Protected Admin Routes */}
+        {/* Protected Admin Dedicated Routes */}
         {isAuthenticated ? (
-          <Route path="/*" element={<AdminLayout onLogout={handleLogout} />}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardScreen />} />
+          <Route path="/admin/*" element={<AdminDedicatedLayout onLogout={handleLogout} />}>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDedicatedDashboard />} />
+            <Route path="users" element={<AdminUsersManagement />} />
             <Route path="requests" element={<RequestsScreen />} />
             <Route path="requests/history" element={<RequestHistoryScreen />} />
             <Route path="appointments" element={<AppointmentsScreen />} />
-            <Route path="appointments/settings" element={<AppointmentSettingsScreen />} />
             <Route path="reports" element={<ReportsScreen />} />
+            <Route path="settings" element={<AdminSystemSettings />} />
+            <Route path="logs" element={<AdminActivityLogs />} />
             <Route path="notifications" element={<NotificationsScreen />} />
-            <Route path="settings" element={<SettingsScreen />} />
           </Route>
         ) : null}
 
@@ -151,12 +209,56 @@ export default function App() {
             <Route path="chat" element={<StudentChatScreen />} />
             <Route path="notifications" element={<StudentNotificationsScreen />} />
             <Route path="profile" element={<StudentProfileScreen />} />
+            <Route path="settings" element={<StudentSettingsScreen />} />
           </Route>
         ) : null}
+
+        {/* Protected Registrar Routes */}
+        {isRegistrarAuthenticated ? (
+          <Route path="/registrar/*" element={<RegistrarLayout onLogout={handleRegistrarLogout} />}>
+            <Route index element={<Navigate to="/registrar/dashboard" replace />} />
+            <Route path="dashboard" element={<RegistrarDashboard />} />
+            <Route path="requests" element={<RegistrarRequestsScreen />} />
+            <Route path="approve" element={<RegistrarApprovalScreen />} />
+            <Route path="appointments" element={<RegistrarAppointmentsScreen />} />
+            <Route path="schedule" element={<RegistrarScheduleScreen />} />
+            <Route path="notifications" element={<RegistrarNotificationsScreen />} />
+            <Route path="profile" element={<RegistrarProfileScreen />} />
+          </Route>
+        ) : null}
+
+        {/* Protected Finance Routes */}
+        {isFinanceAuthenticated ? (
+          <Route path="/finance/*" element={<FinanceLayout onLogout={handleFinanceLogout} />}>
+            <Route index element={<Navigate to="/finance/dashboard" replace />} />
+            <Route path="dashboard" element={<FinanceDashboard />} />
+            <Route path="payments" element={<FinancePaymentsScreen />} />
+            <Route path="verification" element={<FinanceVerificationScreen />} />
+            <Route path="reports" element={<FinanceReportsScreen />} />
+            <Route path="notifications" element={<FinanceNotificationsScreen />} />
+            <Route path="profile" element={<FinanceProfileScreen />} />
+          </Route>
+        ) : null}
+
+        {/* Fallback routes for unauthenticated access */}
+        {!isAuthenticated && (
+          <Route path="/admin/*" element={<Navigate to="/login" replace />} />
+        )}
+        {!isStudentAuthenticated && (
+          <Route path="/student/*" element={<Navigate to="/login" replace />} />
+        )}
+        {!isRegistrarAuthenticated && (
+          <Route path="/registrar/*" element={<Navigate to="/login" replace />} />
+        )}
+        {!isFinanceAuthenticated && (
+          <Route path="/finance/*" element={<Navigate to="/login" replace />} />
+        )}
 
         {/* Default redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/student/login" element={<Navigate to="/login" replace />} />
+        <Route path="/registrar/login" element={<Navigate to="/login" replace />} />
+        <Route path="/finance/login" element={<Navigate to="/login" replace />} />
         <Route path="/*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

@@ -11,6 +11,10 @@ from .views import (
     debug_ready_requests,
     student_appointments
 )
+from .schedule_views import (
+    time_slot_list_create,
+    time_slot_detail
+)
 
 urlpatterns = [
     path('', AppointmentListCreateView.as_view(), name='appointment-list-create'),
@@ -23,4 +27,8 @@ urlpatterns = [
     path("trigger-scheduling/", trigger_automatic_scheduling, name="trigger-automatic-scheduling"),
     path("next-slot/", get_next_available_slot, name="next-available-slot"),
     path("debug-ready-requests/", debug_ready_requests, name="debug-ready-requests"),
+    
+    # Schedule management endpoints
+    path("schedule/", time_slot_list_create, name="time-slot-list-create"),
+    path("schedule/<int:pk>/", time_slot_detail, name="time-slot-detail"),
 ]

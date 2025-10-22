@@ -32,7 +32,8 @@ import {
   Star,
   MessageCircle,
   FileText,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  X
 } from "lucide-react";
 interface StudentProfile {
   id: string;

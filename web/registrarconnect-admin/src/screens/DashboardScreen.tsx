@@ -61,6 +61,49 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Export reports functionality
+  const handleExportReports = () => {
+    const csvContent = generateCSVReport();
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `dashboard-report-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const generateCSVReport = () => {
+    const headers = ['Metric', 'Value'];
+    const rows = [
+      ['Total Requests', stats.totalRequests],
+      ['Pending Requests', stats.pendingRequests],
+      ['Completed Requests', stats.completedRequests],
+      ['Today Requests', stats.todayRequests],
+      ['', ''],
+      ['Generated At', new Date().toLocaleString()]
+    ];
+    
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
+  };
+
+  // Send notifications functionality
+  const handleSendNotifications = () => {
+    alert('Notification center coming soon! This will allow you to send bulk notifications to students.');
+  };
+
+  // Schedule meeting functionality
+  const handleScheduleMeeting = () => {
+    window.location.href = '/appointments';
+  };
+
+  // Manage users functionality
+  const handleManageUsers = () => {
+    alert('User management coming soon! This will allow you to manage student and staff accounts.');
+  };
+
   // Fetch data from database
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -513,19 +556,19 @@ export default function DashboardScreen() {
             className="actions-card"
           >
             <div className="actions-grid">
-              <button className="quick-action-btn">
+              <button className="quick-action-btn" onClick={handleSendNotifications}>
                 <Bell size={18} />
                 <span>Send Notifications</span>
               </button>
-              <button className="quick-action-btn">
+              <button className="quick-action-btn" onClick={handleExportReports}>
                 <Download size={18} />
                 <span>Export Reports</span>
               </button>
-              <button className="quick-action-btn">
+              <button className="quick-action-btn" onClick={handleScheduleMeeting}>
                 <Calendar size={18} />
                 <span>Schedule Meeting</span>
               </button>
-              <button className="quick-action-btn">
+              <button className="quick-action-btn" onClick={handleManageUsers}>
                 <Users size={18} />
                 <span>Manage Users</span>
               </button>

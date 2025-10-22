@@ -16,6 +16,21 @@ from .views import (
     view_receipt,  # NEW
     export_document_requests,  # NEW
 )
+# Registrar views
+from .registrar_views import (
+    get_pending_approvals,
+    approve_document_request,
+    reject_document_request,
+    registrar_dashboard_stats,
+)
+# Finance views
+from .finance_views import (
+    get_pending_verifications,
+    approve_payment,
+    reject_payment,
+    finance_dashboard_stats,
+    finance_reports,
+)
 
 urlpatterns = [
     # Generic API endpoints
@@ -51,4 +66,17 @@ urlpatterns = [
     
     # NEW: export functionality
     path('export/', export_document_requests, name='document-request-export'),
+    
+    # REGISTRAR ENDPOINTS
+    path('registrar/pending/', get_pending_approvals, name='registrar-pending-approvals'),
+    path('<int:pk>/approve/', approve_document_request, name='document-request-approve'),
+    path('<int:pk>/reject/', reject_document_request, name='document-request-reject'),
+    path('registrar/stats/', registrar_dashboard_stats, name='registrar-stats'),
+    
+    # FINANCE ENDPOINTS
+    path('finance/pending/', get_pending_verifications, name='finance-pending-verifications'),
+    path('<int:pk>/approve-payment/', approve_payment, name='payment-approve'),
+    path('<int:pk>/reject-payment/', reject_payment, name='payment-reject'),
+    path('finance/stats/', finance_dashboard_stats, name='finance-stats'),
+    path('finance/reports/', finance_reports, name='finance-reports'),
 ]

@@ -75,6 +75,36 @@ class AppointmentSettings(models.Model):
         )
         return settings_obj
 
+class AppointmentTimeSlot(models.Model):
+    """Weekly time slot configuration for claiming appointments"""
+    DAYS_OF_WEEK = [
+        ('Monday', 'Monday'),
+        ('Tuesday', 'Tuesday'),
+        ('Wednesday', 'Wednesday'),
+        ('Thursday', 'Thursday'),
+        ('Friday', 'Friday'),
+        ('Saturday', 'Saturday'),
+        ('Sunday', 'Sunday'),
+    ]
+    
+    day = models.CharField(max_length=10, choices=DAYS_OF_WEEK)
+    start_time = models.TimeField(help_text="Start time (e.g., 09:00)")
+    end_time = models.TimeField(help_text="End time (e.g., 17:00)")
+    slots_per_hour = models.PositiveIntegerField(
+        default=4,
+        help_text="Number of appointment slots per hour"
+    )
+    is_active = models.BooleanField(default=True, help_text="Whether this time slot is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['day', 'start_time']
+        unique_together = ['day', 'start_time', 'end_time']
+    
+    def __str__(self):
+        return f"{self.day} {self.start_time}-{self.end_time} ({self.slots_per_hour}/hr)"
+
 class Appointment(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="appointments")
     faculty = models.ForeignKey(

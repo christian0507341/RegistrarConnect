@@ -7,16 +7,18 @@ import "../styles/screens/UnifiedLoginScreen.css";
 type UnifiedLoginProps = {
   setIsAuthenticated: (auth: boolean) => void;
   setIsStudentAuthenticated: (auth: boolean) => void;
+  setIsRegistrarAuthenticated: (auth: boolean) => void;
+  setIsFinanceAuthenticated: (auth: boolean) => void;
 };
 
-export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthenticated }: UnifiedLoginProps) {
+export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthenticated, setIsRegistrarAuthenticated, setIsFinanceAuthenticated }: UnifiedLoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginType, setLoginType] = useState<"student" | "admin">("student");
-  const [adminRole, setAdminRole] = useState<"admin" | "faculty">("admin");
+  const [adminRole, setAdminRole] = useState<"admin" | "registrar" | "finance">("admin");
   const [isTransitioning, setIsTransitioning] = useState(false);
   const navigate = useNavigate();
 
@@ -69,12 +71,28 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
       localStorage.setItem("email", userEmail);
       localStorage.setItem("adminRole", adminRole);
 
-      if (loginType === "admin") {
+      // Set authentication state based on BACKEND RETURNED ROLE (not loginType)
+      // The backend determines the actual user role
+      if (userRole === "admin") {
         setIsAuthenticated(true);
-        navigate("/dashboard");
-      } else {
+        console.log('Admin role detected, navigating to admin dashboard');
+        setTimeout(() => navigate("/admin/dashboard"), 0);
+      } else if (userRole === "registrar") {
+        setIsRegistrarAuthenticated(true);
+        console.log('Registrar role detected, navigating to registrar dashboard');
+        setTimeout(() => navigate("/registrar/dashboard"), 0);
+      } else if (userRole === "finance") {
+        setIsFinanceAuthenticated(true);
+        console.log('Finance role detected, navigating to finance dashboard');
+        setTimeout(() => navigate("/finance/dashboard"), 0);
+      } else if (userRole === "student") {
         setIsStudentAuthenticated(true);
-        navigate("/student/dashboard");
+        console.log('Student role detected, navigating to student dashboard');
+        setTimeout(() => navigate("/student/dashboard"), 0);
+      } else {
+        // Fallback for unknown roles
+        console.error('Unknown role:', userRole);
+        setError('Unknown user role. Please contact support.');
       }
     } catch (err: unknown) {
       console.error('Login error:', err);
@@ -166,7 +184,9 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
                       ? "Access your academic documents, track requests, and manage your academic journey with ease."
                       : adminRole === "admin" 
                         ? "Manage student requests, approve documents, and oversee the academic process efficiently."
-                        : "Review and process student document requests, manage academic records, and support student success."
+                        : adminRole === "registrar"
+                          ? "Process document requests, approve submissions, and manage student claiming appointments."
+                          : "Verify student payments, manage financial transactions, and approve payment submissions."
                     }
                   </p>
                 </div>
@@ -208,19 +228,35 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
                             </div>
                           </>
                         )}
-                        {adminRole === "faculty" && (
+                        {adminRole === "registrar" && (
                           <>
                             <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
                               <UserCheck size={20} />
-                              <span>Review student requests</span>
+                              <span>Process document requests</span>
                             </div>
                             <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
                               <BookOpen size={20} />
-                              <span>Manage academic records</span>
+                              <span>Approve submissions</span>
                             </div>
                             <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
                               <Users size={20} />
-                              <span>Support students</span>
+                              <span>Schedule appointments</span>
+                            </div>
+                          </>
+                        )}
+                        {adminRole === "finance" && (
+                          <>
+                            <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
+                              <Shield size={20} />
+                              <span>Verify payments</span>
+                            </div>
+                            <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
+                              <BookOpen size={20} />
+                              <span>Approve transactions</span>
+                            </div>
+                            <div className={`feature-item ${isTransitioning ? 'transitioning' : ''}`}>
+                              <Users size={20} />
+                              <span>Financial reporting</span>
                             </div>
                           </>
                         )}
@@ -242,11 +278,12 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
                       <select
                         id="role"
                         value={adminRole}
-                        onChange={(e) => setAdminRole(e.target.value as "admin" | "faculty")}
+                        onChange={(e) => setAdminRole(e.target.value as "admin" | "registrar" | "finance")}
                         className="role-select"
                       >
                         <option value="admin">Administrator</option>
-                        <option value="faculty">Faculty</option>
+                        <option value="registrar">Registrar</option>
+                        <option value="finance">Finance</option>
                       </select>
                     </div>
                   </div>

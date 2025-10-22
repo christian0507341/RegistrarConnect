@@ -80,26 +80,32 @@ class DocumentRequest(models.Model):
         Get the current status based on the action record.
         Returns: dict with payment, document, and overall status
         """
-        # Get the action record for this request (should be only one now)
-        action_record = self.actions.filter(
-            action='status_changed'
-        ).order_by('-created_at').first()
+        # Check for payment approval (from Finance)
+        payment_approved = self.actions.filter(
+            action='payment_approved',
+            payment=True
+        ).exists()
         
-        if action_record:
-            return {
-                'payment_approved': action_record.payment,
-                'document_approved': action_record.document,
-                'current_status': action_record.to_status,
-                'last_updated': action_record.created_at
-            }
-        else:
-            # Fallback to main table if no action record exists
-            return {
-                'payment_approved': False,
-                'document_approved': False,
-                'current_status': self.status,
-                'last_updated': self.requested_at
-            }
+        # Check for document approval (from Registrar)
+        # IMPORTANT: Only look for status_changed actions AFTER payment approval
+        # and where BOTH payment=True AND document=True
+        document_approved = False
+        if payment_approved:
+            document_approved = self.actions.filter(
+                action='status_changed',
+                payment=True,  # Both must be True
+                document=True
+            ).exists()
+        
+        # Get the latest action for last_updated
+        latest_action = self.actions.order_by('-created_at').first()
+        
+        return {
+            'payment_approved': payment_approved,
+            'document_approved': document_approved,
+            'current_status': self.status,
+            'last_updated': latest_action.created_at if latest_action else self.requested_at
+        }
 
     def __str__(self):
         return f"{self.student_id} - {self.document_type} - {self.status}"

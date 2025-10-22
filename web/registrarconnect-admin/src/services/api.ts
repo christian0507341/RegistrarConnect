@@ -223,6 +223,95 @@ export const apiService = {
 
   changePassword: (data: { current_password: string; new_password: string; confirm_password: string }) =>
     api.post("/auth/change-password/", data),
+
+  // ============================================
+  // REGISTRAR ENDPOINTS
+  // ============================================
+  
+  // Registrar: Get all document requests (with filters)
+  registrar: {
+    getRequests: (params?: { status?: string; document_type?: string; payment_status?: string; search?: string }) =>
+      api.get("/document-requests/", { params }),
+    
+    // Get pending requests (ONLY payment approved, waiting for registrar approval)
+    // This endpoint checks action records to ensure payment is ACTUALLY approved
+    getPendingApprovals: () =>
+      api.get("/document-requests/registrar/pending/"),
+    
+    // Approve document request (triggers auto-scheduling)
+    approveRequest: (id: string) =>
+      api.post(`/document-requests/${id}/approve/`),
+    
+    // Reject document request
+    rejectRequest: (id: string, data: { reason: string }) =>
+      api.post(`/document-requests/${id}/reject/`, data),
+    
+    // Get all claiming appointments
+    getAppointments: (params?: { status?: string; date?: string }) =>
+      api.get("/appointments/", { params }),
+    
+    // Mark appointment as claimed
+    markAsClaimed: (id: number) =>
+      api.patch(`/appointments/${id}/status/`, { status: 'claimed' }),
+    
+    // Mark appointment as no-show
+    markAsNoShow: (id: number) =>
+      api.patch(`/appointments/${id}/status/`, { status: 'no_show' }),
+    
+    // Schedule management
+    getSchedule: () =>
+      api.get("/appointments/schedule/"),
+    
+    addTimeSlot: (data: { day: string; start_time: string; end_time: string; slots_per_hour: number; is_active: boolean }) =>
+      api.post("/appointments/schedule/", data),
+    
+    updateTimeSlot: (id: string, data: any) =>
+      api.patch(`/appointments/schedule/${id}/`, data),
+    
+    deleteTimeSlot: (id: string) =>
+      api.delete(`/appointments/schedule/${id}/`),
+    
+    // Dashboard stats
+    getDashboardStats: () =>
+      api.get("/document-requests/registrar/stats/"),
+  },
+
+  // ============================================
+  // FINANCE ENDPOINTS
+  // ============================================
+  
+  // Finance: Get all payments
+  finance: {
+    getPayments: (params?: { status?: string; search?: string }) =>
+      api.get("/document-requests/", { params }),
+    
+    // Get pending payment verifications (ONLY not yet approved)
+    // This endpoint checks action records to exclude already-approved payments
+    getPendingVerifications: () =>
+      api.get("/document-requests/finance/pending/"),
+    
+    // Approve payment
+    approvePayment: (id: string) =>
+      api.post(`/document-requests/${id}/approve-payment/`),
+    
+    // Reject payment
+    rejectPayment: (id: string, data: { reason: string }) =>
+      api.post(`/document-requests/${id}/reject-payment/`, data),
+    
+    // Get financial reports
+    getReports: (params?: { date_range?: string; report_type?: string }) =>
+      api.get("/document-requests/finance/reports/", { params }),
+    
+    // Dashboard stats
+    getDashboardStats: () =>
+      api.get("/document-requests/finance/stats/"),
+    
+    // Export payments
+    exportPayments: (format: 'csv' | 'excel' = 'csv') =>
+      api.get(`/document-requests/finance/export/?format=${format}`, {
+        responseType: 'blob'
+      }),
+  },
 };
 
 export default api;

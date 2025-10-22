@@ -16,7 +16,8 @@ import {
   CalendarDays,
   BookOpen,
   Award,
-  User
+  User,
+  FileText
 } from "lucide-react";
 interface Appointment {
   id: number;
@@ -37,6 +38,18 @@ export default function StudentAppointmentsScreen() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedDate, setSelectedDate] = useState("");
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  const handleViewDetails = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setShowDetailsModal(true);
+  };
+
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedAppointment(null);
+  };
 
   useEffect(() => {
     // Check if user is authenticated and is a student
@@ -264,7 +277,10 @@ export default function StudentAppointmentsScreen() {
                 </div>
 
                 <div className="card-actions">
-                  <button className="action-btn secondary">
+                  <button 
+                    onClick={() => handleViewDetails(appointment)}
+                    className="action-btn secondary"
+                  >
                     <Eye size={16} />
                     <span>View Details</span>
                   </button>
@@ -326,6 +342,213 @@ export default function StudentAppointmentsScreen() {
           </button>
         </div>
       </div>
+
+      {/* Enhanced Appointment Details Modal */}
+      {showDetailsModal && selectedAppointment && (
+        <div className="modal-overlay" onClick={closeDetailsModal}>
+          <div className="modal-content appointment-detail-modal" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header with Status */}
+            <div className="modal-header-enhanced">
+              <div className="header-top">
+                <div className="header-title">
+                  <Calendar size={28} />
+                  <div>
+                    <h2>Appointment Details</h2>
+                    <p className="appointment-id">ID: #{selectedAppointment.id}</p>
+                  </div>
+                </div>
+                <button onClick={closeDetailsModal} className="modal-close-enhanced">
+                  <XCircle size={24} />
+                </button>
+              </div>
+              <div className={`status-banner ${getStatusColor(selectedAppointment.status)}`}>
+                {getStatusIcon(selectedAppointment.status)}
+                <span className="status-text-large">
+                  {selectedAppointment.status.charAt(0).toUpperCase() + selectedAppointment.status.slice(1)}
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="modal-body-enhanced">
+              {/* Main Info Section */}
+              <div className="info-section primary-info">
+                <h3 className="section-title">
+                  <CalendarDays size={20} />
+                  Schedule Information
+                </h3>
+                <div className="info-grid">
+                  <div className="info-card">
+                    <div className="info-icon calendar-icon">
+                      <Calendar size={24} />
+                    </div>
+                    <div className="info-content">
+                      <label>Date</label>
+                      <p className="info-value">
+                        {new Date(selectedAppointment.appointment_date).toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </p>
+                      <span className="info-meta">
+                        {(() => {
+                          const today = new Date();
+                          const apptDate = new Date(selectedAppointment.appointment_date);
+                          const diffTime = apptDate.getTime() - today.getTime();
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                          
+                          if (diffDays < 0) return `${Math.abs(diffDays)} days ago`;
+                          if (diffDays === 0) return 'Today';
+                          if (diffDays === 1) return 'Tomorrow';
+                          return `In ${diffDays} days`;
+                        })()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="info-card">
+                    <div className="info-icon time-icon">
+                      <Clock size={24} />
+                    </div>
+                    <div className="info-content">
+                      <label>Time</label>
+                      <p className="info-value">{selectedAppointment.appointment_time}</p>
+                      <span className="info-meta">15-minute slot</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Purpose Section */}
+              <div className="info-section">
+                <h3 className="section-title">
+                  <BookOpen size={20} />
+                  Purpose
+                </h3>
+                <div className="purpose-card">
+                  <p className="purpose-text">{selectedAppointment.purpose}</p>
+                </div>
+              </div>
+
+              {/* Notes Section */}
+              {selectedAppointment.notes && (
+                <div className="info-section">
+                  <h3 className="section-title">
+                    <FileText size={20} />
+                    Additional Notes
+                  </h3>
+                  <div className="notes-card">
+                    <p className="notes-content">{selectedAppointment.notes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Timeline Section */}
+              <div className="info-section timeline-section">
+                <h3 className="section-title">
+                  <Clock size={20} />
+                  Timeline
+                </h3>
+                <div className="timeline">
+                  <div className="timeline-item">
+                    <div className="timeline-marker created"></div>
+                    <div className="timeline-content">
+                      <label>Created</label>
+                      <p>{new Date(selectedAppointment.created_at).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}</p>
+                    </div>
+                  </div>
+                  <div className="timeline-item">
+                    <div className="timeline-marker updated"></div>
+                    <div className="timeline-content">
+                      <label>Last Updated</label>
+                      <p>{new Date(selectedAppointment.updated_at).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Guide */}
+              <div className="info-section status-guide">
+                <h3 className="section-title">
+                  <AlertTriangle size={20} />
+                  Status Information
+                </h3>
+                <div className="status-info-grid">
+                  {selectedAppointment.status === 'scheduled' && (
+                    <div className="status-info-card blue">
+                      <CheckCircle2 size={20} />
+                      <div>
+                        <strong>Scheduled</strong>
+                        <p>Your appointment is confirmed. Please arrive 5 minutes early.</p>
+                      </div>
+                    </div>
+                  )}
+                  {selectedAppointment.status === 'completed' && (
+                    <div className="status-info-card green">
+                      <CheckCircle2 size={20} />
+                      <div>
+                        <strong>Completed</strong>
+                        <p>This appointment has been successfully completed.</p>
+                      </div>
+                    </div>
+                  )}
+                  {selectedAppointment.status === 'cancelled' && (
+                    <div className="status-info-card red">
+                      <XCircle size={20} />
+                      <div>
+                        <strong>Cancelled</strong>
+                        <p>This appointment was cancelled. You can schedule a new one.</p>
+                      </div>
+                    </div>
+                  )}
+                  {selectedAppointment.status === 'expired' && (
+                    <div className="status-info-card orange">
+                      <AlertTriangle size={20} />
+                      <div>
+                        <strong>Expired</strong>
+                        <p>This appointment date has passed. Please schedule a new one if needed.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="modal-footer-enhanced">
+              <button onClick={closeDetailsModal} className="action-btn secondary">
+                Close
+              </button>
+              <button 
+                onClick={() => {
+                  // Copy appointment details to clipboard
+                  const details = `Appointment #${selectedAppointment.id}\nDate: ${new Date(selectedAppointment.appointment_date).toLocaleDateString()}\nTime: ${selectedAppointment.appointment_time}\nPurpose: ${selectedAppointment.purpose}\nStatus: ${selectedAppointment.status}`;
+                  navigator.clipboard.writeText(details);
+                  alert('Appointment details copied to clipboard!');
+                }}
+                className="action-btn primary"
+              >
+                <FileText size={16} />
+                Copy Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

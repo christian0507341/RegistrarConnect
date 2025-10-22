@@ -21,12 +21,12 @@ class AppointmentListCreateView(generics.ListCreateAPIView):
         user = self.request.user
         # Students can only see their own appointments
         # Faculty can see appointments they're assigned to
-        # Admin can see all appointments
+        # Registrar, Finance, Admin can see all appointments
         if user.role == 'student':
             return Appointment.objects.filter(student=user).order_by('-created_at')
         elif user.role == 'faculty':
             return Appointment.objects.filter(faculty=user).order_by('-created_at')
-        elif user.role == 'admin':
+        elif user.role in ['registrar', 'finance', 'admin']:
             return Appointment.objects.all().order_by('-created_at')
         else:
             # Default: only show appointments where user is involved
@@ -63,13 +63,14 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         user = self.request.user
         # Students can only see their own appointments
-        # Faculty/Admin can see appointments they're assigned to
+        # Faculty can see appointments they're assigned to
+        # Registrar, Finance, Admin can see all appointments
         if user.role == 'student':
             return Appointment.objects.filter(student=user)
         elif user.role == 'faculty':
             return Appointment.objects.filter(faculty=user)
-        elif user.role == 'admin':
-            # Admin can see all appointments
+        elif user.role in ['registrar', 'finance', 'admin']:
+            # Registrar, Finance, Admin can see all appointments
             return Appointment.objects.all()
         else:
             # Default: only show appointments where user is involved

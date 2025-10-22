@@ -31,6 +31,7 @@ export default function StudentLayout({ onLogout }: StudentLayoutProps) {
     { name: "AI Assistant", href: "/student/chat", icon: MessageCircle },
     { name: "Notifications", href: "/student/notifications", icon: Bell },
     { name: "Profile", href: "/student/profile", icon: User },
+    { name: "Settings", href: "/student/settings", icon: Settings },
   ];
 
   const handleLogout = () => {
