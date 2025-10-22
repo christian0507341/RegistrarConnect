@@ -145,3 +145,6 @@ The auto-refresh runs every 10 seconds, so new appointments will appear automati
 
 Auto-scheduling is working and appointments are now visible in the Registrar portal!
 
+
+
+

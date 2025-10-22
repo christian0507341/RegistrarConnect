@@ -53,10 +53,13 @@ export default function RegistrarRequestsScreen() {
       const fetchedRequests = response.data.map((req: any) => ({
         id: req.id.toString(),
         studentName: req.student_name || 'Unknown Student',
-        studentId: req.student_id?.toString() || 'N/A',
+        studentId: req.student_id_number || req.student_id?.toString() || 'N/A',
         documentType: req.document_type,
         purpose: req.purpose,
-        status: req.status,
+        // Map backend status to frontend status format
+        status: req.status === 'ready_to_claim' ? 'ready_for_claiming' : 
+                req.status === 'on_process' ? 'processing' : 
+                req.status,
         dateSubmitted: req.requested_at || req.created_at,
         paymentStatus: req.payment_approved ? 'approved' : 'pending',  // Use payment_approved from action records
         copies: req.copies || 1
@@ -99,12 +102,18 @@ export default function RegistrarRequestsScreen() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; className: string; icon: any }> = {
+      draft: { label: 'Draft', className: 'status-draft', icon: FileText },
+      confirming: { label: 'Confirming', className: 'status-confirming', icon: Clock },
+      awaiting_payment: { label: 'Awaiting Payment', className: 'status-awaiting', icon: Clock },
       pending: { label: 'Pending', className: 'status-pending', icon: Clock },
       payment_approved: { label: 'Payment Approved', className: 'status-payment-approved', icon: CheckCircle },
       processing: { label: 'Processing', className: 'status-processing', icon: Clock },
+      on_process: { label: 'Processing', className: 'status-processing', icon: Clock },
       ready_for_claiming: { label: 'Ready for Claiming', className: 'status-ready', icon: CheckCircle },
+      ready_to_claim: { label: 'Ready for Claiming', className: 'status-ready', icon: CheckCircle },
       claimed: { label: 'Claimed', className: 'status-claimed', icon: CheckCircle },
-      rejected: { label: 'Rejected', className: 'status-rejected', icon: XCircle }
+      rejected: { label: 'Rejected', className: 'status-rejected', icon: XCircle },
+      cancelled: { label: 'Cancelled', className: 'status-cancelled', icon: XCircle }
     };
 
     const config = statusConfig[status] || statusConfig.pending;

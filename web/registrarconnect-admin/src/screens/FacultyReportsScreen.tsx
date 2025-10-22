@@ -1,36 +1,70 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Download, Calendar, TrendingUp } from 'lucide-react';
+import { FileText, Download, Calendar, TrendingUp, RefreshCw } from 'lucide-react';
+import { apiService } from '../services/api';
+
+interface Stats {
+  total_appointments: number;
+  completed: number;
+  cancelled: number;
+  students: number;
+}
 
 export default function FacultyReportsScreen() {
   const navigate = useNavigate();
   const [reportType, setReportType] = useState("appointments");
   const [dateRange, setDateRange] = useState("thisMonth");
+  const [stats, setStats] = useState<Stats>({
+    total_appointments: 0,
+    completed: 0,
+    cancelled: 0,
+    students: 0
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Authentication is handled by the protected route in App.tsx
-    // TODO: Fetch reports data from backend
-  }, []);
-
-  const stats = {
-    totalAppointments: 45,
-    completed: 38,
-    cancelled: 7,
-    students: 32
+    fetchReports();
+  }, [dateRange]);
+  
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.faculty.getReports({ date_range: dateRange });
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="faculty-reports-screen">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Loading reports...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="faculty-reports-screen">
       <div className="screen-header">
         <h1>Reports & Analytics</h1>
         <p>Generate and view your activity reports</p>
+        <button onClick={fetchReports} className="action-btn secondary">
+          <RefreshCw size={16} />
+          Refresh
+        </button>
       </div>
 
       <div className="stats-summary">
         <div className="stat-box blue">
           <Calendar size={24} />
           <div>
-            <p className="stat-value">{stats.totalAppointments}</p>
+            <p className="stat-value">{stats.total_appointments}</p>
             <p className="stat-label">Total Appointments</p>
           </div>
         </div>
@@ -46,6 +80,13 @@ export default function FacultyReportsScreen() {
           <div>
             <p className="stat-value">{stats.cancelled}</p>
             <p className="stat-label">Cancelled</p>
+          </div>
+        </div>
+        <div className="stat-box purple">
+          <TrendingUp size={24} />
+          <div>
+            <p className="stat-value">{stats.students}</p>
+            <p className="stat-label">Students</p>
           </div>
         </div>
       </div>

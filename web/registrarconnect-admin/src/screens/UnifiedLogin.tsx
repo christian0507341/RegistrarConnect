@@ -4,14 +4,7 @@ import { apiService } from "../services/api";
 import { Eye, EyeOff, User, Mail, Lock, AlertCircle, BookOpen, GraduationCap, Users, Shield, UserCheck } from "lucide-react";
 import "../styles/screens/UnifiedLoginScreen.css";
 
-type UnifiedLoginProps = {
-  setIsAuthenticated: (auth: boolean) => void;
-  setIsStudentAuthenticated: (auth: boolean) => void;
-  setIsRegistrarAuthenticated: (auth: boolean) => void;
-  setIsFinanceAuthenticated: (auth: boolean) => void;
-};
-
-export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthenticated, setIsRegistrarAuthenticated, setIsFinanceAuthenticated }: UnifiedLoginProps) {
+export default function UnifiedLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +54,7 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
       });
       const response = await apiService.login(email, password, roleToSend);
 
-      const { access, refresh, role: userRole, name, email: userEmail } =
+      const { access, refresh, role: userRole, name, email: userEmail, user_id } =
         response.data;
 
       localStorage.setItem("accessToken", access);
@@ -70,25 +63,40 @@ export default function UnifiedLogin({ setIsAuthenticated, setIsStudentAuthentic
       localStorage.setItem("name", name);
       localStorage.setItem("email", userEmail);
       localStorage.setItem("adminRole", adminRole);
+      
+      // Store user ID for student authentication
+      if (user_id) {
+        localStorage.setItem("userId", user_id.toString());
+      }
+      
+      console.log('Login successful - stored data:', {
+        role: userRole,
+        name,
+        email: userEmail,
+        userId: user_id,
+        hasToken: !!access
+      });
 
-      // Set authentication state based on BACKEND RETURNED ROLE (not loginType)
-      // The backend determines the actual user role
+      // Navigate based on BACKEND RETURNED ROLE (not loginType)
+      // Force page reload to ensure fresh authentication check
+      console.log('Login successful, navigating to dashboard for role:', userRole);
+      
       if (userRole === "admin") {
-        setIsAuthenticated(true);
-        console.log('Admin role detected, navigating to admin dashboard');
-        setTimeout(() => navigate("/admin/dashboard"), 0);
+        setTimeout(() => {
+          window.location.href = "/admin/dashboard";
+        }, 200);
       } else if (userRole === "registrar") {
-        setIsRegistrarAuthenticated(true);
-        console.log('Registrar role detected, navigating to registrar dashboard');
-        setTimeout(() => navigate("/registrar/dashboard"), 0);
+        setTimeout(() => {
+          window.location.href = "/registrar/dashboard";
+        }, 200);
       } else if (userRole === "finance") {
-        setIsFinanceAuthenticated(true);
-        console.log('Finance role detected, navigating to finance dashboard');
-        setTimeout(() => navigate("/finance/dashboard"), 0);
+        setTimeout(() => {
+          window.location.href = "/finance/dashboard";
+        }, 200);
       } else if (userRole === "student") {
-        setIsStudentAuthenticated(true);
-        console.log('Student role detected, navigating to student dashboard');
-        setTimeout(() => navigate("/student/dashboard"), 0);
+        setTimeout(() => {
+          window.location.href = "/student/dashboard";
+        }, 200);
       } else {
         // Fallback for unknown roles
         console.error('Unknown role:', userRole);

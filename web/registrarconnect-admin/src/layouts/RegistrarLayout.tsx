@@ -136,3 +136,6 @@ export default function RegistrarLayout({ onLogout }: RegistrarLayoutProps) {
   );
 }
 
+
+
+

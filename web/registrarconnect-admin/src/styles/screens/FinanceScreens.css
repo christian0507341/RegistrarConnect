@@ -238,3 +238,52 @@
   box-shadow: 0 4px 16px rgba(20, 184, 166, 0.4);
 }
 
+/* Finance Reports - Additional Styles */
+.finance-reports-screen .item-count {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: normal;
+}
+
+.finance-reports-screen .no-data {
+  text-align: center;
+  padding: 32px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.finance-reports-screen .breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.finance-reports-screen .breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.finance-reports-screen .item-label {
+  min-width: 200px;
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.finance-reports-screen .item-bar {
+  flex: 1;
+  height: 24px;
+  background: #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.finance-reports-screen .item-value {
+  min-width: 100px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f766e;
+}
+

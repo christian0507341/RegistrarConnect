@@ -1,49 +1,44 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Check, Trash2, CheckCheck, RefreshCw, AlertCircle } from 'lucide-react';
+import { apiService } from '../services/api';
 
 interface Notification {
   id: string;
   title: string;
   message: string;
   timestamp: string;
-  read: boolean;
+  isRead: boolean;
   type: 'info' | 'success' | 'warning' | 'error';
 }
 
 export default function FacultyNotificationsScreen() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      title: 'New Appointment Request',
-      message: 'John Doe requested an appointment for tomorrow at 10:00 AM',
-      timestamp: new Date(Date.now() - 30 * 60000).toISOString(),
-      read: false,
-      type: 'info'
-    },
-    {
-      id: '2',
-      title: 'Appointment Completed',
-      message: 'Your appointment with Jane Smith has been marked as completed',
-      timestamp: new Date(Date.now() - 2 * 60 * 60000).toISOString(),
-      read: true,
-      type: 'success'
-    },
-    {
-      id: '3',
-      title: 'Schedule Update',
-      message: 'Your schedule for next week has been updated',
-      timestamp: new Date(Date.now() - 24 * 60 * 60000).toISOString(),
-      read: false,
-      type: 'warning'
-    },
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Authentication is handled by the protected route in App.tsx
-    // TODO: Fetch notifications data from backend
+    fetchNotifications();
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
+  
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.faculty.getNotifications();
+      setNotifications(response.data.notifications || []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatTime = (timestamp: string) => {
     const now = new Date();
@@ -61,19 +56,30 @@ export default function FacultyNotificationsScreen() {
 
   const markAsRead = (id: string) => {
     setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
+      prev.map(n => n.id === id ? { ...n, isRead: true } : n)
     );
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   };
 
   const deleteNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+  
+  if (loading) {
+    return (
+      <div className="faculty-notifications-screen">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Loading notifications...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="faculty-notifications-screen">
@@ -87,7 +93,7 @@ export default function FacultyNotificationsScreen() {
             <CheckCheck size={16} />
             Mark All Read
           </button>
-          <button className="action-btn primary">
+          <button onClick={fetchNotifications} className="action-btn primary">
             <RefreshCw size={16} />
             Refresh
           </button>
@@ -105,7 +111,7 @@ export default function FacultyNotificationsScreen() {
           notifications.map(notification => (
             <div 
               key={notification.id} 
-              className={`notification-card ${notification.read ? 'read' : 'unread'} ${notification.type}`}
+              className={`notification-card ${notification.isRead ? 'read' : 'unread'} ${notification.type}`}
             >
               <div className="notification-icon">
                 {notification.type === 'info' && <Bell size={20} />}
@@ -119,7 +125,7 @@ export default function FacultyNotificationsScreen() {
                 <span className="notification-time">{formatTime(notification.timestamp)}</span>
               </div>
               <div className="notification-actions">
-                {!notification.read && (
+                {!notification.isRead && (
                   <button 
                     onClick={() => markAsRead(notification.id)}
                     className="icon-btn"

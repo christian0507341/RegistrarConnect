@@ -230,9 +230,14 @@ def registrar_dashboard_stats(request):
             status='scheduled'
         ).count()
         
-        # Today's claiming appointments
+        # Today's claiming appointments (using schedule field which is DateTimeField)
+        from datetime import datetime, time
+        today_start = timezone.make_aware(datetime.combine(today, time.min))
+        today_end = timezone.make_aware(datetime.combine(today, time.max))
+        
         today_appointments = Appointment.objects.filter(
-            scheduled_date=today,
+            schedule__gte=today_start,
+            schedule__lte=today_end,
             status='scheduled'
         ).count()
         

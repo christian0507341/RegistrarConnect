@@ -13,6 +13,17 @@ export default function FinanceDashboard() {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Document pricing to calculate revenue
+  const getDocumentPrice = (documentType: string): number => {
+    const pricing: Record<string, number> = {
+      'OTR': 150, // Official Transcript of Records
+      'COG': 100, // Certificate of Grades
+      'COE': 50,  // Certificate of Enrollment
+      'OTHERS': 75 // Other Certifications
+    };
+    return pricing[documentType] || 0;
+  };
+
   useEffect(() => {
     fetchDashboardStats();
     
@@ -27,12 +38,21 @@ export default function FinanceDashboard() {
   const fetchDashboardStats = async () => {
     setIsLoading(true);
     try {
-      const response = await apiService.finance.getDashboardStats();
+      const statsResponse = await apiService.finance.getDashboardStats();
+      
+      // Fetch reports to calculate actual revenue
+      const reportsResponse = await apiService.finance.getReports({});
+      
+      // Calculate actual revenue from document types
+      const docTypeData = reportsResponse.data.by_document_type || [];
+      const actualRevenue = docTypeData.reduce((sum: number, item: any) => 
+        sum + (item.count * getDocumentPrice(item.document_type)), 0);
+      
       setStats({
-        pendingPayments: response.data.pending_verification || 0,
-        verifiedToday: response.data.approved_today || 0,
-        totalRevenue: response.data.total_revenue || 0,
-        rejectedPayments: response.data.total_payments || 0
+        pendingPayments: statsResponse.data.pending_verifications || 0, // Fixed: was pending_verification (singular)
+        verifiedToday: statsResponse.data.approved_today || 0,
+        totalRevenue: actualRevenue, // Fixed: now calculates actual revenue, not just count
+        rejectedPayments: statsResponse.data.rejected_payments || 0 // Fixed: was total_payments
       });
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);

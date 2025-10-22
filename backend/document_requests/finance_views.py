@@ -198,34 +198,39 @@ def finance_dashboard_stats(request):
     try:
         today = timezone.now().date()
         
-        # Count pending payment verifications
+        # Count pending payment verifications (requests awaiting payment)
         pending_verifications = DocumentRequest.objects.filter(
-            payment=False,
-            status__in=['pending', 'awaiting_payment']
-        ).exclude(payment_amount__isnull=True).count()
+            status='awaiting_payment'
+        ).count()
         
-        # Count approved payments today
+        # Count approved payments today (based on status changes from awaiting_payment)
         approved_today = DocumentRequestAction.objects.filter(
-            actor=request.user,
-            action='payment_approved',
+            action='status_changed',
+            from_status='awaiting_payment',
             created_at__date=today
         ).count()
         
-        # Total revenue (approved payments)
-        total_revenue = DocumentRequest.objects.filter(
-            payment=True
-        ).aggregate(total=Sum('payment_amount'))['total'] or 0
+        # Total revenue - Count all requests that moved past awaiting_payment
+        total_revenue = DocumentRequest.objects.exclude(
+            status='awaiting_payment'
+        ).exclude(
+            status='draft'
+        ).exclude(
+            status='cancelled'
+        ).count()
         
         # Revenue this month
         month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         revenue_this_month = DocumentRequest.objects.filter(
-            payment=True,
-            updated_at__gte=month_start
-        ).aggregate(total=Sum('payment_amount'))['total'] or 0
+            requested_at__gte=month_start
+        ).exclude(
+            status__in=['draft', 'awaiting_payment', 'cancelled']
+        ).count()
         
         # Count rejected payments
         rejected_payments = DocumentRequestAction.objects.filter(
-            action='payment_rejected',
+            action='status_changed',
+            to_status='rejected',
             created_at__date=today
         ).count()
         
@@ -258,39 +263,66 @@ def finance_reports(request):
         )
     
     try:
-        # Get approved payments
-        approved_payments = DocumentRequest.objects.filter(payment=True)
+        # Get processed requests (excluding drafts, awaiting payment, and cancelled)
+        processed_requests = DocumentRequest.objects.exclude(
+            status__in=['draft', 'awaiting_payment', 'cancelled']
+        )
         
         # Breakdown by document type
-        by_document_type = approved_payments.values('document_type').annotate(
-            count=Count('id'),
-            total_amount=Sum('payment_amount')
-        ).order_by('-total_amount')
+        by_document_type = processed_requests.values('document_type').annotate(
+            count=Count('id')
+        ).order_by('-count')
         
         # Breakdown by payment method
-        by_payment_method = approved_payments.values('payment_method').annotate(
-            count=Count('id'),
-            total_amount=Sum('payment_amount')
-        ).order_by('-total_amount')
+        by_payment_method = processed_requests.values('payment_method').annotate(
+            count=Count('id')
+        ).order_by('-count')
         
-        # Monthly revenue trend (last 6 months)
+        # Monthly revenue trend (last 6 months) - count of processed requests
         monthly_revenue = []
-        for i in range(6):
-            month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            month_start = month_start.replace(month=month_start.month - i if month_start.month > i else 12 + month_start.month - i)
+        current_date = timezone.now()
+        
+        for i in range(5, -1, -1):  # Reverse to get chronological order
+            # Calculate month offset
+            year_offset = i // 12
+            month_offset = i % 12
             
-            if month_start.month > timezone.now().month:
-                month_start = month_start.replace(year=month_start.year - 1)
+            target_year = current_date.year
+            target_month = current_date.month - month_offset
             
-            revenue = DocumentRequest.objects.filter(
-                payment=True,
-                updated_at__year=month_start.year,
-                updated_at__month=month_start.month
-            ).aggregate(total=Sum('payment_amount'))['total'] or 0
+            if target_month <= 0:
+                target_month += 12
+                target_year -= 1
+            
+            target_year -= year_offset
+            
+            month_start = current_date.replace(
+                year=target_year,
+                month=target_month,
+                day=1,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0
+            )
+            
+            # Get next month for range
+            if month_start.month == 12:
+                month_end = month_start.replace(year=month_start.year + 1, month=1)
+            else:
+                month_end = month_start.replace(month=month_start.month + 1)
+            
+            # Count processed requests in this month
+            count = DocumentRequest.objects.filter(
+                requested_at__gte=month_start,
+                requested_at__lt=month_end
+            ).exclude(
+                status__in=['draft', 'awaiting_payment', 'cancelled']
+            ).count()
             
             monthly_revenue.append({
                 "month": month_start.strftime('%B %Y'),
-                "revenue": float(revenue)
+                "revenue": count
             })
         
         return Response({

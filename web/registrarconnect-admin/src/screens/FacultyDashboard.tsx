@@ -11,6 +11,7 @@ import {
   FileText,
   Bell
 } from 'lucide-react';
+import { apiService } from '../services/api';
 
 interface Stats {
   todayAppointments: number;
@@ -22,18 +23,40 @@ interface Stats {
 export default function FacultyDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({
-    todayAppointments: 5,
-    upcomingAppointments: 12,
-    completedToday: 3,
-    totalStudents: 45
+    todayAppointments: 0,
+    upcomingAppointments: 0,
+    completedToday: 0,
+    totalStudents: 0
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Authentication is handled by the protected route in App.tsx
-    // TODO: Fetch real data from backend
-    // fetchDashboardData();
+    fetchDashboardData();
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
+  
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.faculty.getDashboardStats();
+      setStats({
+        todayAppointments: response.data.today_appointments || 0,
+        upcomingAppointments: response.data.upcoming_appointments || 0,
+        completedToday: response.data.completed_today || 0,
+        totalStudents: response.data.total_students || 0
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const todayAppointments = [
     { id: 1, student: "John Doe", time: "09:00 AM", purpose: "Transcript Request", status: "pending" },

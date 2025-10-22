@@ -22,6 +22,9 @@ import {
   Info,
   ChevronRight
 } from 'lucide-react';
+import { apiService } from '../services/api';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from '../components/ToastContainer';
 
 interface StudentSettings {
   theme: 'light' | 'dark' | 'auto';
@@ -42,6 +45,7 @@ interface StudentSettings {
 
 export default function StudentSettingsScreen() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [settings, setSettings] = useState<StudentSettings>({
     theme: 'auto',
     language: 'en',
@@ -182,30 +186,35 @@ export default function StudentSettingsScreen() {
 
   const handleChangePassword = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert('New passwords do not match!');
+      toast.error('New passwords do not match!');
       return;
     }
 
     if (passwordForm.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long!');
+      toast.error('Password must be at least 8 characters long!');
       return;
     }
 
     try {
-      // TODO: Call backend API to change password
-      // await apiService.changePassword(passwordForm);
+      await apiService.changePassword({
+        current_password: passwordForm.currentPassword,
+        new_password: passwordForm.newPassword,
+        confirm_password: passwordForm.confirmPassword
+      });
       
-      alert('Password changed successfully!');
+      toast.success('Password changed successfully!');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setShowChangePassword(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error changing password:', error);
-      alert('Failed to change password. Please try again.');
+      const errorMessage = error.response?.data?.error || 'Failed to change password. Please try again.';
+      toast.error(errorMessage);
     }
   };
 
   return (
     <div className="student-settings-screen">
+      <ToastContainer toasts={toast.toasts} onClose={toast.removeToast} />
       {/* Header */}
       <div className="settings-header">
         <div className="header-content">
@@ -682,4 +691,7 @@ export default function StudentSettingsScreen() {
     </div>
   );
 }
+
+
+
 

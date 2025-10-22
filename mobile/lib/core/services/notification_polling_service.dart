@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
 import 'package:mobile/core/services/secure_storage.dart';
 import 'package:mobile/core/services/dio_client.dart';
@@ -41,7 +42,7 @@ class NotificationPollingService {
       _checkForNotifications();
     });
     
-    print('📡 Notification polling started (every ${interval.inSeconds}s)');
+    developer.log('📡 Notification polling started (every ${interval.inSeconds}s)', name: 'NotificationPolling');
   }
 
   /// Stop polling for notifications
@@ -49,7 +50,7 @@ class NotificationPollingService {
     _pollingTimer?.cancel();
     _pollingTimer = null;
     _isPolling = false;
-    print('📡 Notification polling stopped');
+    developer.log('📡 Notification polling stopped', name: 'NotificationPolling');
   }
 
   /// Manually check for new notifications
@@ -57,11 +58,11 @@ class NotificationPollingService {
     try {
       final token = await _storage.readAccess();
       if (token == null || token.isEmpty) {
-        print('⚠️ No access token, skipping notification check');
+        developer.log('⚠️ No access token, skipping notification check', name: 'NotificationPolling');
         return;
       }
 
-      print('🔍 Checking for pending notifications...');
+      developer.log('🔍 Checking for pending notifications...', name: 'NotificationPolling');
 
       final response = await _dio.get(
         '${Endpoints.baseUrl}${Endpoints.pendingNotifications}',
@@ -78,7 +79,7 @@ class NotificationPollingService {
         final notifications = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
         final count = data['count'] ?? 0;
 
-        print('📬 Found $count pending notifications');
+        developer.log('📬 Found $count pending notifications', name: 'NotificationPolling');
 
         if (notifications.isNotEmpty) {
           final newNotifications = <Map<String, dynamic>>[];
@@ -94,7 +95,7 @@ class NotificationPollingService {
           }
 
           if (newNotifications.isNotEmpty) {
-            print('🆕 ${newNotifications.length} new notifications to show');
+            developer.log('🆕 ${newNotifications.length} new notifications to show', name: 'NotificationPolling');
             
             // Show local notifications
             for (final notification in newNotifications) {
@@ -106,14 +107,14 @@ class NotificationPollingService {
 
             // DON'T clear from backend cache - let notification page fetch them
             // The notifications will persist in cache and notification page
-            print('✓ Notifications shown in status bar, also available in notification page');
+            developer.log('✓ Notifications shown in status bar, also available in notification page', name: 'NotificationPolling');
           } else {
-            print('✓ All pending notifications already shown');
+            developer.log('✓ All pending notifications already shown', name: 'NotificationPolling');
           }
         }
       }
     } catch (e) {
-      print('❌ Error checking for notifications: $e');
+      developer.log('❌ Error checking for notifications: $e', name: 'NotificationPolling', error: e);
     }
   }
 
@@ -129,7 +130,7 @@ class NotificationPollingService {
       final notificationIdStr = notification['id']?.toString() ?? '';
       int notificationId = notificationIdStr.hashCode.abs() % 2147483647;
 
-      print('🔔 Showing notification: $title');
+      developer.log('🔔 Showing notification: $title', name: 'NotificationPolling');
 
       if (type == 'payment_approved') {
         await _localNotificationService.showNotification(
@@ -154,7 +155,7 @@ class NotificationPollingService {
         );
       }
     } catch (e) {
-      print('❌ Error showing notification: $e');
+      developer.log('❌ Error showing notification: $e', name: 'NotificationPolling', error: e);
     }
   }
 
@@ -176,16 +177,16 @@ class NotificationPollingService {
         ),
       );
 
-      print('✓ Cleared all pending notifications from backend cache');
+      developer.log('✓ Cleared all pending notifications from backend cache', name: 'NotificationPolling');
     } catch (e) {
-      print('❌ Error clearing notifications: $e');
+      developer.log('❌ Error clearing notifications: $e', name: 'NotificationPolling', error: e);
     }
   }
 
   /// Reset shown notifications (call on app restart)
   void resetShownNotifications() {
     _shownNotificationIds.clear();
-    print('🔄 Reset shown notifications');
+    developer.log('🔄 Reset shown notifications', name: 'NotificationPolling');
   }
 
   /// Dispose the service

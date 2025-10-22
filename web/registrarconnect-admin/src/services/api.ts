@@ -214,15 +214,22 @@ export const apiService = {
   createDocumentRequest: (data: any) =>
     api.post("/document-requests/", data),
 
-  // Student Profile
+  // User Profile (works for all roles)
+  getUserProfile: () =>
+    api.get("/auth/me/"),
+
+  updateProfile: (data: any) =>
+    api.patch("/auth/me/update/", data),
+
+  changePassword: (data: { current_password: string; new_password: string; confirm_password?: string }) =>
+    api.post("/auth/change-password/", data),
+  
+  // Backwards compatibility aliases
   getStudentProfile: () =>
     api.get("/auth/me/"),
 
   updateStudentProfile: (data: any) =>
-    api.patch("/auth/me/", data),
-
-  changePassword: (data: { current_password: string; new_password: string; confirm_password: string }) =>
-    api.post("/auth/change-password/", data),
+    api.patch("/auth/me/update/", data),
 
   // ============================================
   // REGISTRAR ENDPOINTS
@@ -311,6 +318,102 @@ export const apiService = {
       api.get(`/document-requests/finance/export/?format=${format}`, {
         responseType: 'blob'
       }),
+  },
+
+  // ============================================
+  // FACULTY ENDPOINTS
+  // ============================================
+  
+  faculty: {
+    // Dashboard stats
+    getDashboardStats: () =>
+      api.get("/appointments/faculty/stats/"),
+    
+    // Get faculty appointments (filtered by faculty user)
+    getAppointments: (params?: { status?: string; date?: string }) =>
+      api.get("/appointments/", { params }),
+    
+    // Update appointment status
+    updateAppointmentStatus: (id: number, data: { status: string }) =>
+      api.patch(`/appointments/${id}/status/`, data),
+    
+    // Get students advised by this faculty member
+    getStudents: () =>
+      api.get("/appointments/faculty/students/"),
+    
+    // Get faculty reports
+    getReports: (params?: { date_range?: string }) =>
+      api.get("/appointments/faculty/reports/", { params }),
+    
+    // Get faculty notifications
+    getNotifications: () =>
+      api.get("/appointments/faculty/notifications/"),
+  },
+
+  // ============================================
+  // ADMIN ENDPOINTS
+  // ============================================
+  
+  admin: {
+    // Dashboard statistics
+    getDashboardStats: () =>
+      api.get("/auth/admin/stats/"),
+    
+    // User management
+    getUsers: (params?: { role?: string; status?: string; search?: string }) =>
+      api.get("/auth/admin/users/", { params }),
+    
+    getUserDetail: (id: number) =>
+      api.get(`/auth/admin/users/${id}/`),
+    
+    createUser: (data: {
+      username: string;
+      email: string;
+      password: string;
+      first_name: string;
+      last_name: string;
+      role: string;
+    }) =>
+      api.post("/auth/admin/users/create/", data),
+    
+    updateUser: (id: number, data: {
+      first_name?: string;
+      last_name?: string;
+      email?: string;
+      role?: string;
+      is_active?: boolean;
+      password?: string;
+    }) =>
+      api.patch(`/auth/admin/users/${id}/update/`, data),
+    
+    deleteUser: (id: number) =>
+      api.delete(`/auth/admin/users/${id}/delete/`),
+    
+    // Activity logs
+    getActivityLogs: (params?: { limit?: number; action_type?: string }) =>
+      api.get("/auth/admin/logs/", { params }),
+    
+    // System reports
+    getSystemReports: () =>
+      api.get("/auth/admin/reports/"),
+    
+    // Access all document requests (admin can see everything)
+    getAllRequests: (params?: { status?: string; document_type?: string; search?: string }) =>
+      api.get("/document-requests/", { params }),
+    
+    // Access all appointments (admin can see everything)
+    getAllAppointments: (params?: { status?: string; date?: string }) =>
+      api.get("/appointments/", { params }),
+    
+    // System settings
+    getSettings: () =>
+      api.get("/auth/admin/settings/"),
+    
+    updateSettings: (settings: any) =>
+      api.post("/auth/admin/settings/update/", settings),
+    
+    resetSettings: () =>
+      api.post("/auth/admin/settings/reset/"),
   },
 };
 

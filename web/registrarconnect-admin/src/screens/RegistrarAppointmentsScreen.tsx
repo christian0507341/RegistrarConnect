@@ -50,7 +50,7 @@ export default function RegistrarAppointmentsScreen() {
       const fetchedAppointments = response.data.map((apt: any) => ({
         id: apt.id.toString(),
         studentName: apt.student_name || 'Unknown Student',
-        studentId: apt.student_id?.toString() || 'N/A',
+        studentId: apt.student_id || 'N/A', // Now returns actual student ID number from backend
         documentType: apt.document_type || 'N/A',
         scheduledDate: apt.date || apt.scheduled_date,
         scheduledTime: apt.start_time || apt.scheduled_time,

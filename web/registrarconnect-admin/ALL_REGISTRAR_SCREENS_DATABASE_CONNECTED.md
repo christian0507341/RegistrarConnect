@@ -424,3 +424,6 @@ SELECT COUNT(*) FROM appointments WHERE date=CURRENT_DATE AND status='scheduled'
 
 No more mock data! Everything is live! 🚀
 
+
+
+

@@ -259,3 +259,6 @@ Approved payments now **stay approved** and don't reappear on refresh!
 
 The verification screen only shows **truly pending** payments that haven't been approved yet! 🎉
 
+
+
+

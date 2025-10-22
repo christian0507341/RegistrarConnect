@@ -13,8 +13,10 @@ import {
   ArrowDown,
   Activity,
   Database,
-  Settings
+  Settings,
+  RefreshCw
 } from 'lucide-react';
+import { apiService } from '../services/api';
 
 interface SystemStats {
   totalUsers: number;
@@ -23,23 +25,72 @@ interface SystemStats {
   activeUsers: number;
   pendingRequests: number;
   todayAppointments: number;
+  newUsersThisWeek?: number;
 }
 
 export default function AdminDedicatedDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState<SystemStats>({
-    totalUsers: 1247,
-    totalRequests: 856,
-    totalAppointments: 432,
-    activeUsers: 89,
-    pendingRequests: 34,
-    todayAppointments: 12
+    totalUsers: 0,
+    totalRequests: 0,
+    totalAppointments: 0,
+    activeUsers: 0,
+    pendingRequests: 0,
+    todayAppointments: 0,
+    newUsersThisWeek: 0
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
-    // Authentication is handled by the protected route in App.tsx
-    // TODO: Fetch real data from backend
+    fetchDashboardStats();
   }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.admin.getDashboardStats();
+      const data = response.data;
+      
+      setStats({
+        totalUsers: data.users.total,
+        totalRequests: data.requests.total,
+        totalAppointments: data.appointments.total,
+        activeUsers: data.users.active,
+        pendingRequests: data.requests.pending,
+        todayAppointments: data.appointments.today,
+        newUsersThisWeek: data.users.new_this_week
+      });
+      setLastUpdated(new Date());
+      setError(null);
+    } catch (err: any) {
+      console.error('Error fetching dashboard stats:', err);
+      setError('Failed to load dashboard statistics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchDashboardStats();
+    setRefreshing(false);
+  };
+
+  const formatLastUpdated = () => {
+    if (!lastUpdated) return 'Never';
+    const now = new Date();
+    const diff = now.getTime() - lastUpdated.getTime();
+    const minutes = Math.floor(diff / 60000);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    return lastUpdated.toLocaleDateString();
+  };
 
   const recentActivities = [
     { id: 1, action: "New user registered: John Doe", time: "2 mins ago", type: "user" },
@@ -55,142 +106,228 @@ export default function AdminDedicatedDashboard() {
     { name: "Email Service", status: "healthy", uptime: "99.5%", color: "green" },
   ];
 
+  if (loading) {
+    return (
+      <div className="admin-dedicated-dashboard">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-dedicated-dashboard">
+        <div className="error-state">
+          <AlertCircle size={48} />
+          <h2>{error}</h2>
+          <button onClick={fetchDashboardStats} className="retry-btn">Retry</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-dedicated-dashboard">
-      {/* Welcome Section */}
-      <div className="dashboard-welcome">
+      {/* Welcome Section - Enhanced */}
+      <div className="dashboard-welcome-modern">
         <div className="welcome-content">
-          <h1>Welcome back, {localStorage.getItem("name") || "Administrator"}!</h1>
+          <h1>Welcome back, {localStorage.getItem("name") || "Administrator"}! 👋</h1>
           <p>Here's your system overview and recent activities.</p>
+          {lastUpdated && (
+            <span className="last-updated-text">Last updated: {formatLastUpdated()}</span>
+          )}
         </div>
-        <div className="system-status">
-          <Activity size={20} />
-          <span>All Systems Operational</span>
+        <div className="welcome-actions">
+          <div className="system-status-badge">
+            <Activity size={18} />
+            <span>All Systems Operational</span>
+          </div>
+          <button 
+            onClick={handleRefresh} 
+            className="refresh-btn-modern"
+            disabled={refreshing}
+          >
+            <RefreshCw size={18} className={refreshing ? 'spinning' : ''} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
         </div>
       </div>
 
-      {/* Main Stats Grid */}
-      <div className="stats-grid">
-        <div className="stat-card purple">
-          <div className="stat-header">
-            <div className="stat-icon">
+      {/* Main Stats Grid - Modern */}
+      <div className="stats-grid-modern">
+        <div className="stat-card-dashboard purple">
+          <div className="stat-header-dashboard">
+            <div className="stat-icon-dashboard">
               <Users size={28} />
             </div>
-            <div className="stat-trend up">
-              <ArrowUp size={16} />
+            <div className="stat-trend-dashboard positive">
+              <ArrowUp size={14} />
               <span>12%</span>
             </div>
           </div>
-          <div className="stat-content">
+          <div className="stat-content-dashboard">
             <h3>Total Users</h3>
-            <p className="stat-value">{stats.totalUsers}</p>
-            <span className="stat-label">{stats.activeUsers} active now</span>
+            <p className="stat-value-dashboard">{stats.totalUsers.toLocaleString()}</p>
+            <span className="stat-label-dashboard">
+              <span className="stat-highlight">{stats.activeUsers}</span> active now
+            </span>
+          </div>
+          <div className="stat-footer-dashboard">
+            <div className="stat-progress-bar">
+              <div className="stat-progress-fill purple" style={{ width: '75%' }}></div>
+            </div>
           </div>
         </div>
 
-        <div className="stat-card blue">
-          <div className="stat-header">
-            <div className="stat-icon">
+        <div className="stat-card-dashboard blue">
+          <div className="stat-header-dashboard">
+            <div className="stat-icon-dashboard">
               <FileText size={28} />
             </div>
-            <div className="stat-trend up">
-              <ArrowUp size={16} />
+            <div className="stat-trend-dashboard positive">
+              <ArrowUp size={14} />
               <span>8%</span>
             </div>
           </div>
-          <div className="stat-content">
+          <div className="stat-content-dashboard">
             <h3>Document Requests</h3>
-            <p className="stat-value">{stats.totalRequests}</p>
-            <span className="stat-label">{stats.pendingRequests} pending</span>
+            <p className="stat-value-dashboard">{stats.totalRequests.toLocaleString()}</p>
+            <span className="stat-label-dashboard">
+              <span className="stat-highlight">{stats.pendingRequests}</span> pending
+            </span>
+          </div>
+          <div className="stat-footer-dashboard">
+            <div className="stat-progress-bar">
+              <div className="stat-progress-fill blue" style={{ width: '60%' }}></div>
+            </div>
           </div>
         </div>
 
-        <div className="stat-card green">
-          <div className="stat-header">
-            <div className="stat-icon">
+        <div className="stat-card-dashboard green">
+          <div className="stat-header-dashboard">
+            <div className="stat-icon-dashboard">
               <Calendar size={28} />
             </div>
-            <div className="stat-trend up">
-              <ArrowUp size={16} />
+            <div className="stat-trend-dashboard positive">
+              <ArrowUp size={14} />
               <span>15%</span>
             </div>
           </div>
-          <div className="stat-content">
+          <div className="stat-content-dashboard">
             <h3>Appointments</h3>
-            <p className="stat-value">{stats.totalAppointments}</p>
-            <span className="stat-label">{stats.todayAppointments} today</span>
+            <p className="stat-value-dashboard">{stats.totalAppointments.toLocaleString()}</p>
+            <span className="stat-label-dashboard">
+              <span className="stat-highlight">{stats.todayAppointments}</span> today
+            </span>
+          </div>
+          <div className="stat-footer-dashboard">
+            <div className="stat-progress-bar">
+              <div className="stat-progress-fill green" style={{ width: '85%' }}></div>
+            </div>
           </div>
         </div>
 
-        <div className="stat-card orange">
-          <div className="stat-header">
-            <div className="stat-icon">
+        <div className="stat-card-dashboard orange">
+          <div className="stat-header-dashboard">
+            <div className="stat-icon-dashboard">
               <TrendingUp size={28} />
             </div>
-            <div className="stat-trend down">
-              <ArrowDown size={16} />
+            <div className="stat-trend-dashboard negative">
+              <ArrowDown size={14} />
               <span>3%</span>
             </div>
           </div>
-          <div className="stat-content">
+          <div className="stat-content-dashboard">
             <h3>System Load</h3>
-            <p className="stat-value">67%</p>
-            <span className="stat-label">Average this week</span>
+            <p className="stat-value-dashboard">67%</p>
+            <span className="stat-label-dashboard">Average this week</span>
+          </div>
+          <div className="stat-footer-dashboard">
+            <div className="stat-progress-bar">
+              <div className="stat-progress-fill orange" style={{ width: '67%' }}></div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Two Column Layout */}
-      <div className="dashboard-grid">
-        {/* Recent Activities */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <h2>Recent Activities</h2>
-            <button onClick={() => navigate('/admin/logs')} className="view-all-btn">
-              View All
+      {/* Two Column Layout - Modern */}
+      <div className="dashboard-grid-modern">
+        {/* Recent Activities - Enhanced */}
+        <div className="dashboard-card-modern">
+          <div className="card-header-modern">
+            <div className="card-title-wrapper">
+              <Activity size={20} className="card-icon" />
+              <div>
+                <h2>Recent Activities</h2>
+                <span className="card-subtitle">Latest system events</span>
+              </div>
+            </div>
+            <button onClick={() => navigate('/admin/logs')} className="view-all-btn-modern">
+              View All →
             </button>
           </div>
-          <div className="activities-list">
+          <div className="activities-list-modern">
             {recentActivities.map((activity) => (
-              <div key={activity.id} className="activity-item">
-                <div className={`activity-icon ${activity.type}`}>
-                  {activity.type === 'user' && <Users size={16} />}
-                  {activity.type === 'request' && <FileText size={16} />}
-                  {activity.type === 'appointment' && <Calendar size={16} />}
-                  {activity.type === 'system' && <Activity size={16} />}
+              <div key={activity.id} className="activity-item-modern">
+                <div className={`activity-icon-modern ${activity.type}`}>
+                  {activity.type === 'user' && <Users size={18} />}
+                  {activity.type === 'request' && <FileText size={18} />}
+                  {activity.type === 'appointment' && <Calendar size={18} />}
+                  {activity.type === 'system' && <Activity size={18} />}
                 </div>
-                <div className="activity-content">
-                  <p>{activity.action}</p>
-                  <span className="activity-time">{activity.time}</span>
+                <div className="activity-content-modern">
+                  <p className="activity-text">{activity.action}</p>
+                  <span className="activity-time-modern">
+                    <Clock size={12} />
+                    {activity.time}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* System Health */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <h2>System Health</h2>
-            <button onClick={() => navigate('/admin/settings')} className="view-all-btn">
-              Settings
+        {/* System Health - Enhanced */}
+        <div className="dashboard-card-modern">
+          <div className="card-header-modern">
+            <div className="card-title-wrapper">
+              <Database size={20} className="card-icon" />
+              <div>
+                <h2>System Health</h2>
+                <span className="card-subtitle">Service status & uptime</span>
+              </div>
+            </div>
+            <button onClick={() => navigate('/admin/settings')} className="view-all-btn-modern">
+              Settings →
             </button>
           </div>
-          <div className="health-list">
+          <div className="health-list-modern">
             {systemHealth.map((system, index) => (
-              <div key={index} className="health-item">
-                <div className="health-info">
-                  <Database size={20} />
-                  <div>
+              <div key={index} className="health-item-modern">
+                <div className="health-info-modern">
+                  <div className={`health-icon-wrapper ${system.color}`}>
+                    <Database size={18} />
+                  </div>
+                  <div className="health-details">
                     <h4>{system.name}</h4>
-                    <p>Uptime: {system.uptime}</p>
+                    <div className="health-uptime">
+                      <div className="uptime-bar">
+                        <div 
+                          className={`uptime-fill ${system.color}`}
+                          style={{ width: system.uptime }}
+                        ></div>
+                      </div>
+                      <span className="uptime-text">{system.uptime} uptime</span>
+                    </div>
                   </div>
                 </div>
-                <div className={`health-status ${system.color}`}>
+                <div className={`health-status-modern ${system.color}`}>
                   {system.color === 'green' && <CheckCircle size={20} />}
                   {system.color === 'orange' && <AlertCircle size={20} />}
                   {system.color === 'red' && <XCircle size={20} />}
-                  <span>{system.status}</span>
                 </div>
               </div>
             ))}
@@ -198,29 +335,52 @@ export default function AdminDedicatedDashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="quick-actions">
-        <h2>Quick Actions</h2>
-        <div className="actions-grid">
-          <button onClick={() => navigate('/admin/users')} className="action-card">
-            <Users size={32} />
-            <h3>Manage Users</h3>
-            <p>Add, edit, or remove users</p>
+      {/* Quick Actions - Modern */}
+      <div className="quick-actions-modern">
+        <div className="quick-actions-header">
+          <h2>Quick Actions</h2>
+          <p>Common administrative tasks</p>
+        </div>
+        <div className="actions-grid-modern">
+          <button onClick={() => navigate('/admin/users')} className="action-card-modern purple">
+            <div className="action-card-icon">
+              <Users size={32} />
+            </div>
+            <div className="action-card-content">
+              <h3>Manage Users</h3>
+              <p>Add, edit, or remove users from the system</p>
+            </div>
+            <div className="action-card-arrow">→</div>
           </button>
-          <button onClick={() => navigate('/admin/requests')} className="action-card">
-            <FileText size={32} />
-            <h3>Process Requests</h3>
-            <p>Handle pending requests</p>
+          <button onClick={() => navigate('/admin/requests')} className="action-card-modern blue">
+            <div className="action-card-icon">
+              <FileText size={32} />
+            </div>
+            <div className="action-card-content">
+              <h3>Process Requests</h3>
+              <p>Handle pending document requests</p>
+            </div>
+            <div className="action-card-arrow">→</div>
           </button>
-          <button onClick={() => navigate('/admin/reports')} className="action-card">
-            <TrendingUp size={32} />
-            <h3>View Reports</h3>
-            <p>System analytics & insights</p>
+          <button onClick={() => navigate('/admin/reports')} className="action-card-modern green">
+            <div className="action-card-icon">
+              <TrendingUp size={32} />
+            </div>
+            <div className="action-card-content">
+              <h3>View Reports</h3>
+              <p>System analytics and insights</p>
+            </div>
+            <div className="action-card-arrow">→</div>
           </button>
-          <button onClick={() => navigate('/admin/settings')} className="action-card">
-            <Settings size={32} />
-            <h3>System Settings</h3>
-            <p>Configure system parameters</p>
+          <button onClick={() => navigate('/admin/settings')} className="action-card-modern orange">
+            <div className="action-card-icon">
+              <Settings size={32} />
+            </div>
+            <div className="action-card-content">
+              <h3>System Settings</h3>
+              <p>Configure system parameters</p>
+            </div>
+            <div className="action-card-arrow">→</div>
           </button>
         </div>
       </div>

@@ -302,3 +302,6 @@ The `/api/appointments/schedule/` endpoint is now fully implemented!
 
 **Next:** Run `python manage.py makemigrations appointments` and `python manage.py migrate`! 🎉
 
+
+
+

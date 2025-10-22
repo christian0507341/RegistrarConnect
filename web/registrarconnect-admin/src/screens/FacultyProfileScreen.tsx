@@ -15,6 +15,9 @@ import {
   EyeOff,
   Shield
 } from 'lucide-react';
+import { apiService } from '../services/api';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from '../components/ToastContainer';
 
 interface Profile {
   name: string;
@@ -29,6 +32,7 @@ interface Profile {
 
 export default function FacultyProfileScreen() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [profile, setProfile] = useState<Profile>({
@@ -63,10 +67,30 @@ export default function FacultyProfileScreen() {
     setEditForm(profile);
   };
 
-  const handleSave = () => {
-    setProfile(editForm);
-    setIsEditing(false);
-    // TODO: Save to backend
+  const handleSave = async () => {
+    try {
+      // Split name into first_name and last_name
+      const nameParts = editForm.name.trim().split(' ');
+      const first_name = nameParts[0] || '';
+      const last_name = nameParts.slice(1).join(' ') || '';
+      
+      await apiService.updateProfile({
+        first_name,
+        last_name,
+        email: editForm.email,
+        phone: editForm.phone
+      });
+      
+      setProfile(editForm);
+      localStorage.setItem('name', editForm.name);
+      localStorage.setItem('email', editForm.email);
+      setIsEditing(false);
+      toast.success('Profile updated successfully!');
+    } catch (error: any) {
+      console.error('Error saving profile:', error);
+      const errorMessage = error.response?.data?.error || 'Failed to update profile';
+      toast.error(errorMessage);
+    }
   };
 
   const handleCancel = () => {
@@ -74,19 +98,37 @@ export default function FacultyProfileScreen() {
     setEditForm(profile);
   };
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
     if (passwordForm.new !== passwordForm.confirm) {
-      alert('Passwords do not match!');
+      toast.error('Passwords do not match!');
       return;
     }
-    // TODO: Call backend API
-    alert('Password changed successfully!');
-    setPasswordForm({ current: '', new: '', confirm: '' });
-    setShowPasswordForm(false);
+    
+    if (passwordForm.new.length < 8) {
+      toast.error('Password must be at least 8 characters long');
+      return;
+    }
+    
+    try {
+      await apiService.changePassword({
+        current_password: passwordForm.current,
+        new_password: passwordForm.new,
+        confirm_password: passwordForm.confirm
+      });
+      
+      toast.success('Password changed successfully!');
+      setPasswordForm({ current: '', new: '', confirm: '' });
+      setShowPasswordForm(false);
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      const errorMessage = error.response?.data?.error || 'Failed to change password';
+      toast.error(errorMessage);
+    }
   };
 
   return (
     <div className="faculty-profile-screen">
+      <ToastContainer toasts={toast.toasts} onClose={toast.removeToast} />
       <div className="profile-header">
         <div className="profile-avatar-large">
           {profile.name.charAt(0).toUpperCase()}

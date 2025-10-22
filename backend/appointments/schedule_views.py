@@ -91,3 +91,6 @@ def time_slot_detail(request, pk):
             status=status.HTTP_204_NO_CONTENT
         )
 
+
+
+

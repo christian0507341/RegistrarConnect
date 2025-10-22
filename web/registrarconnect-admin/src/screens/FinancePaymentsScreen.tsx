@@ -23,6 +23,17 @@ export default function FinancePaymentsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
+  // Document pricing based on type
+  const getDocumentPrice = (documentType: string): number => {
+    const pricing: Record<string, number> = {
+      'OTR': 150, // Official Transcript of Records
+      'COG': 100, // Certificate of Grades
+      'COE': 50,  // Certificate of Enrollment
+      'OTHERS': 75 // Other Certifications
+    };
+    return pricing[documentType] || 0;
+  };
+
   useEffect(() => {
     fetchPayments();
     
@@ -50,14 +61,14 @@ export default function FinancePaymentsScreen() {
       const fetchedPayments = response.data.map((payment: any) => ({
         id: payment.id.toString(),
         studentName: payment.student_name || 'Unknown Student',
-        studentId: payment.student_id?.toString() || 'N/A',
+        studentId: payment.student_id_number || payment.student_id?.toString() || 'N/A',
         requestId: payment.id.toString(),
         documentType: payment.document_type,
-        amount: payment.payment_amount || 0,
+        amount: getDocumentPrice(payment.document_type), // Calculate price based on document type
         paymentMethod: payment.payment_method || 'N/A',
-        status: payment.payment_status || 'pending',
+        status: payment.payment_approved ? 'approved' : 'pending', // Use payment_approved from serializer
         dateSubmitted: payment.requested_at || payment.created_at,
-        proofImage: payment.receipt_path || 'no-receipt.jpg'
+        proofImage: payment.receipt_image || 'no-receipt.jpg' // Use receipt_image not receipt_path
       }));
       
       setPayments(fetchedPayments);

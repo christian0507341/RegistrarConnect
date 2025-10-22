@@ -94,3 +94,43 @@ class LoginSerializer(serializers.Serializer):
         attrs["role_out"] = user.role
         attrs["name"] = f"{user.first_name} {user.last_name}".strip() or user.email
         return attrs
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer for User model - used by admin endpoints"""
+    full_name = serializers.SerializerMethodField()
+    last_active = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name', 'role',
+            'is_active', 'date_joined', 'last_login', 'full_name', 'last_active'
+        ]
+        read_only_fields = ['id', 'date_joined', 'last_login', 'full_name', 'last_active']
+    
+    def get_full_name(self, obj):
+        return f"{obj.first_name} {obj.last_name}".strip() or obj.username
+    
+    def get_last_active(self, obj):
+        if obj.last_login:
+            from django.utils import timezone
+            from datetime import timedelta
+            
+            now = timezone.now()
+            diff = now - obj.last_login
+            
+            if diff < timedelta(minutes=5):
+                return "Just now"
+            elif diff < timedelta(hours=1):
+                minutes = int(diff.total_seconds() / 60)
+                return f"{minutes} min{'s' if minutes > 1 else ''} ago"
+            elif diff < timedelta(days=1):
+                hours = int(diff.total_seconds() / 3600)
+                return f"{hours} hour{'s' if hours > 1 else ''} ago"
+            elif diff < timedelta(days=7):
+                days = diff.days
+                return f"{days} day{'s' if days > 1 else ''} ago"
+            else:
+                return obj.last_login.strftime("%b %d, %Y")
+        return "Never"

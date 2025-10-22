@@ -70,6 +70,9 @@ class DocumentRequestSerializer(serializers.ModelSerializer):
     document_approved = serializers.SerializerMethodField()
     current_status = serializers.SerializerMethodField()
     last_updated = serializers.SerializerMethodField()
+    # Student information
+    student_name = serializers.CharField(source='student_id.get_full_name', read_only=True)
+    student_id_number = serializers.CharField(source='student_id.student_id', read_only=True)
 
     class Meta:
         model = DocumentRequest
@@ -85,6 +88,8 @@ class DocumentRequestSerializer(serializers.ModelSerializer):
             'document_approved',
             'current_status',
             'last_updated',
+            'student_name',
+            'student_id_number',
         ]
 
     def get_payment_approved(self, obj):

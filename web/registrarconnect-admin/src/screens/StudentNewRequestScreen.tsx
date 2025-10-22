@@ -114,19 +114,29 @@ export default function StudentNewRequestScreen() {
     setError(null);
 
     try {
-      const requestData = {
-        document_type: formData.document_type,
-        purpose: formData.purpose.trim(),
-        notes: formData.notes.trim(),
-        payment_method: formData.payment_method,
-        // Add semester and school_year if needed for COG/COE
-        ...(formData.document_type === 'COG' || formData.document_type === 'COE' ? {
-          semester: formData.semester,
-          school_year: formData.school_year
-        } : {})
-      };
+      // Create FormData for file upload
+      const formDataToSend = new window.FormData();
+      formDataToSend.append('document_type', formData.document_type);
+      formDataToSend.append('purpose', formData.purpose.trim());
+      formDataToSend.append('notes', formData.notes.trim());
+      formDataToSend.append('payment_method', formData.payment_method);
+      
+      // Add semester and school_year if needed for COG/COE
+      if (formData.document_type === 'COG' || formData.document_type === 'COE') {
+        if (formData.semester) {
+          formDataToSend.append('semester', formData.semester.toString());
+        }
+        if (formData.school_year) {
+          formDataToSend.append('school_year', formData.school_year);
+        }
+      }
+      
+      // Add receipt image if uploaded
+      if (uploadedFile) {
+        formDataToSend.append('receipt_image', uploadedFile);
+      }
 
-      await apiService.createDocumentRequest(requestData);
+      await apiService.createDocumentRequest(formDataToSend);
       
       setSuccess(true);
       setFormData({
@@ -142,9 +152,10 @@ export default function StudentNewRequestScreen() {
       // Reset success message after 5 seconds
       setTimeout(() => setSuccess(false), 5000);
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating document request:', err);
-      setError('Failed to submit request. Please try again.');
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to submit request. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

@@ -2,6 +2,16 @@ import { useState, useEffect } from 'react';
 import { BarChart, Download, Calendar, DollarSign, TrendingUp, FileText } from 'lucide-react';
 import { apiService } from '../services/api';
 
+interface DocumentTypeBreakdown {
+  document_type: string;
+  count: number;
+}
+
+interface PaymentMethodBreakdown {
+  payment_method: string;
+  count: number;
+}
+
 export default function FinanceReportsScreen() {
   const [dateRange, setDateRange] = useState('month');
   const [reportType, setReportType] = useState('revenue');
@@ -11,7 +21,30 @@ export default function FinanceReportsScreen() {
     averagePayment: 0,
     pendingPayments: 0
   });
+  const [documentTypeData, setDocumentTypeData] = useState<DocumentTypeBreakdown[]>([]);
+  const [paymentMethodData, setPaymentMethodData] = useState<PaymentMethodBreakdown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Document pricing
+  const getDocumentPrice = (documentType: string): number => {
+    const pricing: Record<string, number> = {
+      'OTR': 150, // Official Transcript of Records
+      'COG': 100, // Certificate of Grades
+      'COE': 50,  // Certificate of Enrollment
+      'OTHERS': 75 // Other Certifications
+    };
+    return pricing[documentType] || 0;
+  };
+
+  const getDocumentDisplayName = (code: string): string => {
+    const names: Record<string, string> = {
+      'OTR': 'Official Transcript of Records',
+      'COG': 'Certificate of Grades',
+      'COE': 'Certificate of Enrollment',
+      'OTHERS': 'Other Certifications'
+    };
+    return names[code] || code;
+  };
 
   useEffect(() => {
     fetchReports();
@@ -27,17 +60,37 @@ export default function FinanceReportsScreen() {
   const fetchReports = async () => {
     setIsLoading(true);
     try {
-      const response = await apiService.finance.getReports({
+      // Fetch reports data
+      const reportsResponse = await apiService.finance.getReports({
         date_range: dateRange,
         report_type: reportType
       });
+
+      // Fetch dashboard stats for pending count
+      const statsResponse = await apiService.finance.getDashboardStats();
+      
+      // Process document type data
+      const docTypeData = reportsResponse.data.by_document_type || [];
+      setDocumentTypeData(docTypeData);
+      
+      // Process payment method data
+      const paymentData = reportsResponse.data.by_payment_method || [];
+      setPaymentMethodData(paymentData);
+      
+      // Calculate total revenue and payments processed
+      const totalProcessed = docTypeData.reduce((sum: number, item: DocumentTypeBreakdown) => 
+        sum + item.count, 0);
+      
+      const totalRevenue = docTypeData.reduce((sum: number, item: DocumentTypeBreakdown) => 
+        sum + (item.count * getDocumentPrice(item.document_type)), 0);
+      
+      const avgPayment = totalProcessed > 0 ? totalRevenue / totalProcessed : 0;
       
       setStats({
-        totalRevenue: response.data.total_revenue || 0,
-        paymentsProcessed: response.data.total_approved_payments || 0,
-        averagePayment: response.data.total_approved_payments ? 
-          (response.data.total_revenue / response.data.total_approved_payments) : 0,
-        pendingPayments: response.data.pending_payments || 0
+        totalRevenue: totalRevenue,
+        paymentsProcessed: totalProcessed,
+        averagePayment: avgPayment,
+        pendingPayments: statsResponse.data.pending_verifications || 0
       });
     } catch (error) {
       console.error('Error fetching reports:', error);
@@ -46,18 +99,19 @@ export default function FinanceReportsScreen() {
     }
   };
 
-  const handleExport = async (format: string) => {
+  const handleExport = async (format: 'csv' | 'excel') => {
     try {
-      const response = await apiService.finance.exportPayments(format.toLowerCase() as 'csv' | 'excel');
+      const response = await apiService.finance.exportPayments(format);
       // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `finance-report.${format.toLowerCase()}`);
+      const extension = format === 'excel' ? 'xlsx' : 'csv';
+      link.setAttribute('download', `finance-report-${new Date().toISOString().split('T')[0]}.${extension}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
-      alert(`Report exported as ${format}`);
+      alert(`Report exported as ${format.toUpperCase()}`);
     } catch (error) {
       console.error('Error exporting report:', error);
       alert('Failed to export report');
@@ -72,13 +126,13 @@ export default function FinanceReportsScreen() {
           <p>View payment analytics and generate reports</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={() => handleExport('CSV')}>
+          <button className="btn-secondary" onClick={() => handleExport('csv')}>
             <Download size={18} />
             Export CSV
           </button>
-          <button className="btn-primary" onClick={() => handleExport('PDF')}>
+          <button className="btn-primary" onClick={() => handleExport('excel')}>
             <Download size={18} />
-            Export PDF
+            Export Excel
           </button>
         </div>
       </div>
@@ -155,36 +209,35 @@ export default function FinanceReportsScreen() {
             <h2>Payment Breakdown by Document Type</h2>
           </div>
           <div className="report-body">
-            <div className="breakdown-list">
-              <div className="breakdown-item">
-                <span className="item-label">Certificate of Grades</span>
-                <div className="item-bar">
-                  <div className="bar-fill" style={{ width: '60%' }}></div>
-                </div>
-                <span className="item-value">₱18,000</span>
+            {isLoading ? (
+              <div className="loading-state">
+                <div className="spinner"></div>
+                <p>Loading data...</p>
               </div>
-              <div className="breakdown-item">
-                <span className="item-label">Transcript of Records</span>
-                <div className="item-bar">
-                  <div className="bar-fill" style={{ width: '30%' }}></div>
-                </div>
-                <span className="item-value">₱13,500</span>
+            ) : documentTypeData.length === 0 ? (
+              <p className="no-data">No data available</p>
+            ) : (
+              <div className="breakdown-list">
+                {documentTypeData.map((item, index) => {
+                  const revenue = item.count * getDocumentPrice(item.document_type);
+                  const maxCount = Math.max(...documentTypeData.map(d => d.count));
+                  const widthPercent = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
+                  
+                  return (
+                    <div key={index} className="breakdown-item">
+                      <span className="item-label">
+                        {getDocumentDisplayName(item.document_type)}
+                        <span className="item-count"> ({item.count} requests)</span>
+                      </span>
+                      <div className="item-bar">
+                        <div className="bar-fill" style={{ width: `${widthPercent}%` }}></div>
+                      </div>
+                      <span className="item-value">₱{revenue.toLocaleString()}</span>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="breakdown-item">
-                <span className="item-label">Certificate of Enrollment</span>
-                <div className="item-bar">
-                  <div className="bar-fill" style={{ width: '10%' }}></div>
-                </div>
-                <span className="item-value">₱8,000</span>
-              </div>
-              <div className="breakdown-item">
-                <span className="item-label">Diploma</span>
-                <div className="item-bar">
-                  <div className="bar-fill" style={{ width: '15%' }}></div>
-                </div>
-                <span className="item-value">₱5,500</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -193,29 +246,39 @@ export default function FinanceReportsScreen() {
             <h2>Payment Methods Distribution</h2>
           </div>
           <div className="report-body">
-            <div className="breakdown-list">
-              <div className="breakdown-item">
-                <span className="item-label">GCash</span>
-                <div className="item-bar">
-                  <div className="bar-fill" style={{ width: '45%' }}></div>
-                </div>
-                <span className="item-value">45%</span>
+            {isLoading ? (
+              <div className="loading-state">
+                <div className="spinner"></div>
+                <p>Loading data...</p>
               </div>
-              <div className="breakdown-item">
-                <span className="item-label">Bank Transfer</span>
-                <div className="item-bar">
-                  <div className="bar-fill" style={{ width: '30%' }}></div>
-                </div>
-                <span className="item-value">30%</span>
+            ) : paymentMethodData.length === 0 ? (
+              <p className="no-data">No data available</p>
+            ) : (
+              <div className="breakdown-list">
+                {(() => {
+                  const totalCount = paymentMethodData.reduce((sum, item) => sum + item.count, 0);
+                  return paymentMethodData.map((item, index) => {
+                    const percentage = totalCount > 0 ? (item.count / totalCount) * 100 : 0;
+                    const methodName = item.payment_method === 'gcash' ? 'GCash' : 
+                                       item.payment_method === 'personal' ? 'Personal (Finance)' : 
+                                       item.payment_method || 'Not specified';
+                    
+                    return (
+                      <div key={index} className="breakdown-item">
+                        <span className="item-label">
+                          {methodName}
+                          <span className="item-count"> ({item.count} payments)</span>
+                        </span>
+                        <div className="item-bar">
+                          <div className="bar-fill" style={{ width: `${percentage}%` }}></div>
+                        </div>
+                        <span className="item-value">{percentage.toFixed(1)}%</span>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
-              <div className="breakdown-item">
-                <span className="item-label">PayMaya</span>
-                <div className="item-bar">
-                  <div className="bar-fill" style={{ width: '25%' }}></div>
-                </div>
-                <span className="item-value">25%</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

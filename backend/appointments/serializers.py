@@ -29,7 +29,8 @@ class AppointmentSerializer(serializers.ModelSerializer):
         return f"{obj.student.first_name} {obj.student.last_name}".strip() or obj.student.email
     
     def get_student_id(self, obj):
-        return obj.student.id
+        # Return the actual student ID number, not the database ID
+        return getattr(obj.student, 'student_id', obj.student.id)
     
     def get_faculty_name(self, obj):
         if obj.faculty:

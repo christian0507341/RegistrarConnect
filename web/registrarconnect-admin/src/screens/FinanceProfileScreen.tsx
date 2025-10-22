@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, Lock, Save, Eye, EyeOff } from 'lucide-react';
 import { apiService } from '../services/api';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from '../components/ToastContainer';
 
 export default function FinanceProfileScreen() {
+  const toast = useToast();
   const [profile, setProfile] = useState({
     name: '',
     email: '',
@@ -34,9 +37,15 @@ export default function FinanceProfileScreen() {
   const handleProfileUpdate = async () => {
     setIsSaving(true);
     try {
+      // Split name into first_name and last_name
+      const nameParts = profile.name.trim().split(' ');
+      const first_name = nameParts[0] || '';
+      const last_name = nameParts.slice(1).join(' ') || '';
+      
       // API call to update profile
       await apiService.updateProfile({
-        name: profile.name,
+        first_name,
+        last_name,
         email: profile.email
       });
       
@@ -44,11 +53,11 @@ export default function FinanceProfileScreen() {
       localStorage.setItem('name', profile.name);
       localStorage.setItem('email', profile.email);
       
-      alert('Profile updated successfully!');
+      toast.success('Profile updated successfully!');
     } catch (error: any) {
       console.error('Error updating profile:', error);
       const errorMessage = error.response?.data?.error || 'Failed to update profile';
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -56,12 +65,12 @@ export default function FinanceProfileScreen() {
 
   const handlePasswordChange = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert('New passwords do not match!');
+      toast.error('New passwords do not match!');
       return;
     }
 
     if (passwordForm.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long');
+      toast.error('Password must be at least 8 characters long');
       return;
     }
 
@@ -70,10 +79,11 @@ export default function FinanceProfileScreen() {
       // API call to change password
       await apiService.changePassword({
         current_password: passwordForm.currentPassword,
-        new_password: passwordForm.newPassword
+        new_password: passwordForm.newPassword,
+        confirm_password: passwordForm.confirmPassword
       });
       
-      alert('Password changed successfully!');
+      toast.success('Password changed successfully!');
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
@@ -82,7 +92,7 @@ export default function FinanceProfileScreen() {
     } catch (error: any) {
       console.error('Error changing password:', error);
       const errorMessage = error.response?.data?.error || 'Failed to change password';
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -90,6 +100,7 @@ export default function FinanceProfileScreen() {
 
   return (
     <div className="finance-profile-screen">
+      <ToastContainer toasts={toast.toasts} onClose={toast.removeToast} />
       <div className="profile-header">
         <h1>Profile Settings</h1>
         <p>Manage your account information and security</p>

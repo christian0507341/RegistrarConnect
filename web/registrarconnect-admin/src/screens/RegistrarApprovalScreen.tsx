@@ -41,12 +41,12 @@ export default function RegistrarApprovalScreen() {
       const requests = response.data.map((req: any) => ({
         id: req.id.toString(),
         studentName: req.student_name || 'Unknown Student',
-        studentId: req.student_id?.toString() || 'N/A',
+        studentId: req.student_id_number || req.student_id?.toString() || 'N/A',
         documentType: req.document_type,
         purpose: req.purpose,
         copies: req.copies || 1,
         dateSubmitted: req.requested_at || req.created_at,
-        paymentProof: req.receipt_path || 'no-receipt.jpg'
+        paymentProof: req.receipt_image || 'no-receipt.jpg' // Use receipt_image not receipt_path
       }));
       setPendingRequests(requests);
     } catch (error) {

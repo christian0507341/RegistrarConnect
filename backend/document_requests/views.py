@@ -10,7 +10,7 @@ from .serializers import (
     DocumentRequestWebSerializer,
     ReceiptUploadSerializer,
 )
-from backend.common.permissions import IsFaculty
+from .permissions import IsFaculty, IsStaffRole
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -380,7 +380,7 @@ class DocumentRequestDetailView(generics.RetrieveUpdateAPIView):
 class DocumentRequestStatusUpdateView(generics.UpdateAPIView):
     queryset = DocumentRequest.objects.all().select_related('student_id', 'processed_by_id')
     serializer_class = DocumentRequestStatusSerializer
-    permission_classes = [IsAuthenticated, IsFaculty]
+    permission_classes = [IsAuthenticated, IsStaffRole]  # Allow faculty, registrar, finance, admin
     http_method_names = ['post', 'put', 'patch']
 
     def perform_update(self, serializer):
@@ -856,10 +856,11 @@ def clear_pending_notifications(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated, IsFaculty])
+@permission_classes([IsAuthenticated, IsStaffRole])
 def view_receipt(request, pk):
     """
-    Faculty endpoint to view receipt details for a document request.
+    Staff endpoint to view receipt details for a document request.
+    Accessible by faculty, registrar, finance, and admin.
     """
     try:
         doc = DocumentRequest.objects.get(pk=pk)
