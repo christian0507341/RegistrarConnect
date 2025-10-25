@@ -107,37 +107,43 @@ export default function RegistrarAppointmentsScreen() {
 
   const handleMarkAsClaimed = async (appointmentId: string) => {
     try {
-      // API call to mark as claimed
+      console.log('Marking as claimed:', appointmentId, 'Type:', typeof appointmentId);
+      // Use PATCH with status, matching API
       await apiService.registrar.markAsClaimed(parseInt(appointmentId));
-      
-      setAppointments(prev =>
-        prev.map(apt =>
-          apt.id === appointmentId ? { ...apt, status: 'claimed' } : apt
-        )
-      );
+      await fetchAppointments();
       alert('Appointment marked as claimed!');
     } catch (error: any) {
       console.error('Error updating appointment:', error);
-      const errorMessage = error.response?.data?.error || 'Failed to update appointment status';
-      alert(errorMessage);
+      let errorMessage = 'Failed to update appointment status';
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data) {
+        errorMessage = JSON.stringify(error.response.data);
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      alert(`Error: ${errorMessage}\nA server (500) error likely means a backend bug, invalid status, or missing data.\nCheck backend logs for the full traceback.`);
     }
   };
 
   const handleMarkAsNoShow = async (appointmentId: string) => {
     try {
-      // API call to mark as no-show
+      console.log('Marking as no-show:', appointmentId, 'Type:', typeof appointmentId);
+      // Use PATCH with status, matching API
       await apiService.registrar.markAsNoShow(parseInt(appointmentId));
-      
-      setAppointments(prev =>
-        prev.map(apt =>
-          apt.id === appointmentId ? { ...apt, status: 'no_show' } : apt
-        )
-      );
+      await fetchAppointments();
       alert('Appointment marked as no-show');
     } catch (error: any) {
       console.error('Error updating appointment:', error);
-      const errorMessage = error.response?.data?.error || 'Failed to update appointment status';
-      alert(errorMessage);
+      let errorMessage = 'Failed to update appointment status';
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data) {
+        errorMessage = JSON.stringify(error.response.data);
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      alert(`Error: ${errorMessage}\nA server (500) error likely means a backend bug, invalid status, or missing data.\nCheck backend logs for the full traceback.`);
     }
   };
 

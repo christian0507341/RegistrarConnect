@@ -12,4 +12,7 @@ abstract class IAuthRepository {
 
   /// Optional but useful if you ever call refresh outside the interceptor.
   Future<String> refresh();
+  
+  /// Get current user profile to verify session validity
+  Future<AuthUser> getCurrentUser();
 }

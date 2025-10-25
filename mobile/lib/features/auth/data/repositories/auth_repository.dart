@@ -62,4 +62,21 @@ class AuthRepository implements domain.IAuthRepository {
     await _storage.saveAccess(newAccess);
     return newAccess;
   }
+
+  @override
+  Future<AuthUser> getCurrentUser() async {
+    try {
+      final userProfile = await _api.getProfile();
+      return AuthUser(
+        role: userProfile.role,
+        name: userProfile.name,
+        email: userProfile.email,
+      );
+    } on DioException catch (e) {
+      final serverMsg = e.response?.data is Map<String, dynamic>
+          ? (e.response!.data['detail'] ?? e.message)
+          : e.message;
+      throw Exception(serverMsg ?? 'Failed to get user profile');
+    }
+  }
 }

@@ -27,7 +27,7 @@ class NotificationPollingService {
   }
 
   /// Start polling for new notifications every 30 seconds
-  void startPolling({Duration interval = const Duration(seconds: 5)}) {
+  void startPolling({Duration interval = const Duration(seconds: 30)}) {
     if (_isPolling) {
       return; // Already polling
     }

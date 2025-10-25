@@ -22,9 +22,33 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     CheckSession event,
     Emitter<AuthState> emit,
   ) async {
-    final has = await _repo.hasSession();
-    emit(has ? const AuthUnauthenticated() : const AuthUnauthenticated());
-    // (When you add a profile endpoint, you can emit AuthAuthenticated with cached user.)
+    try {
+      final hasSession = await _repo.hasSession();
+      if (hasSession) {
+        // Try to get user profile to verify the session is still valid
+        try {
+          final user = await _repo.getCurrentUser();
+          emit(AuthAuthenticated(user));
+        } catch (e) {
+          // If getting user profile fails, the session might be expired
+          // Try to refresh the token
+          try {
+            await _repo.refresh();
+            final user = await _repo.getCurrentUser();
+            emit(AuthAuthenticated(user));
+          } catch (refreshError) {
+            // If refresh also fails, clear the session and show login
+            await _repo.signOut();
+            emit(const AuthUnauthenticated());
+          }
+        }
+      } else {
+        emit(const AuthUnauthenticated());
+      }
+    } catch (e) {
+      // If any error occurs during session check, assume unauthenticated
+      emit(const AuthUnauthenticated());
+    }
   }
 
   Future<void> _onLoginRequested(

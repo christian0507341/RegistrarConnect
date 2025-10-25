@@ -23,4 +23,10 @@ class SecureStorageService {
 
   // Clear everything (or clear specific keys if you prefer)
   Future<void> clear() => _storage.deleteAll();
+  
+  // Clear only auth tokens (keep other data if needed)
+  Future<void> clearAuth() async {
+    await _storage.delete(key: _kAccessKey);
+    await _storage.delete(key: _kRefreshKey);
+  }
 }

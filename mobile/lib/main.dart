@@ -5,12 +5,14 @@ import 'package:dio/dio.dart';
 // Auth
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/auth/presentation/bloc/auth_event.dart';
+import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/data/repositories/auth_repository.dart' as data;
 import 'features/auth/data/sources/auth_api.dart';
 import 'core/services/secure_storage.dart';
 import 'core/services/notification_manager.dart';
-import 'core/services/notification_polling_service.dart';
+import 'core/services/notification_auth_service.dart';
 import 'features/auth/presentation/pages/register_page.dart';
 
 // Onboarding
@@ -66,15 +68,15 @@ void main() async {
   final notificationManager = NotificationManager();
   await notificationManager.initialize();
   
-  // Initialize and start notification polling service
-  final notificationPollingService = NotificationPollingService();
-  await notificationPollingService.initialize();
-  notificationPollingService.startPolling(interval: const Duration(seconds: 30));
+  // Initialize notification auth service
+  final notificationAuthService = NotificationAuthService();
+  await notificationAuthService.initialize();
 
   runApp(MyApp(
     authRepository: authRepository, 
     dioClient: dioClient,
     themeService: themeService,
+    notificationAuthService: notificationAuthService,
   ));
 }
 
@@ -82,19 +84,23 @@ class MyApp extends StatelessWidget {
   final IAuthRepository authRepository;
   final DioClient dioClient;
   final ThemeService themeService;
+  final NotificationAuthService notificationAuthService;
   
   const MyApp({
     super.key, 
     required this.authRepository, 
     required this.dioClient,
     required this.themeService,
+    required this.notificationAuthService,
   });
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<AuthBloc>(create: (_) => AuthBloc(repo: authRepository)),
+        BlocProvider<AuthBloc>(
+          create: (_) => AuthBloc(repo: authRepository)..add(const CheckSession()),
+        ),
         BlocProvider<AppointmentBloc>(
           create: (_) =>
               AppointmentBloc(repository: AppointmentRepositoryImpl(dioClient)),
@@ -111,11 +117,16 @@ class MyApp extends StatelessWidget {
           create: (_) => ThemeBloc(themeService: themeService)..loadTheme(),
         ),
       ],
-      child: BlocBuilder<ThemeBloc, ThemeState>(
-        builder: (context, themeState) {
-          final isDarkMode = themeState is ThemeLoadedState ? themeState.isDarkMode : false;
-          
-          return MaterialApp(
+      child: BlocListener<AuthBloc, AuthState>(
+        listener: (context, authState) {
+          // Handle notification polling based on authentication state
+          notificationAuthService.handleAuthStateChange(authState);
+        },
+        child: BlocBuilder<ThemeBloc, ThemeState>(
+          builder: (context, themeState) {
+            final isDarkMode = themeState is ThemeLoadedState ? themeState.isDarkMode : false;
+            
+            return MaterialApp(
             title: 'RegistrarConnect',
             theme: AppThemes.lightTheme,
             darkTheme: AppThemes.darkTheme,
@@ -134,55 +145,80 @@ class MyApp extends StatelessWidget {
             },
             initialRoute: '/',
             onGenerateRoute: (settings) {
-              late Widget page;
-              bool showFab = true;
-
-              switch (settings.name) {
-                case '/':
-                  page = const OnboardingScreen();
-                  showFab = false;
-                  break;
-                case '/login':
-                  page = const LoginPage();
-                  showFab = false;
-                  break;
-                case '/register':
-                  page = const RegisterPage();
-                  showFab = false;
-                  break;
-                case '/home':
-                  page = const HomeContainer();
-                  showFab =
-                      false; // 🔧 Turn off global FAB; HomePage has its own FAB
-                  break;
-                case '/settings':
-                  page = const SettingsPage();
-                  break;
-                case '/chat':
-                  page = const ChatPage();
-                  showFab = false;
-                  break;
-                case '/chat-history':
-                  page = const ChatHistoryPage();
-                  showFab = false;
-                  break;
-                case '/developer-settings':
-                  page = const DeveloperSettingsPage();
-                  showFab = false;
-                  break;
-                default:
-                  page = const Scaffold(
-                    body: Center(child: Text("Page not found")),
-                  );
-              }
-
               return MaterialPageRoute(
-                builder: (_) => GlobalFabWrapper(showFab: showFab, child: page),
+                builder: (context) {
+                  return BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, authState) {
+                      late Widget page;
+                      bool showFab = true;
+
+                      // Handle authentication routing
+                      if (authState is AuthAuthenticated) {
+                        // User is authenticated, show appropriate page
+                        switch (settings.name) {
+                          case '/':
+                          case '/home':
+                            page = const HomeContainer();
+                            showFab = false;
+                            break;
+                          case '/settings':
+                            page = const SettingsPage();
+                            break;
+                          case '/chat':
+                            page = const ChatPage();
+                            showFab = false;
+                            break;
+                          case '/chat-history':
+                            page = const ChatHistoryPage();
+                            showFab = false;
+                            break;
+                          case '/developer-settings':
+                            page = const DeveloperSettingsPage();
+                            showFab = false;
+                            break;
+                          default:
+                            page = const HomeContainer();
+                            showFab = false;
+                        }
+                      } else if (authState is AuthUnauthenticated) {
+                        // User is not authenticated, show login/onboarding
+                        switch (settings.name) {
+                          case '/':
+                            page = const OnboardingScreen();
+                            showFab = false;
+                            break;
+                          case '/login':
+                            page = const LoginPage();
+                            showFab = false;
+                            break;
+                          case '/register':
+                            page = const RegisterPage();
+                            showFab = false;
+                            break;
+                          default:
+                            page = const OnboardingScreen();
+                            showFab = false;
+                        }
+                      } else {
+                        // Loading state
+                        page = const Scaffold(
+                          body: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                        showFab = false;
+                      }
+
+                      return GlobalFabWrapper(showFab: showFab, child: page);
+                    },
+                  );
+                },
                 settings: settings,
               );
             },
           );
         },
+        ),
       ),
     );
   }

@@ -5,7 +5,7 @@ import { apiService } from "../services/api";
 import { notificationService } from "../services/notificationService";
 import Card from "../components/Card";
 import Table from "../components/Table";
-import ReceiptModal from "../components/ReceiptModal";
+// Removed unused ReceiptModal import
 import NotificationCenter from "../components/NotificationCenter";
 import { 
   Search, 
@@ -43,7 +43,7 @@ export default function RequestsScreen() {
   const navigate = useNavigate();
 
   const [requests, setRequests] = useState<Request[]>([]);
-  const [selected, setSelected] = useState<Request | null>(null);
+  // Removed unused selected state
   const [filter, setFilter] = useState<"All" | "Pending" | "Approved" | "Rejected" | "Claimed">("All");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +70,9 @@ export default function RequestsScreen() {
 
       const res = await apiService.getDocumentRequests(status ? { status } : {});
 
+      // Debug: Log the API response to see the actual structure
+      console.log('API Response:', res.data);
+
       let requestsArray: unknown[] = [];
       if (Array.isArray(res.data)) {
         requestsArray = res.data;
@@ -80,7 +83,6 @@ export default function RequestsScreen() {
       const mappedRequests: Request[] = requestsArray.map((r: unknown) => {
         const request = r as {
           id: string;
-          student: string;
           student_id: string;
           document_type: string;
           semester: string;
@@ -99,6 +101,18 @@ export default function RequestsScreen() {
           document_approved?: boolean;
           current_status?: string;
           last_updated?: string;
+          // Student information (could be object or string)
+          student?: string | {
+            id: string;
+            first_name: string;
+            last_name: string;
+            email: string;
+            student_id?: string;
+          };
+          // Alternative field names that might exist
+          student_name?: string;
+          student_first_name?: string;
+          student_last_name?: string;
         };
         
         // Action-based status is now provided directly by the backend
@@ -119,10 +133,46 @@ export default function RequestsScreen() {
           }
         };
 
+        // Extract student name from different possible formats
+        const getStudentName = () => {
+          // Debug: Log the student data structure
+          console.log('Student data for request', request.id, ':', request.student);
+          
+          if (typeof request.student === 'string') {
+            return request.student;
+          } else if (request.student && typeof request.student === 'object') {
+            const firstName = request.student.first_name || '';
+            const lastName = request.student.last_name || '';
+            const fullName = `${firstName} ${lastName}`.trim();
+            return fullName || 'Unknown Student';
+          }
+          
+          // Try alternative field names that might exist
+          if (request.student_name) {
+            return request.student_name;
+          }
+          
+          // Try combining first and last name from separate fields
+          if (request.student_first_name || request.student_last_name) {
+            const firstName = request.student_first_name || '';
+            const lastName = request.student_last_name || '';
+            return `${firstName} ${lastName}`.trim() || 'Unknown Student';
+          }
+          
+          return 'Unknown Student';
+        };
+
+        const getStudentId = () => {
+          if (request.student && typeof request.student === 'object' && request.student.student_id) {
+            return request.student.student_id;
+          }
+          return request.student_id || "N/A";
+        };
+
         return {
           id: request.id,
-          student: request.student || "N/A",
-          studentId: request.student_id || "N/A",
+          student: getStudentName(),
+          studentId: getStudentId(),
           documentType: request.document_type || "Unknown",
           semester: request.semester || "N/A",
           schoolYear: request.school_year || "N/A",
@@ -157,59 +207,9 @@ export default function RequestsScreen() {
         return;
       }
       
-      // Fallback: use static sample data while backend is unavailable
-      const staticData: Request[] = [
-        {
-          id: "REQ-001",
-          student: "John Doe",
-          studentId: "2020-0001",
-          documentType: "Transcript of Records", // sample document type
-          semester: "1st Semester",
-          schoolYear: "2024–2025",
-          purpose: "Job Application",
-          aiStatus: "Pending",
-          aiNote: "Awaiting verification",
-          receiptUrl: "/sample-receipt.png",
-        },
-        {
-          id: "REQ-002",
-          student: "Jane Smith",
-          studentId: "2021-0002",
-          documentType: "Certificate of Enrollment",
-          semester: "2nd Semester",
-          schoolYear: "2024–2025",
-          purpose: "Scholarship",
-          aiStatus: "Approved",
-          aiNote: "Approved by registrar",
-          receiptUrl: "/sample-receipt.png",
-        },
-        {
-          id: "REQ-003",
-          student: "Mark Dela Cruz",
-          studentId: "2020-0003",
-          documentType: "Good Moral Certificate",
-          semester: "1st Semester",
-          schoolYear: "2023–2024",
-          purpose: "Transfer Requirement",
-          aiStatus: "Rejected",
-          aiNote: "Incomplete requirements",
-          receiptUrl: "/sample-receipt.png",
-        },
-        {
-          id: "REQ-004",
-          student: "Alice Reyes",
-          studentId: "2022-0004",
-          documentType: "Diploma Copy",
-          semester: "2nd Semester",
-          schoolYear: "2024–2025",
-          purpose: "Internship",
-          aiStatus: "Pending",
-          aiNote: "Awaiting verification",
-          receiptUrl: "/sample-receipt.png",
-        },
-      ];
-      setRequests(staticData);
-      setError(null); // clear error since we’re using mock data
+      // Set empty array on error to prevent app crash
+      setRequests([]);
+      setError("Failed to load requests. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -283,24 +283,7 @@ export default function RequestsScreen() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [navigate]);
 
-  // Approve/Reject handlers
-  const handleApprove = (id: string) => {
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, aiStatus: "Approved", aiNote: "Approved by admin." } : r
-      )
-    );
-    setSelected(null);
-  };
-
-  const handleReject = (id: string) => {
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, aiStatus: "Rejected", aiNote: "Rejected by admin." } : r
-      )
-    );
-    setSelected(null);
-  };
+  // Approve/Reject handlers - removed as they're not used in the current implementation
 
   // Bulk approval function
   const handleBulkApproval = async () => {
@@ -887,19 +870,7 @@ const rows = filteredRequests.map((r) => {
         )}
       </Card>
 
-      {/* Modals */}
-      {selected && (
-        <ReceiptModal
-          student={selected.student}
-          document={selected.documentType}
-          receiptUrl={selected.receiptUrl}
-          aiStatus={selected.aiStatus}
-          aiNote={selected.aiNote}
-          onClose={() => setSelected(null)}
-          onApprove={() => handleApprove(selected.id)}
-          onReject={() => handleReject(selected.id)}
-        />
-      )}
+      {/* Modals - removed unused modal */}
 
       {/* Toast Notifications */}
       {toast && (

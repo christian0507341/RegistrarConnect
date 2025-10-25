@@ -27,4 +27,10 @@ class AuthApi {
     );
     return resp.data!['access'] as String;
   }
+
+  /// GET /api/accounts/me/ - Get current user profile
+  Future<AuthResponse> getProfile() async {
+    final resp = await _dio.get<Map<String, dynamic>>(Endpoints.me);
+    return AuthResponse.fromJson(resp.data!);
+  }
 }

@@ -258,9 +258,49 @@ function AddUserModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
     role: 'student'
   });
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+    
+    if (!formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    }
+    
+    if (!formData.first_name.trim()) {
+      newErrors.first_name = 'First name is required';
+    }
+    
+    if (!formData.last_name.trim()) {
+      newErrors.last_name = 'Last name is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setSubmitting(true);
     
     try {
@@ -269,86 +309,166 @@ function AddUserModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
       onSuccess();
     } catch (err: any) {
       console.error('Error creating user:', err);
-      alert(err.response?.data?.error || 'Failed to create user');
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to create user';
+      alert(errorMessage);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleInputChange = (field: string, value: string) => {
+    setFormData({ ...formData, [field]: value });
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: '' });
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content add-user-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Add New User</h2>
+          <div className="modal-title">
+            <div className="title-icon">
+              <Users size={24} />
+            </div>
+            <div>
+              <h2>Add New User</h2>
+              <p>Create a new user account with appropriate permissions</p>
+            </div>
+          </div>
           <button className="close-btn" onClick={onClose}>
             <X size={20} />
           </button>
         </div>
+        
         <form onSubmit={handleSubmit} className="modal-form">
-          <div className="form-group">
-            <label>Username</label>
-            <input
-              type="text"
-              required
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-            />
+          <div className="form-section">
+            <h3>Basic Information</h3>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="first_name">First Name *</label>
+                <input
+                  id="first_name"
+                  type="text"
+                  required
+                  value={formData.first_name}
+                  onChange={(e) => handleInputChange('first_name', e.target.value)}
+                  className={errors.first_name ? 'error' : ''}
+                  placeholder="Enter first name"
+                />
+                {errors.first_name && <span className="error-message">{errors.first_name}</span>}
+              </div>
+              <div className="form-group">
+                <label htmlFor="last_name">Last Name *</label>
+                <input
+                  id="last_name"
+                  type="text"
+                  required
+                  value={formData.last_name}
+                  onChange={(e) => handleInputChange('last_name', e.target.value)}
+                  className={errors.last_name ? 'error' : ''}
+                  placeholder="Enter last name"
+                />
+                {errors.last_name && <span className="error-message">{errors.last_name}</span>}
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="email">Email Address *</label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                className={errors.email ? 'error' : ''}
+                placeholder="user@phinmaed.com"
+              />
+              {errors.email && <span className="error-message">{errors.email}</span>}
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="username">Username *</label>
+              <input
+                id="username"
+                type="text"
+                required
+                value={formData.username}
+                onChange={(e) => handleInputChange('username', e.target.value)}
+                className={errors.username ? 'error' : ''}
+                placeholder="Enter unique username"
+              />
+              {errors.username && <span className="error-message">{errors.username}</span>}
+            </div>
           </div>
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
+
+          <div className="form-section">
+            <h3>Security & Access</h3>
+            <div className="form-group">
+              <label htmlFor="password">Password *</label>
+              <div className="password-input">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  className={errors.password ? 'error' : ''}
+                  placeholder="Enter secure password"
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
+              {errors.password && <span className="error-message">{errors.password}</span>}
+              <div className="password-hint">
+                Password must be at least 8 characters long
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="role">User Role *</label>
+              <select
+                id="role"
+                value={formData.role}
+                onChange={(e) => handleInputChange('role', e.target.value)}
+                className="role-select"
+              >
+                <option value="student">Student</option>
+                <option value="registrar">Registrar</option>
+                <option value="finance">Finance</option>
+                <option value="admin">Admin</option>
+              </select>
+              <div className="role-description">
+                {formData.role === 'student' && 'Can request documents and view their own requests'}
+                {formData.role === 'registrar' && 'Can approve document requests and manage appointments'}
+                {formData.role === 'finance' && 'Can verify payments and manage financial records'}
+                {formData.role === 'admin' && 'Full system access and user management capabilities'}
+              </div>
+            </div>
           </div>
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              required
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>First Name</label>
-            <input
-              type="text"
-              required
-              value={formData.first_name}
-              onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Last Name</label>
-            <input
-              type="text"
-              required
-              value={formData.last_name}
-              onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Role</label>
-            <select
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            >
-              <option value="student">Student</option>
-              <option value="faculty">Faculty</option>
-              <option value="registrar">Registrar</option>
-              <option value="finance">Finance</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
+
           <div className="modal-actions">
             <button type="button" onClick={onClose} className="btn-secondary">
               Cancel
             </button>
             <button type="submit" className="btn-primary" disabled={submitting}>
-              {submitting ? 'Creating...' : 'Create User'}
+              {submitting ? (
+                <>
+                  <div className="spinner-small"></div>
+                  Creating User...
+                </>
+              ) : (
+                <>
+                  <Users size={16} />
+                  Create User
+                </>
+              )}
             </button>
           </div>
         </form>

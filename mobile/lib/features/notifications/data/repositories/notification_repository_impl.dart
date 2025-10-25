@@ -19,15 +19,32 @@ class NotificationRepositoryImpl implements INotificationRepository {
   @override
   Future<List<NotificationItem>> getNotifications() async {
     try {
-      // Fetch both regular notifications and pending approval notifications
+      // Get access token for authentication
+      final token = await _secureStorage.readAccess();
+      if (token == null || token.isEmpty) {
+        print('No access token available for notifications');
+        return [];
+      }
+
+      // Fetch both regular notifications and pending approval notifications with proper authentication
       final results = await Future.wait([
         _dio.get(
           '${Endpoints.baseUrl}${Endpoints.studentNotifications}',
-          options: Options(headers: {'Content-Type': 'application/json'}),
+          options: Options(
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          ),
         ),
         _dio.get(
           '${Endpoints.baseUrl}${Endpoints.pendingNotifications}',
-          options: Options(headers: {'Content-Type': 'application/json'}),
+          options: Options(
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          ),
         ),
       ]);
 
@@ -41,6 +58,8 @@ class NotificationRepositoryImpl implements INotificationRepository {
         final data = regularResponse.data;
         final notificationsData = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
         
+        print('📬 Regular notifications found: ${notificationsData.length}');
+        
         final regularNotifications = notificationsData.map((notificationData) {
           return NotificationItem(
             id: notificationData['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
@@ -53,12 +72,16 @@ class NotificationRepositoryImpl implements INotificationRepository {
         }).toList();
         
         allNotifications.addAll(regularNotifications);
+      } else {
+        print('❌ Regular notifications request failed: ${regularResponse.statusCode}');
       }
 
       // Process pending approval notifications (from cache)
       if (pendingResponse.statusCode == 200) {
         final data = pendingResponse.data;
         final pendingData = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+        
+        print('📬 Pending notifications found: ${pendingData.length}');
         
         final pendingNotifications = pendingData.map((notificationData) {
           final type = notificationData['type'] ?? '';
@@ -74,6 +97,8 @@ class NotificationRepositoryImpl implements INotificationRepository {
         }).toList();
         
         allNotifications.addAll(pendingNotifications);
+      } else {
+        print('❌ Pending notifications request failed: ${pendingResponse.statusCode}');
       }
 
       // Sort by time (most recent first)
