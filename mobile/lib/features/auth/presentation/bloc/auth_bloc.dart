@@ -24,6 +24,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       final hasSession = await _repo.hasSession();
+
+      // If there's a cached user, emit it immediately so the UI stays logged in
+      // while we perform background verification.
+      final cached = await _repo.getCachedUser();
+      if (cached != null) {
+        emit(AuthAuthenticated(cached));
+      }
+
       if (hasSession) {
         // Try to get user profile to verify the session is still valid
         try {
@@ -37,12 +45,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             final user = await _repo.getCurrentUser();
             emit(AuthAuthenticated(user));
           } catch (refreshError) {
-            // If refresh also fails, clear the session and show login
-            await _repo.signOut();
-            emit(const AuthUnauthenticated());
+            // If refresh also fails, attempt to use cached profile (already emitted),
+            // otherwise clear the session.
+            final stillCached = await _repo.getCachedUser();
+            if (stillCached != null) {
+              emit(AuthAuthenticated(stillCached));
+            } else {
+              await _repo.signOut();
+              emit(const AuthUnauthenticated());
+            }
           }
         }
       } else {
+        // No local session/tokens
         emit(const AuthUnauthenticated());
       }
     } catch (e) {

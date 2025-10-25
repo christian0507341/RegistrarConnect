@@ -91,8 +91,8 @@ class AppointmentStatusUpdateView(generics.UpdateAPIView):
             return Appointment.objects.filter(student=user)
         elif user.role == 'faculty':
             return Appointment.objects.filter(faculty=user)
-        elif user.role == 'admin':
-            # Admin can update all appointments
+        elif user.role in ['admin', 'registrar', 'finance']:
+            # Admin, Registrar, Finance can update all appointments
             return Appointment.objects.all()
         else:
             # Default: only show appointments where user is involved

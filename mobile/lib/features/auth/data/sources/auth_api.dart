@@ -30,7 +30,16 @@ class AuthApi {
 
   /// GET /api/accounts/me/ - Get current user profile
   Future<AuthResponse> getProfile() async {
-    final resp = await _dio.get<Map<String, dynamic>>(Endpoints.me);
-    return AuthResponse.fromJson(resp.data!);
+    try {
+      final resp = await _dio.get<Map<String, dynamic>>(Endpoints.me);
+      return AuthResponse.fromJson(resp.data!);
+    } on DioException catch (e) {
+      // If the server is using the older /api/auth/me/ path, try that as a fallback
+      if (e.response?.statusCode == 404) {
+        final resp = await _dio.get<Map<String, dynamic>>('/api/auth/me/');
+        return AuthResponse.fromJson(resp.data!);
+      }
+      rethrow;
+    }
   }
 }

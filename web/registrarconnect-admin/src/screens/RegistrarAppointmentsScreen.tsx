@@ -21,7 +21,49 @@ export default function RegistrarAppointmentsScreen() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  // Today's date for comparisons
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  // Modal + loading states for confirmations
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalAction, setModalAction] = useState<'claim' | 'no_show' | null>(null);
+  const [modalAppointmentId, setModalAppointmentId] = useState<string | null>(null);
+  const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
+
+  const openConfirmModal = (action: 'claim' | 'no_show', id: string) => {
+    setModalAction(action);
+    setModalAppointmentId(id);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setModalAction(null);
+    setModalAppointmentId(null);
+  };
+
+  const confirmModalAction = async () => {
+    if (!modalAction || !modalAppointmentId) return;
+    const id = modalAppointmentId;
+    setLoadingMap(prev => ({ ...prev, [id]: true }));
+    try {
+      if (modalAction === 'claim') {
+        await handleMarkAsClaimed(id);
+      } else {
+        await handleMarkAsNoShow(id);
+      }
+    } catch (e) {
+      console.error('Confirm action failed', e);
+    } finally {
+      setLoadingMap(prev => {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      });
+      closeModal();
+    }
+  };
 
   useEffect(() => {
     fetchAppointments();
@@ -47,19 +89,37 @@ export default function RegistrarAppointmentsScreen() {
         date: dateFilter !== 'all' ? dateFilter : undefined
       });
       
-      const fetchedAppointments = response.data.map((apt: any) => ({
-        id: apt.id.toString(),
-        studentName: apt.student_name || 'Unknown Student',
-        studentId: apt.student_id || 'N/A', // Now returns actual student ID number from backend
-        documentType: apt.document_type || 'N/A',
-        scheduledDate: apt.date || apt.scheduled_date,
-        scheduledTime: apt.start_time || apt.scheduled_time,
-        status: apt.status,
-        location: apt.location || 'Registrar Office',
-        requestId: apt.request_id?.toString() || 'N/A'
-      }));
+      const rawArray = Array.isArray(response.data) ? response.data : (response.data.appointments || []);
+      const fetchedAppointments = rawArray.map((apt: any) => {
+        const rawDate = apt.date || apt.scheduled_date || null;
+        let normalizedDate: string | null = null;
+        try {
+          if (rawDate) {
+              const parsed = new Date(String(rawDate));
+              if (!isNaN(parsed.getTime())) {
+                normalizedDate = parsed.toISOString().split('T')[0];
+              }
+            }
+        } catch (e) {
+          normalizedDate = null;
+        }
+
+        return {
+          id: apt.id.toString(),
+          studentName: apt.student_name || 'Unknown Student',
+          studentId: apt.student_id || 'N/A',
+          documentType: apt.document_type || 'N/A',
+          scheduledDate: normalizedDate,
+          scheduledTime: apt.start_time || apt.scheduled_time,
+          status: apt.status,
+          location: apt.location || 'Registrar Office',
+          requestId: apt.request_id?.toString() || 'N/A'
+        } as Appointment;
+      });
       
-      setAppointments(fetchedAppointments);
+  // Only show appointments scheduled for today on this screen
+  const todaysAppointments = fetchedAppointments.filter((a: Appointment) => a.scheduledDate === todayStr);
+  setAppointments(todaysAppointments);
     } catch (error) {
       console.error('Error fetching appointments:', error);
       alert('Failed to load appointments. Please try again.');
@@ -303,28 +363,60 @@ export default function RegistrarAppointmentsScreen() {
                 </div>
 
                 {appointment.status === 'scheduled' && (
-                  <div className="card-footer">
-                    <button
-                      className="btn-no-show"
-                      onClick={() => handleMarkAsNoShow(appointment.id)}
-                    >
-                      <XCircle size={18} />
-                      No Show
-                    </button>
-                    <button
-                      className="btn-claimed"
-                      onClick={() => handleMarkAsClaimed(appointment.id)}
-                    >
-                      <CheckCircle size={18} />
-                      Mark as Claimed
-                    </button>
-                  </div>
+                  // Only show actions if scheduled for today
+                  <>
+                    {appointment.scheduledDate ? (
+                      appointment.scheduledDate === todayStr ? (
+                        <div className="card-footer">
+                          <button
+                            className="btn-no-show"
+                            onClick={() => openConfirmModal('no_show', appointment.id)}
+                            disabled={!!loadingMap[appointment.id]}
+                          >
+                            <XCircle size={18} />
+                            {loadingMap[appointment.id] ? 'Working...' : 'No Show'}
+                          </button>
+                          <button
+                            className="btn-claimed"
+                            onClick={() => openConfirmModal('claim', appointment.id)}
+                            disabled={!!loadingMap[appointment.id]}
+                          >
+                            <CheckCircle size={18} />
+                            {loadingMap[appointment.id] ? 'Working...' : 'Mark as Claimed'}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="card-footer">
+                          <span className="scheduled-other-day">Scheduled: {new Date(appointment.scheduledDate).toLocaleDateString()}</span>
+                        </div>
+                      )
+                    ) : (
+                      <div className="card-footer">
+                        <span className="scheduled-other-day">Unscheduled</span>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ))}
           </div>
         )}
       </div>
+      {/* Confirmation Modal */}
+      {modalVisible && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Confirm action</h3>
+            <p>Are you sure you want to {modalAction === 'claim' ? 'mark this appointment as claimed' : 'mark this appointment as no-show'}?</p>
+            <div className="modal-actions">
+              <button onClick={closeModal}>Cancel</button>
+              <button onClick={confirmModalAction} disabled={!!(modalAppointmentId && loadingMap[modalAppointmentId])}>
+                {modalAppointmentId && loadingMap[modalAppointmentId] ? 'Working...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

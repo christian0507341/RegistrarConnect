@@ -15,4 +15,7 @@ abstract class IAuthRepository {
   
   /// Get current user profile to verify session validity
   Future<AuthUser> getCurrentUser();
+
+  /// Return cached user if available (does not perform network requests).
+  Future<AuthUser?> getCachedUser();
 }
