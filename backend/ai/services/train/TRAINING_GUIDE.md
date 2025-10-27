@@ -116,7 +116,7 @@ fp16 = True                   # Mixed precision training
 backend/ai/services/train/
 ├── enhanced_training_data.jsonl    # Enhanced training data
 ├── enhanced_training.py           # Enhanced training script
-├── enhanced_chatbot_cli.py        # Improved chatbot logic
+├── chatbot_cli.py                 # Production chatbot logic
 ├── run_enhanced_training.py       # Training runner
 ├── checkpoints/                   # Trained models
 │   ├── doc_type/                  # Document classifier
@@ -133,15 +133,13 @@ Copy the trained models to your production environment:
 cp -r checkpoints/* /path/to/production/models/
 ```
 
-### 2. **Update Chatbot Logic**
-Replace the existing chatbot CLI with the enhanced version:
-```bash
-cp enhanced_chatbot_cli.py chatbot_cli.py
-```
+### 2. **The chatbot CLI is already configured**
+The production system uses `chatbot_cli.py` which is the main chatbot implementation.
 
-### 3. **Test the Enhanced AI**
+### 3. **Test the AI**
 ```bash
-python enhanced_chatbot_cli.py
+cd backend/ai/services/train
+python chatbot_cli.py
 ```
 
 ## 📊 Monitoring and Evaluation
@@ -191,15 +189,9 @@ ls -la enhanced_training_data.jsonl
 ## 📚 Advanced Features
 
 ### 1. **Custom Response Templates**
-Edit `enhanced_chatbot_cli.py` to customize responses:
+Edit `chatbot_cli.py` to customize responses and conversation flow:
 ```python
-RESPONSE_TEMPLATES = {
-    "welcome": "Your custom welcome message...",
-    "document_help": {
-        "OTR": "Your custom OTR help message...",
-        # ... other document types
-    }
-}
+# Modify response templates and conversation logic in chatbot_cli.py
 ```
 
 ### 2. **Additional Training Data**
