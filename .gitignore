@@ -16,11 +16,6 @@ ENV/
 .env
 .env.*
 
-# Local DB / media (don’t commit local SQLite or generated files)
-db.sqlite3
-media/
-staticfiles/
-
 # ======================
 # Machine Learning Artifacts
 # ======================

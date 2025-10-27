@@ -5,7 +5,7 @@ class Endpoints {
   static final String baseUrl = kIsWeb
       ? 'http://localhost:8000'
       : Platform.isAndroid
-      ? 'http://10.159.158.47:8000'  // Your computer's IP for physical device
+      ? 'http://192.168.1.8:8000' // Your computer's IP for physical device
       : 'http://127.0.0.1:8000';
 
   // Auth
@@ -20,11 +20,16 @@ class Endpoints {
   static const String chatHistory = '/api/ai/chat/history/';
 
   // Other
-  static const String receipts = '/api/document-requests/';  // Receipt upload is part of document requests
+  static const String receipts =
+      '/api/document-requests/'; // Receipt upload is part of document requests
   static const String documentRequests = '/api/document-requests/';
-  static const String studentTransactions = '/api/document-requests/student/transactions/';
-  static const String studentNotifications = '/api/document-requests/student/notifications/';
-  static const String pendingNotifications = '/api/document-requests/student/pending-notifications/';
-  static const String clearNotifications = '/api/document-requests/student/clear-notifications/';
+  static const String studentTransactions =
+      '/api/document-requests/student/transactions/';
+  static const String studentNotifications =
+      '/api/document-requests/student/notifications/';
+  static const String pendingNotifications =
+      '/api/document-requests/student/pending-notifications/';
+  static const String clearNotifications =
+      '/api/document-requests/student/clear-notifications/';
   static const String appointments = '/api/appointments/';
 }

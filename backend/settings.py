@@ -35,7 +35,7 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = [
     '10.0.2.2',  # Android emulator
     '127.0.0.1', 'localhost',  # Local development
-    '192.168.1.7', '192.168.100.122', '10.159.158.47',
+    '192.168.1.7', '192.168.100.122', '10.159.158.47', '192.168.1.8',
     '172.20.10.3' # Your specific IPs
 ]
 

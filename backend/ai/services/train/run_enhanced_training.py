@@ -65,7 +65,7 @@ def check_training_requirements():
     print("Checking training requirements...")
     
     required_files = [
-        "enhanced_training_data.jsonl",
+        "data/enhanced_training_data.jsonl",
         "enhanced_training.py",
         "data/val.jsonl"
     ]

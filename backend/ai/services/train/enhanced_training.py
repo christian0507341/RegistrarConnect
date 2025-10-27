@@ -32,7 +32,7 @@ PROJECT_ROOT = find_project_root(HERE)
 LOCAL_BASE = os.path.join(PROJECT_ROOT, "backend", "ai", "models", "distilbert-base-uncased")
 DATA_DIR = os.path.join(HERE, "data")
 OUT_DIR = os.path.join(HERE, "checkpoints")
-ENHANCED_DATA = os.path.join(HERE, "enhanced_training_data.jsonl")
+ENHANCED_DATA = os.path.join(DATA_DIR, "enhanced_training_data.jsonl")
 
 # Enhanced labels and configuration
 DOC_LABELS = ["OTR", "COG", "COE", "OTHERS"]
