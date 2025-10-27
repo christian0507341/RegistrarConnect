@@ -1,1 +1,0 @@
-"# Sample schema file" 

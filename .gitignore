@@ -26,6 +26,7 @@ staticfiles/
 # ======================
 backend/ai/services/train/checkpoints/
 backend/ai/services/train/sessions/   # CLI/dev chat logs
+backend/ai/services/train/training_log.txt   # Training logs
 huggingface/
 .huggingface/
 backend/ai/models/hub/  # Local HF cache dir
