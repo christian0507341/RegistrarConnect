@@ -219,7 +219,6 @@ RegistrarConnect/
 ### Additional Documentation Files
 
 - **[STUDENT_CHAT_AI_README.md](STUDENT_CHAT_AI_README.md)** - Comprehensive guide to the AI chat system
-- **[INTEGRATION_FIXES_SUMMARY.md](INTEGRATION_FIXES_SUMMARY.md)** - Integration fixes and improvements
 
 ### API Documentation
 
