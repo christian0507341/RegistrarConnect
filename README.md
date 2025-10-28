@@ -143,7 +143,6 @@ The admin portal will be available at `http://localhost:5173`
 ### Student
 - Request documents (OTR, COG, COE, Others)
 - Upload payment receipts
-- Schedule appointment for claiming
 - Chat with AI assistant
 - View request history and status
 
@@ -151,6 +150,7 @@ The admin portal will be available at `http://localhost:5173`
 - Review pending document requests
 - Approve/reject student requests
 - Manage appointment schedule
+- Provide appointed time for document claiming
 - View assigned students
 
 ### Registrar
