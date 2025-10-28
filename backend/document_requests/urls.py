@@ -1,7 +1,82 @@
 from django.urls import path
-from .views import DocumentRequestCreateView, DocumentRequestListView
+from .views import document_requests_web
+from .views import (
+    DocumentRequestListCreateView,
+    DocumentRequestDetailView,
+    DocumentRequestStatusUpdateView,
+    create_document_request,
+    document_request_history,
+    document_request_status,
+    document_request_cancel,
+    upload_receipt,  # NEW
+    student_transaction_status,  # NEW
+    student_notifications,  # NEW
+    pending_notifications,  # NEW
+    clear_pending_notifications,  # NEW
+    view_receipt,  # NEW
+    export_document_requests,  # NEW
+)
+# Registrar views
+from .registrar_views import (
+    get_pending_approvals,
+    approve_document_request,
+    reject_document_request,
+    registrar_dashboard_stats,
+)
+# Finance views
+from .finance_views import (
+    get_pending_verifications,
+    approve_payment,
+    reject_payment,
+    finance_dashboard_stats,
+    finance_reports,
+)
 
 urlpatterns = [
-    path('create/', DocumentRequestCreateView.as_view(), name='create-request'),
-    path('my-requests/', DocumentRequestListView.as_view(), name='my-requests'),
+    # Generic API endpoints
+    path('', DocumentRequestListCreateView.as_view(), name="document-request-list-create"),
+    path('<int:pk>/', DocumentRequestDetailView.as_view(), name="document-request-detail"),
+    path('<int:pk>/status/', DocumentRequestStatusUpdateView.as_view(), name='document-request-status'),
+
+    # Creation endpoint (separate for clarity)
+    path('create/', create_document_request, name="create_document_request"),
+    path('api/document-requests/web/', document_requests_web, name='document_requests_web'),
+    path('list/', DocumentRequestListCreateView.as_view(), name="document-request-list"),
+
+    # Chatbot-specific endpoints (namespaced under /chatbot/)
+    path('chatbot/history/', document_request_history, name="document-request-history"),
+    path('chatbot/<int:pk>/status/', document_request_status, name="document-request-status-chatbot"),
+    path('chatbot/<int:pk>/cancel/', document_request_cancel, name="document-request-cancel-chatbot"),
+
+    # NEW: receipt upload (mobile)
+    path('<int:pk>/upload-receipt/', upload_receipt, name='document-request-upload-receipt'),
+    
+    # NEW: student transaction status (mobile)
+    path('student/transactions/', student_transaction_status, name='student-transaction-status'),
+    
+    # NEW: student notifications (mobile)
+    path('student/notifications/', student_notifications, name='student-notifications'),
+    
+    # NEW: pending notifications (mobile - for approval notifications)
+    path('student/pending-notifications/', pending_notifications, name='pending-notifications'),
+    path('student/clear-notifications/', clear_pending_notifications, name='clear-notifications'),
+    
+    # NEW: faculty receipt view
+    path('<int:pk>/receipt/', view_receipt, name='document-request-view-receipt'),
+    
+    # NEW: export functionality
+    path('export/', export_document_requests, name='document-request-export'),
+    
+    # REGISTRAR ENDPOINTS
+    path('registrar/pending/', get_pending_approvals, name='registrar-pending-approvals'),
+    path('<int:pk>/approve/', approve_document_request, name='document-request-approve'),
+    path('<int:pk>/reject/', reject_document_request, name='document-request-reject'),
+    path('registrar/stats/', registrar_dashboard_stats, name='registrar-stats'),
+    
+    # FINANCE ENDPOINTS
+    path('finance/pending/', get_pending_verifications, name='finance-pending-verifications'),
+    path('<int:pk>/approve-payment/', approve_payment, name='payment-approve'),
+    path('<int:pk>/reject-payment/', reject_payment, name='payment-reject'),
+    path('finance/stats/', finance_dashboard_stats, name='finance-stats'),
+    path('finance/reports/', finance_reports, name='finance-reports'),
 ]

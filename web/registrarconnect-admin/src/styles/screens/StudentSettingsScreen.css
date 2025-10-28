@@ -1,0 +1,646 @@
+/* ====================================
+   STUDENT SETTINGS SCREEN
+   ==================================== */
+
+.student-settings-screen {
+  padding: 0;
+  background: transparent;
+}
+
+/* HEADER */
+.student-settings-screen .settings-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  padding: 36px 40px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.25);
+}
+
+.student-settings-screen .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.student-settings-screen .header-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.student-settings-screen .header-icon {
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.student-settings-screen .header-text h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.student-settings-screen .header-text p {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0;
+}
+
+.student-settings-screen .header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* SETTINGS CONTENT */
+.student-settings-screen .settings-content {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* TABS NAVIGATION */
+.student-settings-screen .settings-tabs {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 20px;
+}
+
+.student-settings-screen .tab-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-align: left;
+  position: relative;
+}
+
+.student-settings-screen .tab-item:hover {
+  background: #f9fafb;
+  color: #111827;
+}
+
+.student-settings-screen .tab-item.active {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  color: #059669;
+}
+
+.student-settings-screen .tab-item svg:first-child {
+  flex-shrink: 0;
+}
+
+.student-settings-screen .tab-item .tab-arrow {
+  margin-left: auto;
+  opacity: 0.5;
+}
+
+.student-settings-screen .tab-item.active .tab-arrow {
+  opacity: 1;
+}
+
+/* SETTINGS PANELS */
+.student-settings-screen .settings-panels {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  min-height: 500px;
+}
+
+.student-settings-screen .settings-panel {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.student-settings-screen .panel-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 24px 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.student-settings-screen .panel-title svg {
+  color: #059669;
+}
+
+/* INFO BANNER */
+.student-settings-screen .info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  border: 1px solid #3b82f6;
+  border-left: 4px solid #3b82f6;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  color: #1e40af;
+}
+
+.student-settings-screen .info-banner.warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.student-settings-screen .info-banner svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.student-settings-screen .info-banner p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+/* SETTING GROUPS */
+.student-settings-screen .setting-group {
+  margin-bottom: 32px;
+}
+
+.student-settings-screen .setting-group:last-child {
+  margin-bottom: 0;
+}
+
+.student-settings-screen .setting-header {
+  margin-bottom: 20px;
+}
+
+.student-settings-screen .setting-header h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.student-settings-screen .setting-header p {
+  font-size: 0.9375rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* THEME OPTIONS */
+.student-settings-screen .theme-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.student-settings-screen .theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.student-settings-screen .theme-option:hover {
+  border-color: #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1);
+}
+
+.student-settings-screen .theme-option.active {
+  border-color: #059669;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+.student-settings-screen .theme-option svg:first-child {
+  color: #6b7280;
+}
+
+.student-settings-screen .theme-option.active svg:first-child {
+  color: #059669;
+}
+
+.student-settings-screen .theme-option span {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.9375rem;
+}
+
+.student-settings-screen .theme-option .check-icon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: #059669;
+}
+
+/* LANGUAGE OPTIONS */
+.student-settings-screen .language-options {
+  display: flex;
+  gap: 16px;
+}
+
+.student-settings-screen .language-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  position: relative;
+}
+
+.student-settings-screen .language-option:hover {
+  border-color: #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1);
+}
+
+.student-settings-screen .language-option.active {
+  border-color: #059669;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+.student-settings-screen .language-option svg {
+  color: #6b7280;
+}
+
+.student-settings-screen .language-option.active svg {
+  color: #059669;
+}
+
+.student-settings-screen .language-option span {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.9375rem;
+}
+
+.student-settings-screen .language-option .check-icon {
+  margin-left: auto;
+  color: #059669;
+}
+
+/* SETTING ITEMS */
+.student-settings-screen .setting-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.student-settings-screen .setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.student-settings-screen .setting-item:hover {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-settings-screen .setting-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex: 1;
+}
+
+.student-settings-screen .setting-info svg {
+  color: #059669;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.student-settings-screen .setting-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.student-settings-screen .setting-info p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* TOGGLE SWITCH */
+.student-settings-screen .toggle-switch {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.student-settings-screen .toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.student-settings-screen .toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #cbd5e1;
+  border-radius: 100px;
+  transition: all 0.3s ease;
+}
+
+.student-settings-screen .toggle-slider:before {
+  content: "";
+  position: absolute;
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.student-settings-screen .toggle-switch input:checked + .toggle-slider {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.student-settings-screen .toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+/* PASSWORD CHANGE FORM */
+.student-settings-screen .password-change-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.student-settings-screen .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.student-settings-screen .form-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.student-settings-screen .password-input-wrapper {
+  position: relative;
+}
+
+.student-settings-screen .form-input {
+  width: 100%;
+  padding: 12px 44px 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  background: #ffffff;
+}
+
+.student-settings-screen .form-input:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+.student-settings-screen .password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #9ca3af;
+  transition: color 0.2s ease;
+}
+
+.student-settings-screen .password-toggle-btn:hover {
+  color: #059669;
+}
+
+.student-settings-screen .input-hint {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.student-settings-screen .form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+/* SECURITY INFO CARD */
+.student-settings-screen .security-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
+  border: 1px solid #10b981;
+  border-radius: 10px;
+  margin-top: 24px;
+}
+
+.student-settings-screen .security-info-card svg {
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.student-settings-screen .security-info-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.student-settings-screen .security-info-card p {
+  font-size: 0.875rem;
+  color: #065f46;
+  margin: 0 0 4px 0;
+  line-height: 1.5;
+}
+
+.student-settings-screen .security-info-card p:last-child {
+  margin-bottom: 0;
+}
+
+/* SPINNER */
+.student-settings-screen .spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ACTION BUTTONS */
+.student-settings-screen .action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  justify-content: center;
+}
+
+.student-settings-screen .action-btn.primary {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.student-settings-screen .action-btn.primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35);
+}
+
+.student-settings-screen .action-btn.secondary {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.student-settings-screen .action-btn.secondary:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.student-settings-screen .action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.student-settings-screen .action-btn.full-width {
+  width: 100%;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .student-settings-screen .settings-content {
+    grid-template-columns: 1fr;
+  }
+
+  .student-settings-screen .settings-tabs {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .student-settings-screen .tab-item .tab-arrow {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .student-settings-screen .settings-header {
+    padding: 24px;
+  }
+
+  .student-settings-screen .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .student-settings-screen .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .student-settings-screen .header-actions button {
+    width: 100%;
+  }
+
+  .student-settings-screen .settings-panels {
+    padding: 20px;
+  }
+
+  .student-settings-screen .settings-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .student-settings-screen .theme-options {
+    grid-template-columns: 1fr;
+  }
+
+  .student-settings-screen .language-options {
+    flex-direction: column;
+  }
+
+  .student-settings-screen .form-actions {
+    flex-direction: column;
+  }
+
+  .student-settings-screen .form-actions button {
+    width: 100%;
+  }
+}
+
+
+
+

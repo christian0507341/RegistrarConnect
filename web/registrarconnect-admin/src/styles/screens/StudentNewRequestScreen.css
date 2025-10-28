@@ -1,0 +1,704 @@
+/* ====================================
+   STUDENT NEW REQUEST SCREEN - Complete Redesign
+   ==================================== */
+
+.student-new-request-screen {
+  padding: 0;
+  background: transparent;
+}
+
+.student-new-request-screen .screen-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  padding: 36px 40px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.25);
+}
+
+.student-new-request-screen .screen-header h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.student-new-request-screen .form-container {
+  background: #ffffff;
+  padding: 36px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-new-request-screen .form-group {
+  margin-bottom: 28px;
+}
+
+.student-new-request-screen .form-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 10px;
+  font-size: 0.9375rem;
+}
+
+.student-new-request-screen .form-label svg {
+  color: #059669;
+}
+
+.student-new-request-screen .form-input,
+.student-new-request-screen .form-select,
+.student-new-request-screen .form-textarea {
+  width: 100%;
+  padding: 13px 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  background: #ffffff;
+  font-family: inherit;
+}
+
+.student-new-request-screen .form-input:focus,
+.student-new-request-screen .form-select:focus,
+.student-new-request-screen .form-textarea:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+.student-new-request-screen .form-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.student-new-request-screen .form-help {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 8px;
+}
+
+.student-new-request-screen .info-card {
+  padding: 24px;
+  background: #eff6ff;
+  border-radius: 12px;
+  border: 1px solid #bfdbfe;
+  margin-bottom: 28px;
+  display: flex;
+  gap: 14px;
+}
+
+.student-new-request-screen .info-card svg {
+  flex-shrink: 0;
+  color: #2563eb;
+}
+
+.student-new-request-screen .error-alert {
+  padding: 18px;
+  background: #fef2f2;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  margin-bottom: 28px;
+  display: flex;
+  gap: 12px;
+  color: #991b1b;
+}
+
+.student-new-request-screen .form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 36px;
+  padding-top: 28px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.student-new-request-screen .form-actions button {
+  padding: 13px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.student-new-request-screen .form-actions .btn-primary {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.student-new-request-screen .form-actions .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.35);
+}
+
+.student-new-request-screen .form-actions .btn-secondary {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+@media (max-width: 768px) {
+  .student-new-request-screen .screen-header {
+    padding: 24px;
+  }
+  
+  .student-new-request-screen .form-container {
+    padding: 28px;
+  }
+  
+  .student-new-request-screen .form-actions {
+    flex-direction: column;
+  }
+}
+
+/* ====================================
+   MISSING CLASSES - Added for TSX
+   Multi-Step Form Design
+   ==================================== */
+
+/* SUCCESS STATE (7 classes) */
+.student-new-request-screen .success-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.student-new-request-screen .success-header {
+  margin-bottom: 40px;
+}
+
+.student-new-request-screen .success-icon {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #059669;
+  font-size: 4rem;
+  margin: 0 auto 24px;
+  box-shadow: 0 12px 32px rgba(5, 150, 105, 0.2);
+  animation: successPulse 2s ease-in-out infinite;
+}
+
+@keyframes successPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.student-new-request-screen .success-header h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 12px 0;
+}
+
+.student-new-request-screen .success-header p {
+  font-size: 1.125rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.student-new-request-screen .success-details {
+  background: #ffffff;
+  padding: 32px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 32px;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-new-request-screen .detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.student-new-request-screen .detail-card .detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.student-new-request-screen .detail-card .detail-row:last-child {
+  border-bottom: none;
+}
+
+.student-new-request-screen .success-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* REQUEST HEADER (6 classes - renamed from .screen-header) */
+.student-new-request-screen .request-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  padding: 36px 40px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.25);
+}
+
+.student-new-request-screen .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.student-new-request-screen .header-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.student-new-request-screen .back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.student-new-request-screen .back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-4px);
+}
+
+.student-new-request-screen .header-text h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.student-new-request-screen .header-text p {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0;
+}
+
+.student-new-request-screen .header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* PROGRESS STEPS (3 classes) */
+.student-new-request-screen .progress-section {
+  margin-bottom: 32px;
+}
+
+.student-new-request-screen .progress-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.student-new-request-screen .progress-steps::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 60px;
+  right: 60px;
+  height: 4px;
+  background: #e5e7eb;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.student-new-request-screen .progress-steps .step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  text-align: center;
+}
+
+.student-new-request-screen .step-number {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 4px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.125rem;
+  color: #9ca3af;
+  transition: all 0.3s ease;
+}
+
+.student-new-request-screen .progress-steps .step.active .step-number {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border-color: #059669;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.student-new-request-screen .progress-steps .step.completed .step-number {
+  background: #059669;
+  border-color: #059669;
+  color: #ffffff;
+}
+
+.student-new-request-screen .progress-steps .step p {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0;
+}
+
+.student-new-request-screen .progress-steps .step.active p {
+  color: #059669;
+}
+
+/* FORM STEPS (4 classes) */
+.student-new-request-screen .request-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-new-request-screen .form-step {
+  display: none;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.student-new-request-screen .form-step.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.student-new-request-screen .step-header {
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.student-new-request-screen .step-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.student-new-request-screen .step-header p {
+  font-size: 0.9375rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.student-new-request-screen .form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+/* PAYMENT INFO (1 class) */
+.student-new-request-screen .payment-info {
+  margin-top: 24px;
+}
+
+/* REVIEW SECTION (6 classes) */
+.student-new-request-screen .review-section {
+  margin-top: 20px;
+}
+
+.student-new-request-screen .review-card {
+  background: #f9fafb;
+  padding: 28px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 28px;
+}
+
+.student-new-request-screen .review-card h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 20px 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.student-new-request-screen .review-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.student-new-request-screen .detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 20px;
+}
+
+.student-new-request-screen .detail-row:last-child {
+  border-bottom: none;
+}
+
+.student-new-request-screen .detail-row .label {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 0.9375rem;
+  flex-shrink: 0;
+  min-width: 140px;
+}
+
+.student-new-request-screen .detail-row .value {
+  font-weight: 500;
+  color: #111827;
+  font-size: 0.9375rem;
+  text-align: right;
+  word-break: break-word;
+}
+
+/* FILE UPLOAD (4 classes) */
+.student-new-request-screen .file-upload-area {
+  position: relative;
+  margin-top: 12px;
+}
+
+.student-new-request-screen .file-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.student-new-request-screen .file-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.student-new-request-screen .file-upload-label:hover {
+  background: #ffffff;
+  border-color: #059669;
+}
+
+.student-new-request-screen .file-upload-label svg {
+  color: #9ca3af;
+  margin-bottom: 16px;
+}
+
+.student-new-request-screen .file-upload-label:hover svg {
+  color: #059669;
+}
+
+.student-new-request-screen .file-upload-label p {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin: 0 0 8px 0;
+}
+
+.student-new-request-screen .file-upload-label span {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.student-new-request-screen .file-upload-help {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 12px;
+  text-align: center;
+}
+
+/* MESSAGES (2 classes - renamed) */
+.student-new-request-screen .error-message {
+  padding: 16px 20px;
+  background: #fef2f2;
+  border-left: 4px solid #ef4444;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-new-request-screen .error-message svg {
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
+.student-new-request-screen .error-message p {
+  font-size: 0.9375rem;
+  color: #991b1b;
+  margin: 0;
+  font-weight: 500;
+}
+
+.student-new-request-screen .info-message {
+  padding: 16px 20px;
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-new-request-screen .info-message svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.student-new-request-screen .info-message p {
+  font-size: 0.9375rem;
+  color: #1e40af;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ACTION BUTTONS (2 classes) */
+.student-new-request-screen .action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.student-new-request-screen .action-btn.primary {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.student-new-request-screen .action-btn.primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.35);
+}
+
+.student-new-request-screen .action-btn.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.student-new-request-screen .action-btn.secondary {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.student-new-request-screen .action-btn.secondary:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.student-new-request-screen .loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive for new classes */
+@media (max-width: 768px) {
+  .student-new-request-screen .request-header,
+  .student-new-request-screen .header-content {
+    padding: 28px 24px;
+  }
+  
+  .student-new-request-screen .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .student-new-request-screen .header-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .student-new-request-screen .progress-steps {
+    padding: 0 10px;
+  }
+  
+  .student-new-request-screen .step-number {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .student-new-request-screen .progress-steps .step p {
+    font-size: 0.75rem;
+  }
+  
+  .student-new-request-screen .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-new-request-screen .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .student-new-request-screen .detail-row .value {
+    text-align: left;
+  }
+  
+  .student-new-request-screen .success-icon {
+    width: 100px;
+    height: 100px;
+    font-size: 3rem;
+  }
+}

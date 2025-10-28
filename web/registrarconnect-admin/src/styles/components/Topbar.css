@@ -1,0 +1,186 @@
+/* ====================================
+   ADMIN TOPBAR COMPONENT - Matched to TSX
+   Based on Topbar.tsx structure
+   ==================================== */
+
+.topbar {
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Topbar Left */
+.topbar .topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.topbar .topbar-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* Topbar Right */
+.topbar .topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Search */
+.topbar .search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  width: 340px;
+  transition: all 0.2s ease;
+}
+
+.topbar .search:focus-within {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.topbar .search svg {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.topbar .search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.9375rem;
+  color: #111827;
+  font-family: inherit;
+}
+
+.topbar .search input::placeholder {
+  color: #9ca3af;
+}
+
+/* Icon Button (Notifications) */
+.topbar .icon-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topbar .icon-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.topbar .icon-btn .badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+/* Profile */
+.topbar .profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.topbar .profile:hover {
+  background: #f9fafb;
+}
+
+.topbar .avatar {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.topbar .profile-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .topbar {
+    padding: 0 20px;
+  }
+  
+  .topbar .search {
+    width: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0 16px;
+  }
+  
+  .topbar .topbar-title {
+    font-size: 1.25rem;
+  }
+  
+  .topbar .search {
+    display: none;
+  }
+  
+  .topbar .profile-name {
+    display: none;
+  }
+  
+  .topbar .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+}

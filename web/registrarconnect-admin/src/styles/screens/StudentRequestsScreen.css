@@ -1,0 +1,653 @@
+/* ====================================
+   STUDENT REQUESTS SCREEN - Complete Redesign
+   Modern Green Business Design
+   ==================================== */
+
+.student-requests-screen {
+  padding: 0;
+  background: transparent;
+}
+
+/* Header */
+.student-requests-screen .screen-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  padding: 36px 40px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.student-requests-screen .screen-header h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.student-requests-screen .header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.student-requests-screen .header-actions button {
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: #059669;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.student-requests-screen .header-actions button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Summary Stats */
+.student-requests-screen .summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.student-requests-screen .summary-item {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.student-requests-screen .summary-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.student-requests-screen .summary-item .summary-value {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.student-requests-screen .summary-item .summary-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Requests List */
+.student-requests-screen .requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.student-requests-screen .request-item {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-requests-screen .request-item:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  border-color: #059669;
+}
+
+.student-requests-screen .request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.student-requests-screen .request-title {
+  font-size: 1.1875rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.student-requests-screen .request-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.student-requests-screen .request-status.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.student-requests-screen .request-status.approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.student-requests-screen .request-status.processing {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.student-requests-screen .request-status.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.student-requests-screen .request-status.ready {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.student-requests-screen .request-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.student-requests-screen .request-detail {
+  font-size: 0.9375rem;
+  color: #6b7280;
+}
+
+.student-requests-screen .request-detail strong {
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Empty State */
+.student-requests-screen .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 40px;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.student-requests-screen .empty-state-icon {
+  font-size: 5rem;
+  color: #d1d5db;
+  margin-bottom: 24px;
+}
+
+.student-requests-screen .empty-state-text {
+  font-size: 1.125rem;
+  color: #6b7280;
+  font-weight: 600;
+  margin-bottom: 28px;
+}
+
+/* Loading */
+.student-requests-screen .loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
+}
+
+.student-requests-screen .spinner {
+  width: 56px;
+  height: 56px;
+  border: 5px solid #e5e7eb;
+  border-top-color: #059669;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .student-requests-screen .screen-header {
+    padding: 24px;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .student-requests-screen .screen-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .student-requests-screen .summary-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-requests-screen .request-details {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ====================================
+   MISSING CLASSES - Added for TSX
+   ==================================== */
+
+/* Loading Spinner (renamed from .spinner) */
+.student-requests-screen .loading-spinner {
+  width: 56px;
+  height: 56px;
+  border: 5px solid #e5e7eb;
+  border-top-color: #059669;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Requests Header (renamed from .screen-header) */
+.student-requests-screen .requests-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  padding: 36px 40px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.student-requests-screen .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.student-requests-screen .header-info h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* Stats Overview (renamed from .summary-stats) */
+.student-requests-screen .stats-overview {
+  margin-bottom: 28px;
+}
+
+.student-requests-screen .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.student-requests-screen .stat-card {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.student-requests-screen .stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.student-requests-screen .stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.student-requests-screen .stat-icon.total {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #2563eb;
+}
+
+.student-requests-screen .stat-icon.pending {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #f59e0b;
+}
+
+.student-requests-screen .stat-icon.approved {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #059669;
+}
+
+.student-requests-screen .stat-icon.rejected {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #dc2626;
+}
+
+.student-requests-screen .stat-content {
+  flex: 1;
+  text-align: center;
+}
+
+.student-requests-screen .stat-content h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.student-requests-screen .stat-content p {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+  line-height: 1;
+}
+
+/* Filters Section */
+.student-requests-screen .filters-section {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 28px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-requests-screen .search-bar {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.student-requests-screen .search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.student-requests-screen .search-input {
+  width: 100%;
+  padding: 13px 18px 13px 48px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+}
+
+.student-requests-screen .search-input::placeholder {
+  color: #9ca3af;
+}
+
+.student-requests-screen .search-input:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+  background: #ffffff;
+}
+
+.student-requests-screen .filter-controls {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.student-requests-screen .filter-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.student-requests-screen .filter-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.student-requests-screen .filter-select {
+  width: 100%;
+  padding: 11px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.student-requests-screen .filter-select:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+/* Requests Section */
+.student-requests-screen .requests-section {
+  margin-top: 28px;
+}
+
+/* Request Card (renamed from .request-item) */
+.student-requests-screen .request-card {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: 16px;
+}
+
+.student-requests-screen .request-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  border-color: #059669;
+}
+
+.student-requests-screen .request-info {
+  flex: 1;
+}
+
+.student-requests-screen .request-info h3 {
+  font-size: 1.1875rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.student-requests-screen .request-info p {
+  font-size: 0.9375rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Detail Item (renamed from .request-detail) */
+.student-requests-screen .detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9375rem;
+  color: #6b7280;
+}
+
+.student-requests-screen .detail-item svg {
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.student-requests-screen .detail-item strong {
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Request Footer */
+.student-requests-screen .request-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.student-requests-screen .request-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.student-requests-screen .semester {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.student-requests-screen .request-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Action Buttons */
+.student-requests-screen .action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.student-requests-screen .action-btn.primary {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.student-requests-screen .action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35);
+}
+
+.student-requests-screen .action-btn.secondary {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.student-requests-screen .action-btn.secondary:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.student-requests-screen .action-btn.small {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+}
+
+/* Empty State */
+.student-requests-screen .empty-icon {
+  font-size: 5rem;
+  color: #d1d5db;
+  margin-bottom: 24px;
+}
+
+.student-requests-screen .cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 28px;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.student-requests-screen .cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.35);
+}
+
+/* Responsive for new classes */
+@media (max-width: 768px) {
+  .student-requests-screen .requests-header,
+  .student-requests-screen .header-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .student-requests-screen .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-requests-screen .filter-controls {
+    flex-direction: column;
+  }
+  
+  .student-requests-screen .filter-group {
+    width: 100%;
+  }
+  
+  .student-requests-screen .request-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

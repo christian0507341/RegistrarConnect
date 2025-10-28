@@ -1,0 +1,92 @@
+# ======================
+# Python / Django
+# ======================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.log
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+.env
+.env.*
+
+# ======================
+# Machine Learning Artifacts
+# ======================
+backend/ai/services/train/checkpoints/
+backend/ai/services/train/sessions/   # CLI/dev chat logs
+backend/ai/services/train/training_log.txt   # Training logs
+huggingface/
+.huggingface/
+backend/ai/models/hub/  # Local HF cache dir
+backend/ai/models/**/*.bin
+backend/ai/models/**/*.pt
+backend/ai/models/**/*.ckpt
+
+# Keep specific model files
+!backend/ai/models/**/model.safetensors
+!backend/ai/models/**/config.json
+!backend/ai/models/**/tokenizer_config.json
+!backend/ai/models/**/tokenizer.json
+!backend/ai/models/**/vocab.txt
+!backend/ai/models/**/special_tokens_map.json
+
+# ======================
+# Flutter / Dart (mobile/)
+# ======================
+mobile/.dart_tool/
+mobile/.packages
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.metadata
+mobile/.idea/
+
+# Build outputs
+mobile/build/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/macos/Flutter/ephemeral/
+mobile/windows/flutter/ephemeral/
+mobile/linux/flutter/ephemeral/
+mobile/web/.dart_tool/
+
+# Auto-generated plugin registrants
+mobile/**/GeneratedPluginRegistrant.*
+mobile/**/generated_plugin_registrant.*
+mobile/**/generated_plugins.cmake
+
+# ======================
+# OS / IDE / Misc
+# ======================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Python / Django extras ---
+*.py[cod]
+*.so
+dist/
+build/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.tox/
+*.tmp
+/mobile/windows/flutter
+/mobile/linux/flutter
+*.cc
+mobile/linux/flutter/generated_plugin_registrant.cc
+mobile/linux/flutter/generated_plugins.cmake
+mobile/windows/flutter/generated_plugin_registrant.cc
+mobile/windows/flutter/generated_plugins.cmake
+/backend/ai/models/distilbert-base-uncased

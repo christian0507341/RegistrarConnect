@@ -1,0 +1,44 @@
+/* ====================================
+   ADMIN LAYOUT - Matched to TSX
+   Based on AdminLayout.tsx structure
+   ==================================== */
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+/* Main Area (beside sidebar) */
+.admin-layout .main-area {
+  flex: 1;
+  margin-left: 260px; /* Sidebar width */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Content Area (where Outlet renders) */
+.admin-layout .content-area {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  background: #f9fafb;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .admin-layout .main-area {
+    margin-left: 0;
+  }
+  
+  .admin-layout .content-area {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-layout .content-area {
+    padding: 20px;
+  }
+}

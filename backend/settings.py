@@ -12,13 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-from pymongo import MongoClient
+from dotenv import load_dotenv
 
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
-MONGO_DB_NAME = "RegistrarConnect"
-
-client = MongoClient(MONGODB_URI)
-mongo_db = client[MONGO_DB_NAME]
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,12 +23,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-v^@u$u%zc-hcbs+suu3c-z4%!ptyskrjp@eoj#zrmihf$at!ih'
+
+load_dotenv()
+#print(f"Loaded SECRET_KEY: {os.getenv('SECRET_KEY', 'Not found')}")
+SECRET_KEY = os.getenv('SECRET_KEY', 'default-key-for-dev-only')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
+#DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '10.0.2.2',  # Android emulator
+    '127.0.0.1', 'localhost',  # Local development
+    '192.168.1.7', '192.168.100.122', '10.159.158.47', '192.168.1.8',
+    '172.20.10.3' # Your specific IPs
+]
+
+# For development, allow all hosts (remove this in production)
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -45,6 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
 
     # Third-party apps
     'rest_framework',
@@ -102,11 +111,18 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'RegistrarConnect',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'registrar_connect'),
+        'USER': os.getenv('POSTGRES_USER', 'registrar_user'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'registrar'),
+        'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
 
+AUTHENTICATION_BACKENDS = [ # email OR username
+    'django.contrib.auth.backends.ModelBackend',                 # keep default perms backend
+]
 
 
 
@@ -125,6 +141,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    {
+        "NAME": "backend.accounts.validators.UppercaseAndDigitValidator",
+    },
+    {
+        "NAME": "backend.accounts.validators.NoSpacesPasswordValidator",
     },
 ]
 
@@ -182,3 +204,32 @@ DEFAULT_FROM_EMAIL = 'noreply@registrarconnect.com'
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = 'apikey'
 # EMAIL_HOST_PASSWORD = 'your_sendgrid_api_key'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+# Allow all origins in development
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# ------- NEW: media (for receipt uploads) -------
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

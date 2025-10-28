@@ -1,0 +1,289 @@
+/* ============================================
+   FINANCE SCREENS - COMPREHENSIVE CSS
+   Teal Theme (#14b8a6, #0f766e)
+   ============================================ */
+
+/* Common Screen Styles */
+.finance-payments-screen,
+.finance-verification-screen,
+.finance-reports-screen,
+.finance-notifications-screen,
+.finance-profile-screen {
+  padding: 24px;
+  background: #f8fafc;
+  min-height: calc(100vh - 64px);
+}
+
+/* Override teal colors for Finance portal */
+.finance-payments-screen .btn-icon,
+.finance-verification-screen .btn-icon,
+.finance-reports-screen .btn-icon,
+.finance-notifications-screen .btn-icon,
+.finance-profile-screen .btn-icon,
+.finance-payments-screen .btn-primary,
+.finance-verification-screen .btn-primary,
+.finance-reports-screen .btn-primary,
+.finance-notifications-screen .btn-primary,
+.finance-profile-screen .btn-primary {
+  background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
+}
+
+.finance-payments-screen .btn-icon:hover,
+.finance-verification-screen .btn-icon:hover,
+.finance-reports-screen .btn-icon:hover,
+.finance-notifications-screen .btn-icon:hover,
+.finance-profile-screen .btn-icon:hover,
+.finance-payments-screen .btn-primary:hover,
+.finance-verification-screen .btn-primary:hover,
+.finance-reports-screen .btn-primary:hover,
+.finance-notifications-screen .btn-primary:hover,
+.finance-profile-screen .btn-primary:hover {
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+}
+
+.finance-payments-screen .btn-secondary,
+.finance-verification-screen .btn-secondary,
+.finance-reports-screen .btn-secondary,
+.finance-notifications-screen .btn-secondary,
+.finance-profile-screen .btn-secondary {
+  color: #14b8a6;
+  border-color: #14b8a6;
+}
+
+.finance-payments-screen .btn-secondary:hover,
+.finance-verification-screen .btn-secondary:hover,
+.finance-reports-screen .btn-secondary:hover,
+.finance-notifications-screen .btn-secondary:hover,
+.finance-profile-screen .btn-secondary:hover {
+  background: #f0fdfa;
+}
+
+.finance-payments-screen .pending-count,
+.finance-verification-screen .pending-count {
+  background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
+}
+
+.finance-payments-screen .requests-table thead,
+.finance-payments-screen .payments-table thead,
+.finance-verification-screen .requests-table thead,
+.finance-verification-screen .payments-table thead {
+  background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
+}
+
+.finance-payments-screen .requests-table tbody tr:hover,
+.finance-payments-screen .payments-table tbody tr:hover,
+.finance-verification-screen .requests-table tbody tr:hover,
+.finance-verification-screen .payments-table tbody tr:hover {
+  background: #f0fdfa;
+}
+
+.finance-payments-screen .request-id,
+.finance-payments-screen .payment-id,
+.finance-verification-screen .request-id,
+.finance-verification-screen .payment-id {
+  color: #14b8a6;
+}
+
+.finance-payments-screen .copies,
+.finance-verification-screen .copies {
+  color: #14b8a6;
+}
+
+.finance-payments-screen .search-bar input:focus,
+.finance-verification-screen .search-bar input:focus,
+.finance-reports-screen .search-bar input:focus,
+.finance-notifications-screen .search-bar input:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+.finance-payments-screen .stat-card:hover,
+.finance-verification-screen .stat-card:hover,
+.finance-reports-screen .stat-card:hover,
+.finance-notifications-screen .stat-card:hover {
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.15);
+}
+
+.finance-payments-screen .approval-card:hover,
+.finance-payments-screen .verification-card:hover,
+.finance-payments-screen .appointment-card:hover,
+.finance-verification-screen .approval-card:hover,
+.finance-verification-screen .verification-card:hover,
+.finance-verification-screen .appointment-card:hover {
+  box-shadow: 0 8px 24px rgba(20, 184, 166, 0.15);
+  border-color: #14b8a6;
+}
+
+.finance-payments-screen .card-header,
+.finance-verification-screen .card-header,
+.finance-reports-screen .card-header {
+  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+  border-bottom-color: #99f6e4;
+}
+
+.finance-payments-screen .date-submitted,
+.finance-verification-screen .date-submitted {
+  color: #134e4a;
+}
+
+.finance-payments-screen .student-section svg,
+.finance-verification-screen .student-section svg {
+  background: linear-gradient(135deg, #99f6e4 0%, #5eead4 100%);
+  color: #0f766e;
+}
+
+.finance-payments-screen .detail-row svg,
+.finance-verification-screen .detail-row svg {
+  color: #14b8a6;
+}
+
+.finance-payments-screen .reference-number,
+.finance-verification-screen .reference-number {
+  color: #14b8a6 !important;
+}
+
+.finance-payments-screen .btn-approve,
+.finance-verification-screen .btn-approve {
+  background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
+}
+
+.finance-payments-screen .btn-approve:hover,
+.finance-verification-screen .btn-approve:hover {
+  box-shadow: 0 4px 16px rgba(20, 184, 166, 0.4);
+}
+
+.finance-payments-screen .btn-icon-small,
+.finance-verification-screen .btn-icon-small,
+.finance-reports-screen .btn-icon-small,
+.finance-notifications-screen .btn-icon-small {
+  background: #14b8a6;
+}
+
+.finance-payments-screen .btn-icon-small:hover,
+.finance-verification-screen .btn-icon-small:hover,
+.finance-reports-screen .btn-icon-small:hover,
+.finance-notifications-screen .btn-icon-small:hover {
+  background: #0f766e;
+}
+
+.finance-payments-screen .btn-confirm-approve,
+.finance-verification-screen .btn-confirm-approve {
+  background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
+}
+
+.finance-payments-screen .btn-confirm-approve:hover,
+.finance-verification-screen .btn-confirm-approve:hover {
+  box-shadow: 0 4px 16px rgba(20, 184, 166, 0.4);
+}
+
+.finance-reports-screen .report-header {
+  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+  border-bottom-color: #99f6e4;
+}
+
+.finance-reports-screen .bar-fill {
+  background: linear-gradient(90deg, #14b8a6 0%, #0f766e 100%);
+}
+
+.finance-notifications-screen .notification-card.unread {
+  background: #f0fdfa;
+  border-color: #99f6e4;
+}
+
+.finance-notifications-screen .notification-card:hover {
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.15);
+}
+
+.finance-profile-screen .profile-card .card-header {
+  background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
+}
+
+.finance-payments-screen .form-group input:focus,
+.finance-payments-screen .form-group select:focus,
+.finance-payments-screen .form-group textarea:focus,
+.finance-verification-screen .form-group input:focus,
+.finance-verification-screen .form-group select:focus,
+.finance-verification-screen .form-group textarea:focus,
+.finance-reports-screen .form-group input:focus,
+.finance-reports-screen .form-group select:focus,
+.finance-reports-screen .form-group textarea:focus,
+.finance-notifications-screen .form-group input:focus,
+.finance-notifications-screen .form-group select:focus,
+.finance-notifications-screen .form-group textarea:focus,
+.finance-profile-screen .form-group input:focus,
+.finance-profile-screen .form-group select:focus,
+.finance-profile-screen .form-group textarea:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+.finance-payments-screen .loading-state .spinner,
+.finance-verification-screen .loading-state .spinner,
+.finance-reports-screen .loading-state .spinner,
+.finance-notifications-screen .loading-state .spinner {
+  border-color: #99f6e4;
+  border-top-color: #14b8a6;
+}
+
+/* Add specific classes that might be used in Finance screens */
+.finance-payments-screen .btn-save,
+.finance-verification-screen .btn-save,
+.finance-profile-screen .btn-save {
+  background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
+}
+
+.finance-payments-screen .btn-save:hover,
+.finance-verification-screen .btn-save:hover,
+.finance-profile-screen .btn-save:hover {
+  box-shadow: 0 4px 16px rgba(20, 184, 166, 0.4);
+}
+
+/* Finance Reports - Additional Styles */
+.finance-reports-screen .item-count {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: normal;
+}
+
+.finance-reports-screen .no-data {
+  text-align: center;
+  padding: 32px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.finance-reports-screen .breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.finance-reports-screen .breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.finance-reports-screen .item-label {
+  min-width: 200px;
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.finance-reports-screen .item-bar {
+  flex: 1;
+  height: 24px;
+  background: #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.finance-reports-screen .item-value {
+  min-width: 100px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f766e;
+}
+

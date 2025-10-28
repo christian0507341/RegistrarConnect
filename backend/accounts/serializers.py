@@ -1,30 +1,136 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.contrib.auth.password_validation import validate_password
-
-User = get_user_model()
-role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=True)
-role = serializers.CharField(required=True)
+from django.contrib.auth.hashers import check_password
+from .models import User
+from .validators import validate_phinma_email, validate_student_id
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    password2 = serializers.CharField(write_only=True, required=True)
-    role = serializers.CharField(required=True)  # Include role explicitly
+    role = serializers.ChoiceField(choices=User.Roles.choices)
+    password = serializers.CharField(write_only=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True, min_length=8)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password', 'password2', 'role')
+        fields = (
+            "role",
+            "student_id",
+            "first_name",
+            "middle_name",
+            "last_name",
+            "email",
+            "password",
+            "confirm_password",
+        )
+        extra_kwargs = {
+            "first_name": {"max_length": 50, "required": True},
+            "middle_name": {"max_length": 50, "required": False},
+            "last_name": {"max_length": 50, "required": True},
+        }
+
+    def validate_email(self, value):
+        validate_phinma_email(value)
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def validate_student_id(self, value):
+        if value in (None, "",) and self.initial_data.get("role") == User.Roles.STUDENT:
+            raise serializers.ValidationError("Student ID is required for students.")
+        if value not in (None, "",):
+            validate_student_id(value)
+        return value
 
     def validate(self, attrs):
-        if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password": "Passwords don't match."})
+        if attrs["password"] != attrs["confirm_password"]:
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
+        if attrs.get("role") == User.Roles.STUDENT and not attrs.get("student_id"):
+            raise serializers.ValidationError({"student_id": "Student ID is required for students."})
         return attrs
 
-    def create(self, validated_data):
-        password = validated_data.pop('password')
-        validated_data.pop('password2')
-        user = User(**validated_data)
+    def create(self, validated):
+        validated.pop("confirm_password", None)
+        password = validated.pop("password")
+        # Only include student_id if provided and valid
+        if validated.get("role") == User.Roles.STUDENT and not validated.get("student_id"):
+            validated["student_id"] = None  # Explicitly set to None for students without ID
+        elif validated.get("role") == User.Roles.FACULTY:
+            validated["student_id"] = None  # Ensure faculty has no student_id
+        user = User.objects.create(**validated)  # username auto-fills from email
         user.set_password(password)
+        user.is_active = True
         user.save()
         return user
+
+
+class LoginSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=User.Roles.choices)  # radio on frontend
+    email = serializers.EmailField(write_only=True)
+    password = serializers.CharField(write_only=True)
+
+    # response fields
+    name = serializers.CharField(read_only=True)
+    role_out = serializers.CharField(read_only=True)
+
+    def validate(self, attrs):
+        email = attrs["email"]
+        password = attrs["password"]
+        role = attrs["role"]
+
+        UserModel = get_user_model()
+        try:
+            user = UserModel.objects.get(email__iexact=email)
+        except UserModel.DoesNotExist:
+            raise serializers.ValidationError("Invalid email or password.")
+
+        if not check_password(password, user.password):
+            raise serializers.ValidationError("Invalid email or password.")
+        if not user.is_active:
+            raise serializers.ValidationError("User is inactive.")
+        if user.role != role:
+            raise serializers.ValidationError("Role does not match this account.")
+
+        attrs["user"] = user
+        attrs["role_out"] = user.role
+        attrs["name"] = f"{user.first_name} {user.last_name}".strip() or user.email
+        return attrs
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer for User model - used by admin endpoints"""
+    full_name = serializers.SerializerMethodField()
+    last_active = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name', 'role',
+            'is_active', 'date_joined', 'last_login', 'full_name', 'last_active'
+        ]
+        read_only_fields = ['id', 'date_joined', 'last_login', 'full_name', 'last_active']
+    
+    def get_full_name(self, obj):
+        return f"{obj.first_name} {obj.last_name}".strip() or obj.username
+    
+    def get_last_active(self, obj):
+        if obj.last_login:
+            from django.utils import timezone
+            from datetime import timedelta
+            
+            now = timezone.now()
+            diff = now - obj.last_login
+            
+            if diff < timedelta(minutes=5):
+                return "Just now"
+            elif diff < timedelta(hours=1):
+                minutes = int(diff.total_seconds() / 60)
+                return f"{minutes} min{'s' if minutes > 1 else ''} ago"
+            elif diff < timedelta(days=1):
+                hours = int(diff.total_seconds() / 3600)
+                return f"{hours} hour{'s' if hours > 1 else ''} ago"
+            elif diff < timedelta(days=7):
+                days = diff.days
+                return f"{days} day{'s' if days > 1 else ''} ago"
+            else:
+                return obj.last_login.strftime("%b %d, %Y")
+        return "Never"

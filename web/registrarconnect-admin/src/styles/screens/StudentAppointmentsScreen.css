@@ -1,0 +1,1120 @@
+/* ====================================
+   STUDENT APPOINTMENTS SCREEN - Complete Redesign
+   ==================================== */
+
+.student-appointments-screen {
+  padding: 0;
+  background: transparent;
+}
+
+.student-appointments-screen .screen-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  padding: 36px 40px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.25);
+}
+
+.student-appointments-screen .screen-header h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.student-appointments-screen .appointments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.student-appointments-screen .appointment-item {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-appointments-screen .appointment-item:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  border-color: #059669;
+}
+
+.student-appointments-screen .appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.student-appointments-screen .appointment-title {
+  font-size: 1.1875rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.student-appointments-screen .appointment-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.student-appointments-screen .appointment-badge.scheduled {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.student-appointments-screen .appointment-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.student-appointments-screen .appointment-badge.cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.student-appointments-screen .appointment-badge.claimed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.student-appointments-screen .appointment-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  font-size: 0.9375rem;
+  color: #6b7280;
+}
+
+.student-appointments-screen .appointment-detail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.student-appointments-screen .appointment-detail svg {
+  color: #059669;
+}
+
+.student-appointments-screen .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 40px;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+@media (max-width: 768px) {
+  .student-appointments-screen .screen-header {
+    padding: 24px;
+  }
+  
+  .student-appointments-screen .appointment-details {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ====================================
+   MISSING CLASSES - Added for TSX
+   Complete Appointments Dashboard
+   ==================================== */
+
+/* LOADING & ERROR STATES (4 classes) */
+.appointments-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
+}
+
+.appointments-loading .loading-spinner {
+  width: 56px;
+  height: 56px;
+  border: 5px solid #e5e7eb;
+  border-top-color: #059669;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.appointments-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
+  text-align: center;
+  padding: 40px;
+}
+
+.appointments-error p {
+  font-size: 1.125rem;
+  color: #6b7280;
+  font-weight: 600;
+  margin: 0;
+}
+
+.retry-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.retry-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35);
+}
+
+/* APPOINTMENTS HEADER (6 classes - renamed from .screen-header) */
+.student-appointments-screen .appointments-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  padding: 36px 40px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.25);
+}
+
+.student-appointments-screen .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.student-appointments-screen .header-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.student-appointments-screen .header-icon {
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.student-appointments-screen .header-text h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.student-appointments-screen .header-text p {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0;
+}
+
+.student-appointments-screen .header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* STATS SECTION (4 classes + 4 color variants) */
+.student-appointments-screen .stats-section {
+  margin-bottom: 28px;
+}
+
+.student-appointments-screen .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.student-appointments-screen .stat-card {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.student-appointments-screen .stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.student-appointments-screen .stat-card.blue::before {
+  background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.student-appointments-screen .stat-card.green::before {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.student-appointments-screen .stat-card.purple::before {
+  background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.student-appointments-screen .stat-card.orange::before {
+  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.student-appointments-screen .stat-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+}
+
+.student-appointments-screen .stat-card svg {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.student-appointments-screen .stat-card.blue svg {
+  color: #2563eb;
+}
+
+.student-appointments-screen .stat-card.green svg {
+  color: #059669;
+}
+
+.student-appointments-screen .stat-card.purple svg {
+  color: #8b5cf6;
+}
+
+.student-appointments-screen .stat-card.orange svg {
+  color: #f59e0b;
+}
+
+.student-appointments-screen .stat-content {
+  flex: 1;
+}
+
+.student-appointments-screen .stat-content h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.student-appointments-screen .stat-content p {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+  line-height: 1;
+}
+
+/* CONTROLS SECTION (8 classes) */
+.student-appointments-screen .controls-section {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 28px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-appointments-screen .search-bar {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.student-appointments-screen .search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.student-appointments-screen .search-bar input {
+  width: 100%;
+  padding: 13px 18px 13px 48px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+}
+
+.student-appointments-screen .search-bar input::placeholder {
+  color: #9ca3af;
+}
+
+.student-appointments-screen .search-bar input:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+  background: #ffffff;
+}
+
+.student-appointments-screen .filter-controls {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.student-appointments-screen .filter-dropdown,
+.student-appointments-screen .date-filter {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.student-appointments-screen .filter-icon,
+.student-appointments-screen .date-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.student-appointments-screen .filter-dropdown select,
+.student-appointments-screen .date-filter input {
+  width: 100%;
+  padding: 11px 16px 11px 48px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.student-appointments-screen .filter-dropdown select:focus,
+.student-appointments-screen .date-filter input:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+/* APPOINTMENTS SECTION (14 classes) */
+.student-appointments-screen .appointments-section {
+  margin-bottom: 32px;
+}
+
+.student-appointments-screen .appointments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 20px;
+}
+
+.student-appointments-screen .appointment-card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-appointments-screen .appointment-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  border-color: #059669;
+}
+
+.student-appointments-screen .card-header {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-appointments-screen .appointment-date {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-appointments-screen .appointment-date svg {
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.student-appointments-screen .date-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.student-appointments-screen .date-info .date {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.student-appointments-screen .date-info .time {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.student-appointments-screen .card-content {
+  padding: 24px;
+}
+
+.student-appointments-screen .appointment-purpose {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+.student-appointments-screen .appointment-notes {
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+}
+
+.student-appointments-screen .appointment-notes p {
+  font-size: 0.9375rem;
+  color: #4b5563;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.student-appointments-screen .appointment-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.student-appointments-screen .meta-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9375rem;
+  color: #6b7280;
+}
+
+.student-appointments-screen .meta-item svg {
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.student-appointments-screen .card-actions {
+  padding: 20px 24px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ACTION BUTTONS (4 variants) */
+.student-appointments-screen .action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  flex: 1;
+  justify-content: center;
+  min-width: fit-content;
+}
+
+.student-appointments-screen .action-btn.primary {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.student-appointments-screen .action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35);
+}
+
+.student-appointments-screen .action-btn.secondary {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.student-appointments-screen .action-btn.secondary:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.student-appointments-screen .action-btn.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+}
+
+.student-appointments-screen .action-btn.warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
+}
+
+.student-appointments-screen .action-btn.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.student-appointments-screen .action-btn.danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+/* EMPTY STATE & QUICK ACTIONS (4 classes) */
+.student-appointments-screen .empty-state .empty-icon {
+  color: #d1d5db;
+  margin-bottom: 24px;
+}
+
+.student-appointments-screen .empty-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.student-appointments-screen .quick-actions-section {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-appointments-screen .quick-actions-section h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 20px 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.student-appointments-screen .quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.student-appointments-screen .quick-action-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.student-appointments-screen .quick-action-card:hover {
+  background: #ffffff;
+  border-color: #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1);
+  transform: translateX(4px);
+}
+
+.student-appointments-screen .quick-action-card svg {
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.student-appointments-screen .quick-action-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+/* Enhanced Appointment Details Modal */
+.appointment-detail-modal {
+  max-width: 700px !important;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header-enhanced {
+  padding: 0;
+  border-bottom: none;
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+}
+
+.modal-header-enhanced .header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px;
+}
+
+.modal-header-enhanced .header-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.modal-header-enhanced .header-title svg {
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.modal-header-enhanced h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.modal-header-enhanced .appointment-id {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.modal-close-enhanced {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  color: #6b7280;
+}
+
+.modal-close-enhanced:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 28px;
+  font-weight: 600;
+  font-size: 1.125rem;
+  border-bottom: 2px solid;
+}
+
+.status-banner.blue {
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  color: #1e40af;
+  border-color: #3b82f6;
+}
+
+.status-banner.green {
+  background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
+  color: #065f46;
+  border-color: #10b981;
+}
+
+.status-banner.red {
+  background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%);
+  color: #991b1b;
+  border-color: #ef4444;
+}
+
+.status-banner.orange {
+  background: linear-gradient(135deg, #fed7aa 0%, #fef3c7 100%);
+  color: #92400e;
+  border-color: #f59e0b;
+}
+
+.status-text-large {
+  text-transform: capitalize;
+}
+
+.modal-body-enhanced {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.info-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.info-section.primary-info {
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+  border-color: #d1d5db;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.section-title svg {
+  color: #059669;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.info-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.info-card:hover {
+  border-color: #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1);
+}
+
+.info-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.info-icon.calendar-icon {
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  color: #1e40af;
+}
+
+.info-icon.time-icon {
+  background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
+  color: #065f46;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-content label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.info-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+}
+
+.info-meta {
+  font-size: 0.875rem;
+  color: #059669;
+  font-weight: 500;
+}
+
+.purpose-card {
+  padding: 16px;
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.purpose-text {
+  margin: 0;
+  font-size: 1rem;
+  color: #111827;
+  line-height: 1.6;
+}
+
+.notes-card {
+  padding: 16px;
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+}
+
+.notes-content {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #78350f;
+  line-height: 1.6;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-left: 8px;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+}
+
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 28px;
+  bottom: -16px;
+  width: 2px;
+  background: #e5e7eb;
+}
+
+.timeline-marker {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid;
+  flex-shrink: 0;
+  margin-top: 2px;
+  background: #ffffff;
+  z-index: 1;
+}
+
+.timeline-marker.created {
+  border-color: #3b82f6;
+}
+
+.timeline-marker.updated {
+  border-color: #10b981;
+}
+
+.timeline-content {
+  flex: 1;
+}
+
+.timeline-content label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.timeline-content p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #111827;
+  font-weight: 500;
+}
+
+.status-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.status-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+.status-info-card.blue {
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  border-color: #3b82f6;
+  color: #1e40af;
+}
+
+.status-info-card.green {
+  background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
+  border-color: #10b981;
+  color: #065f46;
+}
+
+.status-info-card.red {
+  background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%);
+  border-color: #ef4444;
+  color: #991b1b;
+}
+
+.status-info-card.orange {
+  background: linear-gradient(135deg, #fed7aa 0%, #fef3c7 100%);
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.status-info-card svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.status-info-card strong {
+  display: block;
+  font-size: 0.9375rem;
+  margin-bottom: 4px;
+}
+
+.status-info-card p {
+  margin: 0;
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.modal-footer-enhanced {
+  padding: 20px 28px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Responsive for new classes */
+@media (max-width: 1024px) {
+  .student-appointments-screen .appointments-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .appointment-detail-modal {
+    max-width: 95vw !important;
+    margin: 20px;
+  }
+
+  .modal-header-enhanced .header-top {
+    padding: 20px;
+  }
+
+  .modal-body-enhanced {
+    padding: 20px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-footer-enhanced {
+    padding: 16px 20px;
+    flex-direction: column;
+  }
+
+  .modal-footer-enhanced button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .student-appointments-screen .appointments-header,
+  .student-appointments-screen .header-content {
+    padding: 28px 24px;
+  }
+  
+  .student-appointments-screen .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .student-appointments-screen .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-appointments-screen .filter-controls {
+    flex-direction: column;
+  }
+  
+  .student-appointments-screen .filter-dropdown,
+  .student-appointments-screen .date-filter {
+    width: 100%;
+  }
+  
+  .student-appointments-screen .appointments-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-appointments-screen .card-actions {
+    flex-direction: column;
+  }
+  
+  .student-appointments-screen .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}

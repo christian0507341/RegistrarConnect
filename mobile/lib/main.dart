@@ -1,124 +1,225 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/auth/presentation/pages/login_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
 
-void main() {
-  runApp(const MyApp());
+// Auth
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/auth/presentation/bloc/auth_event.dart';
+import 'features/auth/presentation/bloc/auth_state.dart';
+import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/data/repositories/auth_repository.dart' as data;
+import 'features/auth/data/sources/auth_api.dart';
+import 'core/services/secure_storage.dart';
+import 'core/services/notification_manager.dart';
+import 'core/services/notification_auth_service.dart';
+import 'features/auth/presentation/pages/register_page.dart';
+
+// Onboarding
+import 'features/onboarding/presentation/pages/onboarding_screen.dart';
+
+// Home & Notifications
+import 'features/home/presentation/pages/home_container.dart';
+import 'features/home/presentation/bloc/home_bloc.dart';
+import 'features/home/data/repositories/activity_repository_impl.dart';
+import 'features/notifications/presentation/bloc/notification_bloc.dart';
+import 'features/notifications/data/repositories/notification_repository_impl.dart';
+
+// Appointment
+import 'features/appointment/presentation/bloc/appointment_bloc.dart';
+import 'features/appointment/data/repositories/appointment_repository_impl.dart';
+
+// Chat
+import 'features/chat/presentation/pages/chat_page.dart';
+import 'features/chat/presentation/pages/chat_history_page.dart';
+import 'features/chat/presentation/bloc/chat_bloc.dart';
+
+// Settings
+import 'features/settings/presentation/pages/settings_page.dart';
+import 'features/settings/presentation/pages/developer_settings_page.dart';
+
+// Global wrapper
+import 'core/widgets/global_fab_wrapper.dart';
+
+// ✅ Unify network client
+import 'core/services/dio_client.dart';
+
+// Theme
+import 'core/theme/theme_bloc.dart';
+import 'core/theme/theme_service.dart';
+import 'core/theme/app_themes.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  final secureStorage = SecureStorageService();
+  final themeService = ThemeService();
+
+  final dioClient = DioClient(secureStorage);
+  final Dio dio = dioClient.dio;
+
+  final authApi = AuthApi(dio);
+  final IAuthRepository authRepository = data.AuthRepository(
+    api: authApi,
+    storage: secureStorage,
+  );
+
+  // Initialize notification manager
+  final notificationManager = NotificationManager();
+  await notificationManager.initialize();
+  
+  // Initialize notification auth service
+  final notificationAuthService = NotificationAuthService();
+  await notificationAuthService.initialize();
+
+  runApp(MyApp(
+    authRepository: authRepository, 
+    dioClient: dioClient,
+    themeService: themeService,
+    notificationAuthService: notificationAuthService,
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: LoginPage(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  final IAuthRepository authRepository;
+  final DioClient dioClient;
+  final ThemeService themeService;
+  final NotificationAuthService notificationAuthService;
+  
+  const MyApp({
+    super.key, 
+    required this.authRepository, 
+    required this.dioClient,
+    required this.themeService,
+    required this.notificationAuthService,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(
+          create: (_) => AuthBloc(repo: authRepository)..add(const CheckSession()),
+        ),
+        BlocProvider<AppointmentBloc>(
+          create: (_) =>
+              AppointmentBloc(repository: AppointmentRepositoryImpl(dioClient)),
+        ),
+        BlocProvider<HomeBloc>(
+          create: (_) => HomeBloc(repository: ActivityRepositoryImpl()),
+        ),
+        BlocProvider<NotificationBloc>(
+          create: (_) =>
+              NotificationBloc(repository: NotificationRepositoryImpl(secureStorage: SecureStorageService())),
+        ),
+        BlocProvider<ChatBloc>(create: (_) => ChatBloc()),
+        BlocProvider<ThemeBloc>(
+          create: (_) => ThemeBloc(themeService: themeService)..loadTheme(),
+        ),
+      ],
+      child: BlocListener<AuthBloc, AuthState>(
+        listener: (context, authState) {
+          // Handle notification polling based on authentication state
+          notificationAuthService.handleAuthStateChange(authState);
+        },
+        child: BlocBuilder<ThemeBloc, ThemeState>(
+          builder: (context, themeState) {
+            final isDarkMode = themeState is ThemeLoadedState ? themeState.isDarkMode : false;
+            
+            return MaterialApp(
+            title: 'RegistrarConnect',
+            theme: AppThemes.lightTheme,
+            darkTheme: AppThemes.darkTheme,
+            themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            debugShowCheckedModeBanner: false,
+            // Add builder to handle layout overflow gracefully
+            builder: (context, child) {
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(
+                    MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2),
+                  ),
+                ),
+                child: child!,
+              );
+            },
+            initialRoute: '/',
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) {
+                  return BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, authState) {
+                      late Widget page;
+                      bool showFab = true;
+
+                      // Handle authentication routing
+                      if (authState is AuthAuthenticated) {
+                        // User is authenticated, show appropriate page
+                        switch (settings.name) {
+                          case '/':
+                          case '/home':
+                            page = const HomeContainer();
+                            showFab = false;
+                            break;
+                          case '/settings':
+                            page = const SettingsPage();
+                            break;
+                          case '/chat':
+                            page = const ChatPage();
+                            showFab = false;
+                            break;
+                          case '/chat-history':
+                            page = const ChatHistoryPage();
+                            showFab = false;
+                            break;
+                          case '/developer-settings':
+                            page = const DeveloperSettingsPage();
+                            showFab = false;
+                            break;
+                          default:
+                            page = const HomeContainer();
+                            showFab = false;
+                        }
+                      } else if (authState is AuthUnauthenticated) {
+                        // User is not authenticated, show login/onboarding
+                        switch (settings.name) {
+                          case '/':
+                            page = const OnboardingScreen();
+                            showFab = false;
+                            break;
+                          case '/login':
+                            page = const LoginPage();
+                            showFab = false;
+                            break;
+                          case '/register':
+                            page = const RegisterPage();
+                            showFab = false;
+                            break;
+                          default:
+                            page = const OnboardingScreen();
+                            showFab = false;
+                        }
+                      } else {
+                        // Loading state
+                        page = const Scaffold(
+                          body: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                        showFab = false;
+                      }
+
+                      return GlobalFabWrapper(showFab: showFab, child: page);
+                    },
+                  );
+                },
+                settings: settings,
+              );
+            },
+          );
+        },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

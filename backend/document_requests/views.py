@@ -1,19 +1,1002 @@
-from django.shortcuts import render
-
 from rest_framework import generics, permissions
-from .models import DocumentRequest
-from .serializers import DocumentRequestSerializer
+from rest_framework.exceptions import ValidationError
+from django.db import transaction
+from django.db.models import Q
+from .models import DocumentRequest, DocumentRequestAction
+from .serializers import (
+    DocumentRequestSerializer,
+    DocumentRequestStatusSerializer,
+    DocumentRequestCancelSerializer,
+    DocumentRequestWebSerializer,
+    ReceiptUploadSerializer,
+)
+from .permissions import IsFaculty, IsStaffRole
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from backend.appointments.models import Appointment, AppointmentAction
+from backend.appointments.services import AutomaticAppointmentService
+from backend.ai.models import ChatHistory
+import logging
+import csv
+import io
+from django.http import HttpResponse
+from datetime import datetime
+from django.utils import timezone
+from django.core.cache import cache
 
-class DocumentRequestCreateView(generics.CreateAPIView):
-    serializer_class = DocumentRequestSerializer
-    permission_classes = [permissions.IsAuthenticated]
+# Optional imports for Excel export
+try:
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+except ImportError:
+    openpyxl = None
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+logger = logging.getLogger(__name__)
 
-class DocumentRequestListView(generics.ListAPIView):
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def document_requests_web(request):
+    user = request.user
+    # Registrar, Finance, and Admin can see all requests
+    if hasattr(user, 'role') and user.role in ['faculty', 'registrar', 'finance', 'admin']:
+        queryset = DocumentRequest.objects.all().select_related('student_id')
+    else:
+        # Students can only see their own requests
+        queryset = DocumentRequest.objects.filter(student_id=user).select_related('student_id')
+    serializer = DocumentRequestWebSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def document_request_history(request):
+    requests = DocumentRequest.objects.filter(student_id=request.user)
+    serializer = DocumentRequestSerializer(requests, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def document_request_status(request, pk):
+    try:
+        doc = DocumentRequest.objects.get(pk=pk, student_id=request.user)
+    except DocumentRequest.DoesNotExist:
+        return Response({"error": "Request not found"}, status=404)
+    return Response({"id": doc.id, "status": doc.status, "document_type": doc.document_type, "purpose": doc.purpose})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def document_request_cancel(request, pk):
+    try:
+        doc = DocumentRequest.objects.get(pk=pk, student_id=request.user)
+    except DocumentRequest.DoesNotExist:
+        return Response({"error": "Request not found"}, status=404)
+    if doc.status not in ['draft', 'confirming', 'awaiting_payment']:
+        return Response({"error": "Only requests before payment can be cancelled."}, status=400)
+
+    serializer = DocumentRequestCancelSerializer(doc, data=request.data, context={"request": request})
+    if serializer.is_valid():
+        serializer.save()
+        if doc.chat_history:
+            doc.chat_history.status = 'cancelled'
+            doc.chat_history.save(update_fields=["status", "updated_at"])
+        return Response({"message": "Request cancelled successfully"})
+    return Response(serializer.errors, status=400)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def create_document_request(request):
+    """
+    Creates or updates the student's in-flight request for a given document_type.
+    If a 'conversation_id' is provided, link THAT ChatHistory row; else, link the most
+    recent unlinked ChatHistory for this user.
+    """
+    document_type = request.data.get("document_type")
+    semester = request.data.get("semester")
+    school_year = request.data.get("school_year")
+    purpose = request.data.get("purpose")
+    
+    # Check for existing active requests of the same type (excluding rejected/cancelled)
+    active_statuses = ['draft', 'confirming', 'awaiting_payment', 'pending', 'on_process', 'ready_to_claim']
+    existing_active = DocumentRequest.objects.filter(
+        student_id=request.user,
+        document_type=document_type,
+        status__in=active_statuses
+    )
+    
+    # For COG and COE, also check semester and school year
+    if document_type in ['COG', 'COE'] and semester and school_year:
+        existing_active = existing_active.filter(
+            semester=semester,
+            school_year=school_year
+        )
+    
+    # For OTR and OTHERS, check if any active request exists
+    if document_type in ['OTR', 'OTHERS']:
+        existing_active = existing_active.filter(
+            purpose=purpose if purpose else Q(purpose__isnull=True)
+        )
+    
+    if existing_active.exists():
+        existing_request = existing_active.first()
+        return Response({
+            "error": "duplicate_request",
+            "message": f"You already have a {document_type} request in progress.",
+            "existing_request": {
+                "id": existing_request.id,
+                "document_type": existing_request.document_type,
+                "status": existing_request.status,
+                "requested_at": existing_request.requested_at,
+                "semester": existing_request.semester,
+                "school_year": existing_request.school_year,
+                "purpose": existing_request.purpose
+            },
+            "status_message": f"Your {existing_request.document_type} request is currently {existing_request.get_status_display().lower()}. Please wait for it to be completed before submitting another request."
+        }, status=status.HTTP_409_CONFLICT)
+
+    # Check for existing draft request to update
+    existing = DocumentRequest.objects.filter(
+        student_id=request.user,
+        document_type=document_type,
+        status="draft"
+    ).first()
+
+    serializer = (
+        DocumentRequestSerializer(existing, data=request.data, partial=True, context={"request": request})
+        if existing else
+        DocumentRequestSerializer(data=request.data, context={"request": request})
+    )
+
+    if not serializer.is_valid():
+        logger.error(f"Validation failed for create_document_request: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    with transaction.atomic():
+        instance = serializer.save(student_id=request.user)
+
+        payment_method = request.data.get("payment_method")
+        receipt_reference = request.data.get("receipt_reference")
+
+        # 1) payment method -> awaiting_payment (from draft)
+        if payment_method and instance.status == "draft":
+            prev = instance.status
+            instance.status = "awaiting_payment"
+            instance.save(update_fields=["status"])
+            # Check if action already exists to prevent duplicates
+            existing_action = DocumentRequestAction.objects.filter(
+                request=instance,
+                action="payment_method_set",
+                from_status=prev,
+                to_status="awaiting_payment"
+            ).first()
+            if not existing_action:
+                DocumentRequestAction.objects.create(
+                    request=instance,
+                    actor=request.user,
+                    action="payment_method_set",
+                    from_status=prev,
+                    to_status="awaiting_payment",
+                    notes=f"Payment method set to {payment_method}",
+                )
+
+        # 2) receipt reference -> pending (from draft/awaiting_payment)
+        if receipt_reference and instance.status in ["draft", "awaiting_payment"]:
+            prev = instance.status
+            instance.status = "pending"
+            instance.receipt_reference = receipt_reference
+            instance.save(update_fields=["status", "receipt_reference"])
+            # Check if action already exists to prevent duplicates
+            existing_action = DocumentRequestAction.objects.filter(
+                request=instance,
+                action="receipt_submitted",
+                from_status=prev,
+                to_status="pending"
+            ).first()
+            if not existing_action:
+                DocumentRequestAction.objects.create(
+                    request=instance,
+                    actor=request.user,
+                    action="receipt_submitted",
+                    from_status=prev,
+                    to_status="pending",
+                    notes=f"Receipt submitted with reference: {receipt_reference}",
+                )
+
+        # 3) initial creation (no payment/no receipt)
+        if not payment_method and not receipt_reference and existing is None:
+            # Check if action already exists to prevent duplicates
+            existing_action = DocumentRequestAction.objects.filter(
+                request=instance,
+                action="created",
+                from_status=None,
+                to_status="draft"
+            ).first()
+            if not existing_action:
+                DocumentRequestAction.objects.create(
+                    request=instance,
+                    actor=request.user,
+                    action="created",
+                    from_status=None,
+                    to_status="draft",
+                    notes="Document request created",
+                )
+
+        # ---- Link ChatHistory ----
+        conv_id = request.data.get("conversation_id")
+        chat = None
+        if conv_id:
+            chat = ChatHistory.objects.filter(
+                user_id=str(request.user.id),
+                conversation_id=conv_id
+            ).first()
+
+        if not chat:
+            # Prefer the latest unlinked conversation
+            chat = (
+                ChatHistory.objects
+                .filter(user_id=str(request.user.id), document_request__isnull=True)
+                .order_by("-updated_at", "-created_at")
+                .first()
+            )
+
+        if chat:
+            chat.document_request = instance
+            chat.status = instance.status
+            chat.save(update_fields=["document_request", "status", "updated_at"])
+        else:
+            # Create a new row if nothing to link
+            chat_id = f"{request.user.id}_{instance.id}_{instance.requested_at}"
+            chat = ChatHistory.objects.create(
+                user_id=str(request.user.id),
+                conversation_id=chat_id,
+                status=instance.status,
+                document_request=instance,
+            )
+
+        logger.info(f"DocumentRequest {instance.id} saved; linked ChatHistory {chat.id}")
+        return Response(DocumentRequestSerializer(instance, context={"request": request}).data, status=status.HTTP_201_CREATED)
+
+
+# ---- Upload receipt image (mobile flow) ----
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def upload_receipt(request, pk):
+    """
+    POST multipart/form-data:
+      - receipt_image: <file>
+
+    Effect:
+      - Saves file to DocumentRequest.receipt_image
+      - If status ∈ {draft, awaiting_payment} -> moves to 'pending'
+      - Logs DocumentRequestAction('receipt_uploaded' from <prev> to 'pending')
+      - Syncs linked ChatHistory.status
+    """
+    try:
+        doc = DocumentRequest.objects.get(pk=pk, student_id=request.user)
+    except DocumentRequest.DoesNotExist:
+        return Response({"error": "Request not found"}, status=404)
+
+    serializer = ReceiptUploadSerializer(doc, data=request.data, context={"request": request})
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=400)
+
+    with transaction.atomic():
+        prev = doc.status
+        serializer.save()
+        
+        # Move to pending if not yet submitted
+        if doc.status in ["draft", "awaiting_payment"]:
+            doc.status = "pending"
+            doc.save(update_fields=["status"])
+            
+            # Log action with from/to (check for duplicates)
+            existing_action = DocumentRequestAction.objects.filter(
+                request=doc,
+                action="receipt_uploaded",
+                from_status=prev,
+                to_status="pending"
+            ).first()
+            if not existing_action:
+                DocumentRequestAction.objects.create(
+                    request=doc,
+                    actor=request.user,
+                    action="receipt_uploaded",
+                    from_status=prev,
+                    to_status="pending",
+                    notes="Receipt image uploaded",
+                )
+            
+            # Sync linked ChatHistory
+            ch = doc.chat_history.first()
+            if ch:
+                ch.status = "pending"
+                ch.save(update_fields=["status", "updated_at"])
+
+    return Response({"id": doc.id, "status": doc.status}, status=200)
+
+
+class DocumentRequestListCreateView(generics.ListCreateAPIView):
     serializer_class = DocumentRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return DocumentRequest.objects.filter(user=self.request.user)
+        user = self.request.user
+        # Registrar, Finance, and Admin can see all requests
+        if hasattr(user, 'role') and user.role in ['faculty', 'registrar', 'finance', 'admin']:
+            return DocumentRequest.objects.all().select_related('student_id', 'processed_by_id')
+        # Students can only see their own requests
+        return DocumentRequest.objects.filter(student_id=user).select_related('student_id', 'processed_by_id')
+
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            instance = serializer.save(student_id=self.request.user)
+            DocumentRequestAction.objects.create(
+                request=instance,
+                actor=self.request.user,
+                action='created',
+                from_status=None,
+                to_status=instance.status,
+                notes=instance.notes or ''
+            )
+            # Prefer latest chat without a link
+            chat = (
+                ChatHistory.objects
+                .filter(user_id=str(self.request.user.id), document_request__isnull=True)
+                .order_by("-updated_at", "-created_at")
+                .first()
+            )
+            if chat:
+                chat.document_request = instance
+                chat.status = instance.status
+                chat.save(update_fields=["document_request", "status", "updated_at"])
+            else:
+                chat_id = f"{self.request.user.id}_{instance.id}_{instance.requested_at}"
+                ChatHistory.objects.create(
+                    user_id=str(self.request.user.id),
+                    conversation_id=chat_id,
+                    status=instance.status,
+                    document_request=instance,
+                )
+
+
+class DocumentRequestDetailView(generics.RetrieveUpdateAPIView):
+    serializer_class = DocumentRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        # Registrar, Finance, and Admin can see all requests
+        if hasattr(user, 'role') and user.role in ['faculty', 'registrar', 'finance', 'admin']:
+            return DocumentRequest.objects.all().select_related('student_id', 'processed_by_id')
+        # Students can only see their own requests
+        return DocumentRequest.objects.filter(student_id=user).select_related('student_id', 'processed_by_id')
+
+
+class DocumentRequestStatusUpdateView(generics.UpdateAPIView):
+    queryset = DocumentRequest.objects.all().select_related('student_id', 'processed_by_id')
+    serializer_class = DocumentRequestStatusSerializer
+    permission_classes = [IsAuthenticated, IsStaffRole]  # Allow faculty, registrar, finance, admin
+    http_method_names = ['post', 'put', 'patch']
+
+    def perform_update(self, serializer):
+        with transaction.atomic():
+            instance = self.get_object()
+            old_status = instance.status  # Capture BEFORE any changes
+            
+            payment = self.request.data.get('payment', False)
+            document = self.request.data.get('document', False)
+            schedule = self.request.data.get('schedule')
+            notes = self.request.data.get('notes', '')
+            
+            # Debug logging
+            logger.info(f"Document request {instance.id} update - payment: {payment}, document: {document}, schedule: {schedule}")
+            logger.info(f"Request data: {self.request.data}")
+            
+            # Determine new status - prioritize explicit status field, then checkbox logic
+            explicit_status = self.request.data.get('status')
+            if explicit_status:
+                # Use explicit status if provided
+                new_status = explicit_status
+            else:
+                # Fall back to checkbox logic
+                new_status = old_status  # default: no change
+                
+                if payment and document:
+                    # Both checked: document is ready to claim
+                    new_status = 'ready_to_claim'
+                elif payment and not document:
+                    # Only payment approved: processing document
+                    new_status = 'on_process'
+                elif old_status == 'pending' and not payment:
+                    # Faculty can keep it pending or reject
+                    new_status = 'pending'
+            
+            # Update instance status only if it's different from current status
+            if new_status != old_status:
+                instance.status = new_status
+                instance.processed_by_id = self.request.user
+                instance.save(update_fields=['status', 'processed_by_id'])
+            
+            # Update or create action log with proper from/to
+            # Try to find existing action record for this request
+            existing_action = DocumentRequestAction.objects.filter(
+                request=instance,
+                action='status_changed'
+            ).order_by('-created_at').first()
+            
+            if existing_action:
+                # Update existing action record - preserve existing values if not provided
+                existing_action.actor = self.request.user
+                existing_action.from_status = old_status
+                existing_action.to_status = new_status
+                existing_action.notes = notes
+                # Only update payment if explicitly provided in request, otherwise keep existing value
+                if 'payment' in self.request.data:
+                    existing_action.payment = payment
+                # Only update document if explicitly provided in request, otherwise keep existing value
+                if 'document' in self.request.data:
+                    existing_action.document = document
+                # For rejection, reset both payment and document to False
+                if new_status == 'rejected':
+                    existing_action.payment = False
+                    existing_action.document = False
+                existing_action.save()
+                action = existing_action
+            else:
+                # Create new action record if none exists
+                action = DocumentRequestAction.objects.create(
+                    request=instance,
+                    actor=self.request.user,
+                    action='status_changed',
+                    from_status=old_status,
+                    to_status=new_status,
+                    notes=notes,
+                    payment=payment,
+                    document=document
+                )
+            
+            # Sync ChatHistory status
+            chat = instance.chat_history.first()
+            if chat:
+                chat.status = new_status
+                chat.save(update_fields=["status", "updated_at"])
+            
+            # Handle appointment scheduling when both payment and document are approved
+            # Check if both payment and document are true (regardless of status change)
+            logger.info(f"Checking appointment scheduling - payment: {payment}, document: {document}")
+            if payment and document:
+                logger.info(f"Both payment and document approved for request {instance.id}, checking for existing appointment")
+                # Check if appointment already exists for this request
+                existing_appointment = Appointment.objects.filter(
+                    document_request=instance,
+                    status='scheduled'
+                ).first()
+                
+                if not existing_appointment:
+                    if schedule:
+                        # Manual scheduling by faculty
+                        conflict = Appointment.objects.filter(
+                            faculty=self.request.user,
+                            schedule=schedule,
+                            status='scheduled'
+                        ).exists()
+                        if conflict:
+                            raise ValidationError("This schedule is already taken.")
+                        Appointment.objects.create(
+                            student=instance.student_id,
+                            faculty=self.request.user,
+                            document_request=instance,
+                            purpose=f"Claim {instance.document_type}",
+                            schedule=schedule,
+                            status='scheduled'
+                        )
+                        AppointmentAction.objects.create(
+                            appointment=Appointment.objects.get(document_request=instance),
+                            actor=self.request.user,
+                            action='scheduled',
+                            to_status='scheduled',
+                            notes=f"Scheduled for {schedule}"
+                        )
+                    else:
+                        # Automatic scheduling when both payment and document are approved
+                        try:
+                            AutomaticAppointmentService.schedule_appointment_for_ready_request(instance)
+                            logger.info(f"Automatically scheduled appointment for request {instance.id}")
+                        except Exception as e:
+                            logger.error(f"Failed to automatically schedule appointment for request {instance.id}: {str(e)}")
+                            # Don't raise the error, just log it - the request is still ready to claim
+                else:
+                    logger.info(f"Appointment already exists for request {instance.id}")
+            
+            return Response({
+                "status": new_status,
+                "from_status": old_status,
+                "to_status": new_status
+            })
+
+            if payment and not document:
+                updated.status = 'on_process'
+                updated.save()
+                action.to_status = 'on_process'
+                action.save()
+                if updated.chat_history:
+                    updated.chat_history.status = 'on_process'
+                    updated.chat_history.save(update_fields=["status", "updated_at"])
+            elif payment and document:
+                updated.status = 'ready_to_claim'
+                updated.save()
+                action.to_status = 'ready_to_claim'
+                action.save()
+                if updated.chat_history:
+                    updated.chat_history.status = 'ready_to_claim'
+                    updated.chat_history.save(update_fields=["status", "updated_at"])
+                if schedule:
+                    conflict = Appointment.objects.filter(
+                        faculty=self.request.user,
+                        schedule=schedule,
+                        status='scheduled'
+                    ).exists()
+                    if conflict:
+                        raise ValidationError("This schedule is already taken.")
+                    Appointment.objects.create(
+                        student=instance.student_id,
+                        faculty=self.request.user,
+                        document_request=instance,
+                        purpose=f"Claim {instance.document_type}",
+                        schedule=schedule,
+                        status='scheduled'
+                    )
+                    AppointmentAction.objects.create(
+                        appointment=Appointment.objects.get(document_request=instance),
+                        actor=self.request.user,
+                        action='scheduled',
+                        to_status='scheduled',
+                        notes=f"Scheduled for {schedule}"
+                    )
+            return Response({"status": updated.status})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def student_transaction_status(request):
+    """
+    Get student transaction status from document_requests_documentrequest and 
+    document_requests_documentrequestaction tables.
+    Returns document_type, status, payment, document approval status for the logged-in student.
+    """
+    logger.info(f"Student transaction status endpoint called by user: {request.user.id}")
+    try:
+        # Get all document requests for the current student
+        document_requests = DocumentRequest.objects.filter(student_id=request.user)
+        
+        transactions = []
+        
+        for doc_request in document_requests:
+            # Get action-based status using the new method
+            action_status = doc_request.get_current_status_from_actions()
+            
+            # Use action-based status
+            payment_approved = action_status['payment_approved']
+            document_approved = action_status['document_approved']
+            current_status = action_status['current_status']
+            last_updated = action_status['last_updated']
+            
+            # Determine overall status for display
+            if current_status == 'ready_to_claim' and payment_approved and document_approved:
+                overall_status = 'ready_to_claim'
+            elif current_status == 'on_process':
+                overall_status = 'on_process'
+            elif current_status == 'pending':
+                if payment_approved and not document_approved:
+                    overall_status = 'payment_approved_document_pending'
+                elif not payment_approved and document_approved:
+                    overall_status = 'document_approved_payment_pending'
+                else:
+                    overall_status = 'pending_review'
+            else:
+                overall_status = current_status
+            
+            transaction = {
+                'id': doc_request.id,
+                'document_type': doc_request.document_type,
+                'status': overall_status,
+                'payment_approved': payment_approved,
+                'document_approved': document_approved,
+                'requested_at': doc_request.requested_at.strftime('%Y-%m-%d'),
+                'last_updated': last_updated.strftime('%Y-%m-%d %H:%M:%S') if last_updated else doc_request.requested_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'current_status': current_status,
+                'original_status': doc_request.status,
+                'purpose': doc_request.purpose,
+                'semester': doc_request.semester,
+                'school_year': doc_request.school_year,
+            }
+            
+            transactions.append(transaction)
+        
+        # Sort by requested_at descending (newest first)
+        transactions.sort(key=lambda x: x['requested_at'], reverse=True)
+        
+        return Response({
+            'transactions': transactions,
+            'total_count': len(transactions)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching student transactions: {str(e)}")
+        return Response(
+            {"error": "Failed to fetch transaction status"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def student_notifications(request):
+    """
+    Get student notifications based on their document requests and actions.
+    Returns notifications for status changes, approvals, and announcements.
+    """
+    logger.info(f"Student notifications endpoint called by user: {request.user.id}")
+    try:
+        # Get all document requests for the current student
+        document_requests = DocumentRequest.objects.filter(student_id=request.user)
+        
+        notifications = []
+        
+        for doc_request in document_requests:
+            # Get the latest action for this request
+            # Don't filter by actor - we want actions performed ON the student's requests
+            latest_action = DocumentRequestAction.objects.filter(
+                request=doc_request
+            ).order_by('-created_at').first()
+            
+            if latest_action:
+                # Create notification based on action type
+                notification = {
+                    'id': f"doc_{doc_request.id}_{latest_action.id}",
+                    'title': _getNotificationTitle(doc_request, latest_action),
+                    'message': _getNotificationMessage(doc_request, latest_action),
+                    'time': _getTimeAgo(latest_action.created_at),
+                    'icon': _getNotificationIcon(latest_action.action),
+                    'color': _getNotificationColor(latest_action.action),
+                    'type': 'document_request',
+                    'document_type': doc_request.document_type,
+                    'status': doc_request.status,
+                }
+                notifications.append(notification)
+        
+        # Add system announcements (you can expand this)
+        announcements = [
+            {
+                'id': 'announcement_1',
+                'title': 'System Maintenance',
+                'message': 'The system will be under maintenance on Sunday, 2:00 AM - 4:00 AM.',
+                'time': '2d ago',
+                'icon': 'maintenance',
+                'color': 'orange',
+                'type': 'announcement',
+            }
+        ]
+        
+        # Combine and sort notifications
+        all_notifications = notifications + announcements
+        all_notifications.sort(key=lambda x: x['time'], reverse=True)
+        
+        return Response({
+            'notifications': all_notifications,
+            'total_count': len(all_notifications)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching student notifications: {str(e)}")
+        return Response(
+            {"error": "Failed to fetch notifications"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+def _getNotificationTitle(doc_request, action):
+    """Generate notification title based on action type"""
+    action_titles = {
+        'created': 'Document Request Created',
+        'submitted': 'Document Request Submitted',
+        'payment_method_set': 'Payment Method Set',
+        'receipt_submitted': 'Receipt Submitted',
+        'receipt_uploaded': 'Receipt Uploaded',
+        'status_changed': 'Status Updated',
+        'scheduled': 'Appointment Scheduled',
+        'updated': 'Request Updated',
+    }
+    return action_titles.get(action.action, 'Document Request Updated')
+
+
+def _getNotificationMessage(doc_request, action):
+    """Generate notification message based on action type"""
+    if action.action == 'status_changed':
+        return f"Your {doc_request.document_type} status changed from {action.from_status} to {action.to_status}."
+    elif action.action == 'scheduled':
+        return f"Your {doc_request.document_type} appointment has been scheduled."
+    elif action.action == 'receipt_uploaded':
+        return f"Receipt uploaded for your {doc_request.document_type} request."
+    else:
+        return f"Your {doc_request.document_type} request has been {action.action.replace('_', ' ')}."
+
+
+def _getTimeAgo(created_at):
+    """Convert datetime to human-readable time ago"""
+    now = timezone.now()
+    diff = now - created_at
+    
+    if diff.days > 0:
+        return f"{diff.days}d ago"
+    elif diff.seconds > 3600:
+        hours = diff.seconds // 3600
+        return f"{hours}h ago"
+    elif diff.seconds > 60:
+        minutes = diff.seconds // 60
+        return f"{minutes}m ago"
+    else:
+        return "Just now"
+
+
+def _getNotificationIcon(action_type):
+    """Get appropriate icon for notification type"""
+    icon_map = {
+        'created': 'add_circle',
+        'submitted': 'send',
+        'payment_method_set': 'payment',
+        'receipt_submitted': 'receipt',
+        'receipt_uploaded': 'upload',
+        'status_changed': 'update',
+        'scheduled': 'event',
+        'updated': 'edit',
+    }
+    return icon_map.get(action_type, 'info')
+
+
+def _getNotificationColor(action_type):
+    """Get appropriate color for notification type"""
+    color_map = {
+        'created': 'blue',
+        'submitted': 'blue',
+        'payment_method_set': 'green',
+        'receipt_submitted': 'green',
+        'receipt_uploaded': 'green',
+        'status_changed': 'orange',
+        'scheduled': 'purple',
+        'updated': 'blue',
+    }
+    return color_map.get(action_type, 'blue')
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def pending_notifications(request):
+    """
+    Get pending notifications from cache for the current user.
+    These are notifications triggered by database changes (payment/document approval).
+    Mobile app polls this endpoint to check for new notifications.
+    """
+    try:
+        student_id = request.user.id
+        cache_key = f'pending_notifications_{student_id}'
+        
+        # Get pending notifications from cache
+        pending = cache.get(cache_key, [])
+        
+        logger.info(f"Fetching pending notifications for student {student_id}: {len(pending)} found")
+        
+        return Response({
+            'notifications': pending,
+            'count': len(pending),
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching pending notifications: {str(e)}")
+        return Response(
+            {"error": "Failed to fetch pending notifications"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def clear_pending_notifications(request):
+    """
+    Clear pending notifications after they've been shown to the user.
+    Mobile app calls this after displaying notifications.
+    """
+    try:
+        student_id = request.user.id
+        cache_key = f'pending_notifications_{student_id}'
+        
+        # Get notification IDs to clear from request
+        notification_ids = request.data.get('notification_ids', [])
+        
+        if notification_ids:
+            # Get current pending notifications
+            pending = cache.get(cache_key, [])
+            
+            # Remove cleared notifications
+            remaining = [n for n in pending if n['id'] not in notification_ids]
+            
+            # Update cache
+            if remaining:
+                cache.set(cache_key, remaining, timeout=60*60*24*7)
+            else:
+                cache.delete(cache_key)
+            
+            logger.info(f"Cleared {len(notification_ids)} notifications for student {student_id}")
+            
+            return Response({
+                'message': 'Notifications cleared',
+                'cleared_count': len(notification_ids),
+                'remaining_count': len(remaining),
+            })
+        else:
+            # Clear all notifications
+            cache.delete(cache_key)
+            logger.info(f"Cleared all pending notifications for student {student_id}")
+            
+            return Response({
+                'message': 'All notifications cleared',
+            })
+        
+    except Exception as e:
+        logger.error(f"Error clearing pending notifications: {str(e)}")
+        return Response(
+            {"error": "Failed to clear notifications"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsStaffRole])
+def view_receipt(request, pk):
+    """
+    Staff endpoint to view receipt details for a document request.
+    Accessible by faculty, registrar, finance, and admin.
+    """
+    try:
+        doc = DocumentRequest.objects.get(pk=pk)
+        return Response({
+            "receipt_image": doc.receipt_image.url if doc.receipt_image else None,
+            "receipt_reference": doc.receipt_reference,
+            "payment_method": doc.payment_method,
+            "status": doc.status,
+            "document_type": doc.document_type,
+            "student_name": doc.student_id.get_full_name() if hasattr(doc.student_id, 'get_full_name') else str(doc.student_id)
+        })
+    except DocumentRequest.DoesNotExist:
+        return Response({"error": "Document request not found"}, status=404)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def export_document_requests(request):
+    """
+    Export document requests to CSV or Excel format
+    """
+    format_type = request.GET.get('format', 'csv').lower()
+    
+    # Get document requests based on user role
+    user = request.user
+    if hasattr(user, 'role') and user.role in ['admin', 'faculty']:
+        queryset = DocumentRequest.objects.all().select_related('student_id')
+    else:
+        queryset = DocumentRequest.objects.filter(student_id=user).select_related('student_id')
+    
+    if format_type == 'csv':
+        return export_to_csv(queryset)
+    elif format_type == 'excel':
+        return export_to_excel(queryset)
+    else:
+        return Response({"error": "Unsupported format. Use 'csv' or 'excel'."}, status=400)
+
+
+def export_to_csv(queryset):
+    """Export document requests to CSV format"""
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="document_requests_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+    
+    writer = csv.writer(response)
+    
+    # Write header
+    writer.writerow([
+        'ID', 'Student Name', 'Student Email', 'Document Type', 'Purpose',
+        'Status', 'Requested Date', 'Payment Status', 'Payment Amount',
+        'Claim Info', 'Notes', 'Created At', 'Updated At'
+    ])
+    
+    # Write data
+    for request in queryset:
+        writer.writerow([
+            request.id,
+            request.student_id.get_full_name() if hasattr(request.student_id, 'get_full_name') else str(request.student_id),
+            request.student_id.email if hasattr(request.student_id, 'email') else '',
+            request.document_type,
+            request.purpose,
+            request.status,
+            request.requested_at.strftime('%Y-%m-%d') if request.requested_at else '',
+            'Paid' if request.payment else 'Unpaid',
+            request.payment_amount or 0,
+            request.claim_info or '',
+            request.notes or '',
+            request.created_at.strftime('%Y-%m-%d %H:%M:%S') if request.created_at else '',
+            request.updated_at.strftime('%Y-%m-%d %H:%M:%S') if request.updated_at else ''
+        ])
+    
+    return response
+
+
+def export_to_excel(queryset):
+    """Export document requests to Excel format"""
+    if not openpyxl:
+        return Response({"error": "Excel export requires openpyxl package. Please install it."}, status=500)
+    
+    # Create workbook and worksheet
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Document Requests"
+    
+    # Define headers
+    headers = [
+        'ID', 'Student Name', 'Student Email', 'Document Type', 'Purpose',
+        'Status', 'Requested Date', 'Payment Status', 'Payment Amount',
+        'Claim Info', 'Notes', 'Created At', 'Updated At'
+    ]
+    
+    # Style header row
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center")
+    
+    # Write headers
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+    
+    # Write data
+    for row, request in enumerate(queryset, 2):
+        ws.cell(row=row, column=1, value=request.id)
+        ws.cell(row=row, column=2, value=request.student_id.get_full_name() if hasattr(request.student_id, 'get_full_name') else str(request.student_id))
+        ws.cell(row=row, column=3, value=request.student_id.email if hasattr(request.student_id, 'email') else '')
+        ws.cell(row=row, column=4, value=request.document_type)
+        ws.cell(row=row, column=5, value=request.purpose)
+        ws.cell(row=row, column=6, value=request.status)
+        ws.cell(row=row, column=7, value=request.requested_at.strftime('%Y-%m-%d') if request.requested_at else '')
+        ws.cell(row=row, column=8, value='Paid' if request.payment else 'Unpaid')
+        ws.cell(row=row, column=9, value=request.payment_amount or 0)
+        ws.cell(row=row, column=10, value=request.claim_info or '')
+        ws.cell(row=row, column=11, value=request.notes or '')
+        ws.cell(row=row, column=12, value=request.created_at.strftime('%Y-%m-%d %H:%M:%S') if request.created_at else '')
+        ws.cell(row=row, column=13, value=request.updated_at.strftime('%Y-%m-%d %H:%M:%S') if request.updated_at else '')
+    
+    # Auto-adjust column widths
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # Save to response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="document_requests_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+    
+    wb.save(response)
+    return response
